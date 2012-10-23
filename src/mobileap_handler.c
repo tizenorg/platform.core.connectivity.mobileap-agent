@@ -1,0 +1,181 @@
+/*
+ * mobileap-agent
+ *
+ * Copyright (c) 2000 - 2011 Samsung Electronics Co., Ltd. All rights reserved.
+ *
+ * Contact: Hocheol Seo <hocheol.seo@samsung.com>,
+ *          Injun Yang <injun.yang@samsung.com>,
+ *          Seungyoun Ju <sy39.ju@samsung.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
+#include <glib.h>
+#include <dbus/dbus.h>
+#include <dbus/dbus-glib.h>
+#include <dbus/dbus-glib-lowlevel.h>
+
+#include "mobileap_agent.h"
+#include "mobileap_common.h"
+#include "mobileap_bluetooth.h"
+#include "mobileap_wifi.h"
+#include "mobileap_usb.h"
+
+
+static void __handle_flight_mode_changed_cb(keynode_t *key, void *data)
+{
+	if (key == NULL) {
+		ERR("Parameter is NULL\n");
+		return;
+	}
+
+	MobileAPObject *obj = (MobileAPObject *)data;
+	int vconf_key = 0;
+
+	if (_mobileap_is_disabled()) {
+		DBG("Tethering is not enabled\n");
+		return;
+	}
+
+	if (vconf_keynode_get_type(key) != VCONF_TYPE_BOOL) {
+		ERR("Invalid vconf key type\n");
+		return;
+	}
+
+	vconf_key = vconf_keynode_get_bool(key);
+	DBG("key = %s, value = %d(bool)\n",
+			vconf_keynode_get_name(key), vconf_key);
+
+	if (vconf_key == FALSE) {
+		DBG("Flight mode is turned off\n");
+		return;
+	}
+
+	DBG("Flight mode\n");
+	_disable_wifi_tethering(obj);
+	_emit_mobileap_dbus_signal(obj, E_SIGNAL_FLIGHT_MODE, NULL);
+
+	return;
+}
+
+
+static void __handle_device_name_changed_cb(keynode_t *key, void *data)
+{
+	if (key == NULL || data == NULL) {
+		ERR("Parameter is NULL\n");
+		return;
+	}
+
+	MobileAPObject *obj = (MobileAPObject *)data;
+	char *vconf_key = NULL;
+
+	if (!_mobileap_is_enabled(MOBILE_AP_STATE_WIFI)) {
+		DBG("Wi-Fi hotspot is not enabled\n");
+		return;
+	}
+
+	if (vconf_keynode_get_type(key) != VCONF_TYPE_STRING) {
+		ERR("Invalid vconf key type\n");
+		return;
+	}
+
+	vconf_key = vconf_keynode_get_str(key);
+	DBG("key = %s, value = %s(str)\n",
+			vconf_keynode_get_name(key), vconf_key);
+
+	if (g_strcmp0(vconf_key, obj->ssid) == 0) {
+		DBG("ssid is not changed\n");
+	} else {
+		DBG("ssid is changed\n");
+		_disable_wifi_tethering(obj);
+	}
+
+	return;
+}
+
+
+
+
+void _register_vconf_cb(void *user_data)
+{
+	if (user_data == NULL) {
+		ERR("Invalid param\n");
+		return;
+	}
+
+	vconf_reg_t vconf_reg[] = {
+		{VCONFKEY_SETAPPL_FLIGHT_MODE_BOOL,
+			__handle_flight_mode_changed_cb, NULL},
+		{VCONFKEY_SETAPPL_DEVICE_NAME_STR,
+			__handle_device_name_changed_cb, NULL},
+		{NULL, NULL, NULL}
+	};
+
+	int i = 0;
+	int ret = 0;
+
+	while (vconf_reg[i].key != NULL && vconf_reg[i].cb != NULL) {
+		DBG("Register [%d] : %s\n", i, vconf_reg[i].key);
+		ret = vconf_notify_key_changed(vconf_reg[i].key,
+					vconf_reg[i].cb, user_data);
+		if (ret != 0) {
+			ERR("vconf_notify_key_changed is failed : %d\n", ret);
+		}
+
+		if (vconf_reg[i].value) {
+			ret = vconf_get_int(vconf_reg[i].key,
+					vconf_reg[i].value);
+			if (ret != 0) {
+				ERR("vconf_get_int is failed : %d\n", ret);
+			}
+		}
+
+		i++;
+	}
+
+	return;
+}
+
+void _unregister_vconf_cb(void *user_data)
+{
+	if (user_data == NULL) {
+		ERR("Invalid param\n");
+		return;
+	}
+
+	vconf_reg_t vconf_reg[] = {
+		{VCONFKEY_SETAPPL_FLIGHT_MODE_BOOL,
+			__handle_flight_mode_changed_cb, NULL},
+		{VCONFKEY_SETAPPL_DEVICE_NAME_STR,
+			__handle_device_name_changed_cb, NULL},
+		{NULL, NULL, NULL}
+	};
+
+	int i = 0;
+	int ret = 0;
+
+	while (vconf_reg[i].key != NULL && vconf_reg[i].cb != NULL) {
+		DBG("Register [%d] : %s\n", i, vconf_reg[i].key);
+		ret = vconf_ignore_key_changed(vconf_reg[i].key,
+				vconf_reg[i].cb);
+		if (ret != 0) {
+			ERR("vconf_notify_key_changed is failed : %d\n", ret);
+		}
+
+		i++;
+	}
+
+	return;
+}
+

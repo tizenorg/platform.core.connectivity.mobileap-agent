@@ -1,0 +1,3 @@
+[D-BUS Service]
+Name=com.samsung.mobileap
+Exec=/usr/bin/mobileap-agent
