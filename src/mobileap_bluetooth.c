@@ -182,15 +182,6 @@ static void __bt_nap_connection_changed(bool connected, const char *remote_addre
 static mobile_ap_error_code_e __activate_bt_nap(MobileAPObject *obj)
 {
 	int bt_ret = BT_ERROR_NONE;
-	bt_adapter_visibility_mode_e mode = BT_ADAPTER_VISIBILITY_MODE_NON_DISCOVERABLE;
-
-	bt_ret = bt_adapter_get_visibility(&mode);
-	if (bt_ret != BT_ERROR_NONE)
-		ERR("bt_adapter_get_visibility is failed : %d\n", bt_ret);
-	else
-		DBG("Bluetooth is %s\n", mode !=
-				BT_ADAPTER_VISIBILITY_MODE_NON_DISCOVERABLE ?
-				"visible" : "invisible");
 
 	bt_ret = bt_nap_set_connection_state_changed_cb(__bt_nap_connection_changed, (void *)obj);
 	if (bt_ret != BT_ERROR_NONE) {

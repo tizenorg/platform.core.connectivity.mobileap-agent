@@ -660,6 +660,7 @@ int _mh_core_enable_softap(const char *ssid, const char *security,
 		if ((sock_fd = socket(PF_INET, SOCK_DGRAM, 0)) < 0) {
 			ERR("Failed to open socket...!!!\n");
 			ret_status = MOBILE_AP_ERROR_RESOURCE;
+			break;
 		}
 
 		snprintf(cmd, MAX_BUF_SIZE, "ASCII_CMD=AP_CFG,"
@@ -766,7 +767,8 @@ int _mh_core_disable_softap(void)
 	case MOBILE_AP_WEXT:
 		if ((sock_fd = socket(PF_INET, SOCK_DGRAM, 0)) < 0) {
 			ERR("Failed to open socket...!!!\n");
-			return MOBILE_AP_ERROR_RESOURCE;
+			ret_status = MOBILE_AP_ERROR_RESOURCE;
+			break;
 		}
 
 		/* Stop broadcasting of BSS. */
@@ -1015,6 +1017,7 @@ int _mh_core_enable_masquerade(const char *ext_if)
 
 	if (write(fd, "1", 1) != 1) {
 		ERR("write failed\n");
+		close(fd);
 		return MOBILE_AP_ERROR_INTERNAL;
 	}
 	close(fd);
@@ -1046,6 +1049,7 @@ int _mh_core_disable_masquerade(const char *ext_if)
 
 	if (write(fd, "0", 1) != 1) {
 		ERR("write failed\n");
+		close(fd);
 		return MOBILE_AP_ERROR_INTERNAL;
 	}
 	close(fd);

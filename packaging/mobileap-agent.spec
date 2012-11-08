@@ -1,6 +1,6 @@
 Name:       mobileap-agent
 Summary:    Mobile AP daemon for setting tethering environments
-Version:    0.1.76
+Version:    0.1.78
 Release:    1
 Group:      TO_BE/FILLED_IN
 License:    Apache License Version 2.0
@@ -48,6 +48,12 @@ rm -rf %{buildroot}
 %{_bindir}/mobileap-agent
 
 %changelog
+* Tue Nov 06 2012 Seungyoun Ju <sy39.ju@samsung.com> 0.1.78-1
+- Unnecessary BT API is removed
+
+* Sat Nov 03 2012 Seungyoun Ju <sy39.ju@samsung.com> 0.1.77-1
+- Prevent issues are fixed
+
 * Tue Oct 30 2012 Seungyoun Ju <sy39.ju@samsung.com> 0.1.76-1
 - Vconf enum is changed (SETTING_USB_MOBILE_HOTSPOT -> SETTING_USB_TETHERING_MODE)
 - Private code is separated
