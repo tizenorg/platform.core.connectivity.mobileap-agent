@@ -29,8 +29,8 @@
 #define MH_NOTI_STR_MAX		50
 #define MH_NOTI_ICON_PATH	"/usr/apps/org.tizen.tethering/res/images/Q02_Notification_MobileAP.png"
 
-notification_h _create_notification(void);
-int _insert_notification(notification_h noti, char *title, char *content, char *icon_path);
+int _create_notification(const char *content, const char *title, const char *icon_path);
+int _update_notification(const char *content);
 int _delete_notification(void);
 int _set_notification_app_launch(notification_h noti);
 

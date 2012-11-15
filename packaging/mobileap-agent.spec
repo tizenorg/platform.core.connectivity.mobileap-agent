@@ -1,6 +1,6 @@
 Name:       mobileap-agent
 Summary:    Mobile AP daemon for setting tethering environments
-Version:    0.1.78
+Version:    0.1.79
 Release:    1
 Group:      TO_BE/FILLED_IN
 License:    Apache License Version 2.0
@@ -48,6 +48,9 @@ rm -rf %{buildroot}
 %{_bindir}/mobileap-agent
 
 %changelog
+* Thu Nov 08 2012 Seungyoun Ju <sy39.ju@samsung.com> 0.1.79-1
+- Notification's API usage is changed
+
 * Tue Nov 06 2012 Seungyoun Ju <sy39.ju@samsung.com> 0.1.78-1
 - Unnecessary BT API is removed
 

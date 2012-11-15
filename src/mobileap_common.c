@@ -116,42 +116,37 @@ void _send_dbus_station_info(const char *member, mobile_ap_station_info_t *info)
 
 void _update_station_count(int count)
 {
-	static int total_cnt = 0;
+	static int prev_cnt = 0;
 	char str[MH_NOTI_STR_MAX] = {0, };
-	notification_h noti = NULL;
 
-	if (total_cnt == count) {
+	if (prev_cnt == count) {
 		DBG("No need to update\n");
 		return;
 	}
 
 	DBG("Update the number of station : %d\n", count);
-	total_cnt = count;
-
 	if (vconf_set_int(VCONFKEY_MOBILE_HOTSPOT_CONNECTED_DEVICE,
-				total_cnt) < 0) {
+				count) < 0) {
 		ERR("Error setting up vconf\n");
 		return;
 	}
 
-	_delete_notification();
-	if (total_cnt == 0)
-		return;
-
-	noti = _create_notification();
-	if (noti == NULL) {
-		ERR("_create_notification() is failed\n");
+	if (count == 0) {
+		prev_cnt = 0;
+		_delete_notification();
 		return;
 	}
 
-	_set_notification_app_launch(noti);
+	snprintf(str, MH_NOTI_STR_MAX, MH_NOTI_STR, count);
+	if (prev_cnt == 0) {
+		DBG("Create notification\n");
+		_create_notification(str, MH_NOTI_TITLE, MH_NOTI_ICON_PATH);
+	} else {
+		DBG("Update notification\n");
+		_update_notification(str);
+	}
 
-	/* Currently notification bar cannot be updated.
-	 * So it is always deleted and inserted.
-	 */
-	snprintf(str, MH_NOTI_STR_MAX, MH_NOTI_STR, total_cnt);
-	_insert_notification(noti, str, MH_NOTI_TITLE, MH_NOTI_ICON_PATH);
-
+	prev_cnt = count;
 	return;
 }
 
