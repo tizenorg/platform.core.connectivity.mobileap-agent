@@ -151,14 +151,14 @@ gboolean _mobileap_set_state(int state)
 	return TRUE;
 }
 
-int _mobileap_is_disabled(void)
+gboolean _mobileap_is_disabled(void)
 {
-	return !mobileap_state;
+	return mobileap_state ? FALSE : TRUE;
 }
 
-int _mobileap_is_enabled(int state)
+gboolean _mobileap_is_enabled(mobile_ap_type_e type)
 {
-	return (mobileap_state & state) ? 1 : 0;
+	return (mobileap_state & type) ? TRUE : FALSE;
 }
 
 gboolean _mobileap_clear_state(int state)
@@ -447,11 +447,15 @@ static DBusHandlerResult __dnsmasq_signal_filter(DBusConnection *conn,
 			dbus_error_free(&error);
 			return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 		}
-
 		DBG("DhcpConnected signal : %s  %s %s\n", ip_addr, mac, name);
 
 		if (_get_tethering_type_from_ip(ip_addr, &type) != MOBILE_AP_ERROR_NONE)
 			return DBUS_HANDLER_RESULT_HANDLED;
+
+		if (_mobileap_is_enabled(type) != FALSE) {
+			DBG("Tethering[%d] is disabled. Ignore ACK\n", type);
+			return DBUS_HANDLER_RESULT_HANDLED;
+		}
 
 		info = (mobile_ap_station_info_t *)malloc(sizeof(mobile_ap_station_info_t));
 		if (info == NULL) {
@@ -483,7 +487,11 @@ static DBusHandlerResult __dnsmasq_signal_filter(DBusConnection *conn,
 			}
 		}
 
-		_add_station_info(info);
+		if (_add_station_info(info) != MOBILE_AP_ERROR_NONE) {
+			free(info);
+			return DBUS_HANDLER_RESULT_HANDLED;
+		}
+
 		_send_dbus_station_info("DhcpConnected", info);
 
 		return DBUS_HANDLER_RESULT_HANDLED;

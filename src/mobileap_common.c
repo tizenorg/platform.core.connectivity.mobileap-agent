@@ -162,6 +162,12 @@ int _add_station_info(mobile_ap_station_info_t *info)
 	mobile_ap_station_info_t *si = NULL;
 	int i = 0;
 
+	if (_get_station_info(info->mac, _slist_find_station_by_mac, &si) ==
+			MOBILE_AP_ERROR_NONE) {
+		DBG("Already exist station : %s\n", info->mac);
+		return MOBILE_AP_ERROR_INTERNAL;
+	}
+
 	station_list = g_slist_append(station_list, info);
 	for (l = station_list; l != NULL; l = g_slist_next(l)) {
 		si = (mobile_ap_station_info_t *)l->data;

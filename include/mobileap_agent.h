@@ -207,8 +207,8 @@ gboolean _deinit_tethering(MobileAPObject *obj);
 gboolean _mobileap_clear_state(int state);
 
 
-int _mobileap_is_disabled(void);
-int _mobileap_is_enabled(int state);
+gboolean _mobileap_is_disabled(void);
+gboolean _mobileap_is_enabled(mobile_ap_type_e type);
 gboolean _mobileap_set_state(int state);
 
 #endif
