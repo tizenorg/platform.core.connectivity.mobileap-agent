@@ -156,9 +156,35 @@ gboolean _mobileap_is_disabled(void)
 	return mobileap_state ? FALSE : TRUE;
 }
 
-gboolean _mobileap_is_enabled(mobile_ap_type_e type)
+gboolean _mobileap_is_enabled(int state)
 {
-	return (mobileap_state & type) ? TRUE : FALSE;
+	return (mobileap_state & state) ? TRUE : FALSE;
+}
+
+gboolean _mobileap_is_enabled_by_type(mobile_ap_type_e type)
+{
+	switch (type) {
+	case MOBILE_AP_TYPE_WIFI:
+		if (_mobileap_is_enabled(MOBILE_AP_STATE_WIFI))
+			return TRUE;
+		break;
+
+	case MOBILE_AP_TYPE_BT:
+		if (_mobileap_is_enabled(MOBILE_AP_STATE_BT))
+			return TRUE;
+		break;
+
+	case MOBILE_AP_TYPE_USB:
+		if (_mobileap_is_enabled(MOBILE_AP_STATE_USB))
+			return TRUE;
+		break;
+
+	default:
+		ERR("Unknow type : %d\n", type);
+		break;
+	}
+
+	return FALSE;
 }
 
 gboolean _mobileap_clear_state(int state)
@@ -452,7 +478,7 @@ static DBusHandlerResult __dnsmasq_signal_filter(DBusConnection *conn,
 		if (_get_tethering_type_from_ip(ip_addr, &type) != MOBILE_AP_ERROR_NONE)
 			return DBUS_HANDLER_RESULT_HANDLED;
 
-		if (_mobileap_is_enabled(type) != FALSE) {
+		if (_mobileap_is_enabled_by_type(type) == FALSE) {
 			DBG("Tethering[%d] is disabled. Ignore ACK\n", type);
 			return DBUS_HANDLER_RESULT_HANDLED;
 		}

@@ -39,7 +39,7 @@ int _create_notification(const char *content, const char *title, const char *ico
 	notification_h noti = NULL;
 	notification_error_e ret = NOTIFICATION_ERROR_NONE;
 
-	noti = notification_new(NOTIFICATION_TYPE_NOTI,
+	noti = notification_new(NOTIFICATION_TYPE_ONGOING,
 			NOTIFICATION_GROUP_ID_NONE, NOTIFICATION_PRIV_ID_NONE);
 	if (!noti) {
 		ERR("Fail to notification_new [%d]\n", ret);
@@ -162,7 +162,7 @@ int _delete_notification(void)
 	DBG("+\n");
 	notification_error_e ret;
 
-	ret = notification_delete_all_by_type(APPNAME, NOTIFICATION_TYPE_NOTI);
+	ret = notification_delete_all_by_type(APPNAME, NOTIFICATION_TYPE_ONGOING);
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("Fail to notification_delete_all_by_type [%d]\n", ret);
 		return MOBILE_AP_ERROR_INTERNAL;
