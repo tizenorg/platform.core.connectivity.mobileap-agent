@@ -24,9 +24,12 @@
 #ifndef __MOBILEAP_HANDLER_H__
 #define __MOBILEAP_HANDLER_H__
 
-
 void _register_vconf_cb(void *user_data);
 void _unregister_vconf_cb(void *user_data);
 
+void _init_timeout_cb(mobile_ap_type_e type, void *user_data);
+void _start_timeout_cb(mobile_ap_type_e type);
+void _stop_timeout_cb(mobile_ap_type_e type);
+void _deinit_timeout_cb(mobile_ap_type_e type);
 
 #endif

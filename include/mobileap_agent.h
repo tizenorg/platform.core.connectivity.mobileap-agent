@@ -136,8 +136,8 @@
 
 #define DNSMASQ_DBUS_INTERFACE "uk.org.thekelleys.dnsmasq"
 
-#define PROC_NET_DEV		"/proc/net/dev"
-#define MAX_TRANSFER_CHECK_COUNT	180	/* 30 minutes */
+#define PROC_NET_DEV			"/proc/net/dev"
+#define TETHERING_CONN_TIMEOUT		(1200000)	/* 20 Mins */
 #define CHECK_NET_STATE_RETRY_COUNT	5
 #define PSK_ITERATION_COUNT		4096
 

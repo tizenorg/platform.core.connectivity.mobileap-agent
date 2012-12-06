@@ -45,7 +45,7 @@ int _remove_station_info(gconstpointer data, GCompareFunc func);
 int _remove_station_info_all(mobile_ap_type_e type);
 int _get_station_info(gconstpointer data, GCompareFunc func,
 		mobile_ap_station_info_t **si);
-int _get_station_count(int *count);
+int _get_station_count(gconstpointer data, GCompareFunc func, int *count);
 int _station_info_foreach(GFunc func, void *user_data);
 int _add_data_usage_rule(const char *src, const char *dest);
 int _del_data_usage_rule(const char *src, const char *dest);

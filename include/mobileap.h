@@ -64,6 +64,7 @@ extern "C" {
 #define SIGNAL_NAME_DHCP_STATUS		"dhcp_status"
 
 #define SIGNAL_MSG_NOT_AVAIL_INTERFACE	"Interface is not available"
+#define SIGNAL_MSG_TIMEOUT		"There is no connection for a while"
 
 #define DNSMASQ_LEASES_FILE		"/var/lib/misc/dnsmasq.leases"
 #define IP_USB_SUBNET			"192.168.129"

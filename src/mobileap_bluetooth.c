@@ -31,6 +31,7 @@
 #include "mobileap_agent.h"
 #include "mobileap_common.h"
 #include "mobileap_bluetooth.h"
+#include "mobileap_handler.h"
 
 typedef struct {
 	bt_device_info_s *info;
@@ -147,10 +148,12 @@ static void __bt_nap_connection_changed(bool connected, const char *remote_addre
 	__bt_remote_device_s *remote;
 	bt_device_info_s *info;
 	int ret;
+	int n_station = 0;
 
 	DBG("Remote address : %s, Interface : %s, %s\n",
 			remote_address, interface_name,
 			connected ? "Connected" : "Disconnected");
+
 
 	if (connected) {
 		ret = bt_adapter_get_bonded_device_info(remote_address, &info);
@@ -172,8 +175,14 @@ static void __bt_nap_connection_changed(bool connected, const char *remote_addre
 		}
 	} else {
 		_remove_station_info(remote_address, _slist_find_station_by_mac);
-		if (__del_bt_remote(remote_address) == FALSE)
+		if (__del_bt_remote(remote_address) == FALSE) {
 			ERR("__del_bt_remote is failed\n");
+		}
+
+		_get_station_count((gconstpointer)MOBILE_AP_TYPE_BT,
+				_slist_find_station_by_interface, &n_station);
+		if (n_station == 0)
+			_start_timeout_cb(MOBILE_AP_TYPE_BT);
 	}
 
 	return;
@@ -310,6 +319,7 @@ mobile_ap_error_code_e _disable_bt_tethering(MobileAPObject *obj)
 
 	_remove_station_info_all(MOBILE_AP_TYPE_BT);
 	__del_bt_remote_all();
+	_deinit_timeout_cb(MOBILE_AP_TYPE_BT);
 
 	_deinit_tethering(obj);
 	_mobileap_clear_state(MOBILE_AP_STATE_BT);
@@ -405,6 +415,9 @@ gboolean mobileap_enable_bt_tethering(MobileAPObject *obj,
 		ret = MOBILE_AP_ERROR_RESOURCE;
 		goto FAIL;
 	}
+
+	_init_timeout_cb(MOBILE_AP_TYPE_BT, (void *)obj);
+	_start_timeout_cb(MOBILE_AP_TYPE_BT);
 
 	_emit_mobileap_dbus_signal(obj, E_SIGNAL_BT_TETHER_ON, NULL);
 	dbus_g_method_return(context, MOBILE_AP_ENABLE_BT_TETHERING_CFM, ret);

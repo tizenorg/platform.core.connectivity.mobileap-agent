@@ -32,6 +32,19 @@
 #include "mobileap_wifi.h"
 #include "mobileap_usb.h"
 
+typedef struct {
+	guint src_id;
+	GSourceFunc func;
+	void *user_data;
+} sp_timeout_handler_t;
+
+static gboolean __wifi_timeout_cb(gpointer user_data);
+static gboolean __bt_timeout_cb(gpointer user_data);
+
+static sp_timeout_handler_t sp_timeout_handler[MOBILE_AP_TYPE_MAX] = {
+	{0, __wifi_timeout_cb, NULL},
+	{0, NULL, NULL},
+	{0, __bt_timeout_cb, NULL}};
 
 static void __handle_flight_mode_changed_cb(keynode_t *key, void *data)
 {
@@ -179,3 +192,132 @@ void _unregister_vconf_cb(void *user_data)
 	return;
 }
 
+static gboolean __wifi_timeout_cb(gpointer data)
+{
+	DBG("+\n");
+	if (data == NULL) {
+		ERR("data is NULL\n");
+		return FALSE;
+	}
+
+	MobileAPObject *obj = (MobileAPObject *)data;
+
+	if (_mobileap_is_enabled(MOBILE_AP_STATE_WIFI) == FALSE) {
+		ERR("There is no conn. via Wi-Fi tethernig. But nothing to do\n");
+		return FALSE;
+	}
+
+	_disable_wifi_tethering(obj);
+	_emit_mobileap_dbus_signal(obj,
+			E_SIGNAL_WIFI_TETHER_OFF, SIGNAL_MSG_TIMEOUT);
+
+	DBG("-\n");
+	return FALSE;
+}
+
+static gboolean __bt_timeout_cb(gpointer data)
+{
+	DBG("+\n");
+	if (data == NULL) {
+		ERR("data is NULL\n");
+		return FALSE;
+	}
+
+	MobileAPObject *obj = (MobileAPObject *)data;
+
+	if (_mobileap_is_enabled(MOBILE_AP_STATE_BT) == FALSE) {
+		ERR("There is no conn. via BT tethering. But nothing to do\n");
+		return FALSE;
+	}
+
+	_disable_bt_tethering(obj);
+	_emit_mobileap_dbus_signal(obj,
+			E_SIGNAL_BT_TETHER_OFF, SIGNAL_MSG_TIMEOUT);
+
+	DBG("-\n");
+	return FALSE;
+}
+
+void _init_timeout_cb(mobile_ap_type_e type, void *user_data)
+{
+	DBG("+\n");
+	if (sp_timeout_handler[type].func == NULL) {
+		DBG("Not supported timeout : type[%d]\n", type);
+		return;
+	}
+
+	if (user_data == NULL) {
+		ERR("Invalid param\n");
+		return;
+	}
+
+	if (sp_timeout_handler[type].src_id > 0) {
+		DBG("There is already registered timeout source\n");
+		g_source_remove(sp_timeout_handler[type].src_id);
+		sp_timeout_handler[type].src_id = 0;
+	}
+
+	sp_timeout_handler[type].user_data = user_data;
+
+	DBG("-\n");
+	return;
+}
+
+void _start_timeout_cb(mobile_ap_type_e type)
+{
+	DBG("+\n");
+	if (sp_timeout_handler[type].func == NULL) {
+		DBG("Not supported timeout : type[%d]\n", type);
+		return;
+	}
+
+	if (sp_timeout_handler[type].src_id > 0) {
+		ERR("It is not registered or stopped\n");
+		return;
+	}
+
+	sp_timeout_handler[type].src_id = g_timeout_add(TETHERING_CONN_TIMEOUT,
+			sp_timeout_handler[type].func,
+			sp_timeout_handler[type].user_data);
+
+	DBG("-\n");
+	return;
+}
+
+void _stop_timeout_cb(mobile_ap_type_e type)
+{
+	DBG("+\n");
+	if (sp_timeout_handler[type].func == NULL) {
+		DBG("Not supported timeout : type[%d]\n", type);
+		return;
+	}
+
+	if (sp_timeout_handler[type].src_id == 0) {
+		ERR("It is not started yet\n");
+		return;
+	}
+
+	g_source_remove(sp_timeout_handler[type].src_id);
+	sp_timeout_handler[type].src_id = 0;
+
+	DBG("-\n");
+	return;
+}
+
+void _deinit_timeout_cb(mobile_ap_type_e type) {
+	DBG("+\n");
+	if (sp_timeout_handler[type].func == NULL) {
+		DBG("Not supported timeout : type[%d]\n", type);
+		return;
+	}
+
+	if (sp_timeout_handler[type].src_id > 0) {
+		g_source_remove(sp_timeout_handler[type].src_id);
+		sp_timeout_handler[type].src_id = 0;
+	}
+
+	sp_timeout_handler[type].user_data = NULL;
+
+	DBG("-\n");
+	return;
+}

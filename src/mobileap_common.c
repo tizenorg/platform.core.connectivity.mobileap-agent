@@ -45,7 +45,7 @@
 
 extern DBusConnection *mobileap_conn;
 
-static GSList *station_list = NULL;;
+static GSList *station_list = NULL;
 
 gint _slist_find_station_by_interface(gconstpointer a, gconstpointer b)
 {
@@ -281,14 +281,24 @@ int _get_station_info(gconstpointer data, GCompareFunc func,
 	return MOBILE_AP_ERROR_NONE;
 }
 
-int _get_station_count(int *count)
+int _get_station_count(gconstpointer data, GCompareFunc func, int *count)
 {
 	if (count == NULL) {
 		ERR("Invalid param\n");
 		return MOBILE_AP_ERROR_INVALID_PARAM;
 	}
 
-	*count = g_slist_length(station_list);
+	GSList *l = station_list;
+	int _count = 0;
+
+	for (_count = 0; l != NULL; _count++, l = g_slist_next(l)) {
+		l = g_slist_find_custom(l, data, func);
+		if (l == NULL)
+			break;
+	}
+
+	*count = _count;
+	DBG("Station count : %d\n", *count);
 
 	return MOBILE_AP_ERROR_NONE;
 }

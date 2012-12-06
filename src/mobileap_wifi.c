@@ -33,6 +33,7 @@
 #include "mobileap_agent.h"
 #include "mobileap_common.h"
 #include "mobileap_wifi.h"
+#include "mobileap_handler.h"
 
 static int __generate_initial_passphrase(char *passphrase_buf);
 static mobile_ap_error_code_e __get_hide_mode(int *hide_mode);
@@ -236,6 +237,7 @@ static mobile_ap_error_code_e __set_passphrase(const char *passphrase, const uns
 static gboolean __send_station_event_cb(gpointer data)
 {
 	int sig = GPOINTER_TO_INT(data);
+	int n_station = 0;
 	mobile_ap_station_info_t *si = NULL;
 
 	if (!_mobileap_is_enabled(MOBILE_AP_STATE_WIFI)) {
@@ -256,6 +258,11 @@ static gboolean __send_station_event_cb(gpointer data)
 			return FALSE;
 		}
 		_remove_station_info(si->mac, _slist_find_station_by_mac);
+
+		_get_station_count((gconstpointer)MOBILE_AP_TYPE_WIFI,
+				_slist_find_station_by_interface, &n_station);
+		if (n_station == 0)
+			_start_timeout_cb(MOBILE_AP_TYPE_WIFI);
 	}
 
 	return FALSE;
@@ -341,6 +348,8 @@ mobile_ap_error_code_e _disable_wifi_tethering(MobileAPObject *obj)
 		ret = MOBILE_AP_ERROR_NOT_ENABLED;
 		return ret;
 	}
+
+	_deinit_timeout_cb(MOBILE_AP_TYPE_WIFI);
 
 	if (_remove_station_info_all(MOBILE_AP_TYPE_WIFI) !=
 			MOBILE_AP_ERROR_NONE) {
@@ -442,6 +451,9 @@ gboolean mobileap_enable_wifi_tethering(MobileAPObject *obj, gchar *ssid,
 		_deinit_tethering(obj);
 		goto FAIL;
 	}
+
+	_init_timeout_cb(MOBILE_AP_TYPE_WIFI, (void *)obj);
+	_start_timeout_cb(MOBILE_AP_TYPE_WIFI);
 
 	_emit_mobileap_dbus_signal(obj, E_SIGNAL_WIFI_TETHER_ON, NULL);
 	dbus_g_method_return(context, MOBILE_AP_ENABLE_WIFI_TETHERING_CFM, ret);

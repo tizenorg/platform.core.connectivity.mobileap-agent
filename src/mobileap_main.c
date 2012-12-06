@@ -373,77 +373,6 @@ gboolean mobileap_get_data_packet_usage(MobileAPObject *obj,
 	return TRUE;
 }
 
-
-static void __reset_interface(MobileAPObject *obj)
-{
-	obj->rx_bytes = 0;
-	obj->tx_bytes = 0;
-	obj->transfer_check_count = 0;
-}
-
-
-static gboolean __check_data_transfer_cb(gpointer data)
-{
-	MobileAPObject *obj = (MobileAPObject *)data;
-	GIOChannel *io = NULL;
-	gchar *line = NULL;
-
-	char *if_name = NULL;
-	gchar iface[IF_BUF_LEN] = {0, };
-	unsigned long long rx_bytes = 0;
-	unsigned long long tx_bytes = 0;
-
-	if (_mobileap_is_disabled()) {
-		ERR("Nothing is to be done.\n");
-		return TRUE;
-	}
-
-	if (_get_network_interface_name(&if_name) == FALSE)
-		return TRUE;
-
-	io = g_io_channel_new_file(PROC_NET_DEV, "r", NULL);
-	if (!io) {
-		ERR("g_io_channel_new_file failed\n");
-		return TRUE;
-	}
-
-	while (g_io_channel_read_line(io, &line, NULL, NULL, NULL) == G_IO_STATUS_NORMAL) {
-
-		line = g_strdelimit(line, ":", ' ');
-		sscanf(line, "%29s %19lld %*s %*s %*s %*s %*s %*s %*s %19lld %*s %*s %*s %*s %*s",
-								iface, &rx_bytes, &tx_bytes);
-
-		g_free(line);
-
-		if (g_ascii_strcasecmp(iface, if_name) == 0) {
-			break;
-		}
-	}
-
-	g_io_channel_unref(io);
-	free(if_name);
-
-	/*DBG("rx:%lld tx:%lld\n", rx_bytes, tx_bytes);*/
-	if (obj->rx_bytes < rx_bytes || obj->tx_bytes < tx_bytes) {
-		obj->rx_bytes = rx_bytes;
-		obj->tx_bytes = tx_bytes;
-		obj->transfer_check_count = 0;
-	} else {
-		obj->transfer_check_count++;
-
-		/* 30 minutes */
-		if (obj->transfer_check_count == MAX_TRANSFER_CHECK_COUNT) {
-			_emit_mobileap_dbus_signal(obj,
-					E_SIGNAL_NO_DATA_TIMEOUT, NULL);
-			__reset_interface(obj);
-			_disable_wifi_tethering(obj);
-		}
-	}
-
-	return TRUE;
-}
-
-
 static DBusHandlerResult __dnsmasq_signal_filter(DBusConnection *conn,
 		DBusMessage *msg, void *user_data)
 {
@@ -460,6 +389,7 @@ static DBusHandlerResult __dnsmasq_signal_filter(DBusConnection *conn,
 	mobile_ap_type_e type = MOBILE_AP_TYPE_MAX;
 	MobileAPObject *obj = (MobileAPObject *)user_data;
 	mobile_ap_station_info_t *info = NULL;
+	int n_station = 0;
 
 	dbus_error_init(&error);
 	if (dbus_message_is_signal(msg, DNSMASQ_DBUS_INTERFACE,
@@ -517,6 +447,11 @@ static DBusHandlerResult __dnsmasq_signal_filter(DBusConnection *conn,
 			free(info);
 			return DBUS_HANDLER_RESULT_HANDLED;
 		}
+
+		_get_station_count((gconstpointer)type,
+				_slist_find_station_by_interface, &n_station);
+		if (n_station == 1)
+			_stop_timeout_cb(type);
 
 		_send_dbus_station_info("DhcpConnected", info);
 
@@ -621,9 +556,6 @@ int main(int argc, char **argv)
 	_init_network(NULL);
 	_register_wifi_station_handler();
 	_register_vconf_cb((void *)mobileap_obj);
-
-	/* check tx/rx every 10 seconds */
-	g_timeout_add(10000, __check_data_transfer_cb, mobileap_obj);
 
 	dbus_error_init(&dbus_error);
 	dbus_bus_add_match(mobileap_conn, rule, &dbus_error);

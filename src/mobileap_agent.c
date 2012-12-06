@@ -45,6 +45,7 @@
 
 #include "mobileap_common.h"
 #include "mobileap_agent.h"
+#include "mobileap_handler.h"
 
 static pid_t dnsmasq_pid = 0;
 static pid_t hostapd_pid = 0;
@@ -472,6 +473,7 @@ static gboolean __hostapd_monitor_cb(GIOChannel *source)
 	char buf[HOSTAPD_REQ_MAX_LEN] = {0, };
 	char *pbuf = NULL;
 	gsize read = 0;
+	int n_station = 0;
 
 #if !GLIB_CHECK_VERSION(2, 31, 0)
 	int ret = 0;
@@ -517,6 +519,11 @@ static gboolean __hostapd_monitor_cb(GIOChannel *source)
 
 		DBG("Disconnected station MAC : %s\n", pbuf);
 		_remove_station_info(pbuf, _slist_find_station_by_mac);
+
+		_get_station_count((gconstpointer)MOBILE_AP_TYPE_WIFI,
+				_slist_find_station_by_interface, &n_station);
+		if (n_station == 0)
+			_start_timeout_cb(MOBILE_AP_TYPE_WIFI);
 
 		return TRUE;
 	} else {
