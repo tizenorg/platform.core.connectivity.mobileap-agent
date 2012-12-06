@@ -31,6 +31,11 @@
 #include "mobileap_bluetooth.h"
 #include "mobileap_wifi.h"
 #include "mobileap_usb.h"
+#include "mobileap_notification.h"
+
+/* Need translation */
+#define MH_NOTI_TIMEOUT_STR	"Tap for setting"
+#define MH_NOTI_TIMEOUT_TITLE	"Disable tethering by timeout"
 
 typedef struct {
 	guint src_id;
@@ -211,6 +216,9 @@ static gboolean __wifi_timeout_cb(gpointer data)
 	_emit_mobileap_dbus_signal(obj,
 			E_SIGNAL_WIFI_TETHER_OFF, SIGNAL_MSG_TIMEOUT);
 
+	_create_timeout_noti(MH_NOTI_TIMEOUT_STR, MH_NOTI_TIMEOUT_TITLE,
+			MH_NOTI_ICON_PATH);
+
 	DBG("-\n");
 	return FALSE;
 }
@@ -234,6 +242,8 @@ static gboolean __bt_timeout_cb(gpointer data)
 	_emit_mobileap_dbus_signal(obj,
 			E_SIGNAL_BT_TETHER_OFF, SIGNAL_MSG_TIMEOUT);
 
+	_create_timeout_noti(MH_NOTI_TIMEOUT_STR, MH_NOTI_TIMEOUT_TITLE,
+			MH_NOTI_ICON_PATH);
 	DBG("-\n");
 	return FALSE;
 }

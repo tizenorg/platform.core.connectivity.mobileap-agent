@@ -133,17 +133,17 @@ void _update_station_count(int count)
 
 	if (count == 0) {
 		prev_cnt = 0;
-		_delete_notification();
+		_delete_connected_noti();
 		return;
 	}
 
 	snprintf(str, MH_NOTI_STR_MAX, MH_NOTI_STR, count);
 	if (prev_cnt == 0) {
 		DBG("Create notification\n");
-		_create_notification(str, MH_NOTI_TITLE, MH_NOTI_ICON_PATH);
+		_create_connected_noti(str, MH_NOTI_TITLE, MH_NOTI_ICON_PATH);
 	} else {
 		DBG("Update notification\n");
-		_update_notification(str);
+		_update_connected_noti(str);
 	}
 
 	prev_cnt = count;
