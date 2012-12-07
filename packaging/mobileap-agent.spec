@@ -1,6 +1,6 @@
 Name:       mobileap-agent
 Summary:    Mobile AP daemon for setting tethering environments
-Version:    0.1.79
+Version:    0.1.80
 Release:    1
 Group:      TO_BE/FILLED_IN
 License:    Apache License Version 2.0
@@ -48,6 +48,13 @@ rm -rf %{buildroot}
 %{_bindir}/mobileap-agent
 
 %changelog
+* Fri Dec 07 2012 Seungyoun Ju <sy39.ju@samsung.com> 0.1.80-1
+- Notification API's usage is changed
+- Duplicated station information issue is fixed
+- Improper notification type is used
+- Timeout(Auto disconnection) feature is implemented
+- Notification for timeout event is implemented
+
 * Thu Nov 08 2012 Seungyoun Ju <sy39.ju@samsung.com> 0.1.79-1
 - Notification's API usage is changed
 
