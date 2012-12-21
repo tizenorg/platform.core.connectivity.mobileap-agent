@@ -9,6 +9,7 @@ Source1001: 	mobileap-agent.manifest
 BuildRequires: pkgconfig(dlog)
 BuildRequires: pkgconfig(dbus-glib-1)
 BuildRequires: pkgconfig(glib-2.0)
+BuildRequires: pkgconfig(gio-2.0)
 BuildRequires: pkgconfig(gthread-2.0)
 BuildRequires: pkgconfig(pmapi)
 BuildRequires: pkgconfig(vconf)
