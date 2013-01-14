@@ -1,6 +1,6 @@
 Name:       mobileap-agent
 Summary:    Mobile AP daemon for setting tethering environments
-Version:    0.1.80
+Version:    0.1.81
 Release:    1
 Group:      TO_BE/FILLED_IN
 License:    Apache License Version 2.0
@@ -48,6 +48,11 @@ rm -rf %{buildroot}
 %{_bindir}/mobileap-agent
 
 %changelog
+* Mon Jan 14 2013 Seungyoun Ju <sy39.ju@samsung.com> 0.1.81-1
+- dhcp lease delete is handled based on IP Address
+- DNS Forward by netfilter is implemented
+- Vconf key for flight mode is changed
+
 * Fri Dec 07 2012 Seungyoun Ju <sy39.ju@samsung.com> 0.1.80-1
 - Notification API's usage is changed
 - Duplicated station information issue is fixed

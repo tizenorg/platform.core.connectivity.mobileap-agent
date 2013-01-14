@@ -28,6 +28,7 @@
 
 gint _slist_find_station_by_interface(gconstpointer a, gconstpointer b);
 gint _slist_find_station_by_mac(gconstpointer a, gconstpointer b);
+gint _slist_find_station_by_ip_addr(gconstpointer a, gconstpointer b);
 
 void _emit_mobileap_dbus_signal(MobileAPObject *obj,
 		mobile_ap_sig_e num, const gchar *message);

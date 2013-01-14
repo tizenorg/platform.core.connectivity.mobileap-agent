@@ -73,138 +73,6 @@ static int __issue_ioctl(int sock_fd, char *if_name, char *cmd, char *buf)
 	return ret_val;
 }
 
-static int __get_dns_server(char *dns_server, int len)
-{
-#ifndef __USE_CONNMAN_DNS_ADDR__
-	g_strlcpy(dns_server, GOOGLE_PUBLIC_DNS, len);
-	DBG("DNS server [%s]\n", dns_server);
-
-	return EXIT_SUCCESS;
-#else
-	int ret = EXIT_FAILURE;
-	GError *error = NULL;
-	DBusGConnection *bus = NULL;
-	DBusGProxy *manager_proxy = NULL;
-	DBusGProxy *service_proxy = NULL;
-	gchar *service_object_path = NULL;
-
-	GHashTable *hash = NULL;
-	GValue *value;
-	const gchar *state;
-	gchar **dns_server_list = NULL;
-	GPtrArray *service_list = NULL;
-
-	bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error);
-	if (error) {
-		ERR("Couldn't connect to the System bus[%s]", error->message);
-		g_error_free(error);
-		return ret;
-	}
-
-	manager_proxy = dbus_g_proxy_new_for_name(bus, "net.connman",
-						"/",
-						"net.connman.Manager");
-	if (!manager_proxy) {
-		ERR("Couldn't create the proxy object");
-		goto done;
-	}
-
-	dbus_g_proxy_call(manager_proxy, "GetProperties", &error, G_TYPE_INVALID,
-		dbus_g_type_get_map("GHashTable", G_TYPE_STRING, G_TYPE_VALUE),
-		&hash, G_TYPE_INVALID);
-	if (error) {
-		ERR("GetProperties failed[%s]", error->message);
-		g_error_free(error);
-		goto done;
-	}
-
-	/*
-	dict entry(
-		string "Services"
-		variant		array [
-			object path "/profile/default/cellular_45001_cellular_Samsung3G_1"
-			object path "/profile/default/cellular_45001_cellular_Samsung3G_MMS_2"
-		]
-	)
-	*/
-	value = g_hash_table_lookup(hash, "Services");
-
-	service_list = g_value_get_boxed(value);
-	if (!service_list) {
-		ERR("No service available");
-		goto done;
-	}
-
-	service_object_path = g_ptr_array_index(service_list, 0);
-	DBG("service object path : %s\n", service_object_path);
-
-	service_proxy = dbus_g_proxy_new_for_name(bus, "net.connman",
-						service_object_path,
-						"net.connman.Service");
-	if (!service_proxy) {
-		ERR("Couldn't create the proxy object");
-		goto done;
-	}
-
-	dbus_g_proxy_call(service_proxy, "GetProperties", &error, G_TYPE_INVALID,
-		dbus_g_type_get_map("GHashTable", G_TYPE_STRING, G_TYPE_VALUE),
-		&hash, G_TYPE_INVALID);
-	if (error) {
-		ERR("GetProperties failed[%s]", error->message);
-		g_error_free(error);
-		goto done;
-	}
-
-	/*
-	dict entry(
-		string "State"
-		variant		string "online"
-	)
-
-	dict entry(
-		string "Nameservers"
-		variant		array [
-			string "165.213.73.226"
-			string "10.32.192.11"
-		]
-	)
-	*/
-	value = g_hash_table_lookup(hash, "State");
-	state = value ? g_value_get_string(value) : NULL;
-	DBG("Network state : %s\n", state);
-
-	if (g_strcmp0(state, "ready") != 0 && g_strcmp0(state, "online") != 0) {
-		ERR("Network is not connected\n");
-		goto done;
-	}
-
-	value = g_hash_table_lookup(hash, "Nameservers");
-
-	dns_server_list = g_value_get_boxed(value);
-	if (!dns_server_list) {
-		ERR("No Nameserver exist");
-		goto done;
-	}
-	g_strlcpy(dns_server, *dns_server_list, len);
-	DBG("DNS server [%s]\n", dns_server);
-
-	ret = EXIT_SUCCESS;
-done:
-	if (dns_server_list)
-		g_strfreev(dns_server_list);
-	if (service_list)
-		g_ptr_array_free(service_list, TRUE);
-	if (manager_proxy)
-		g_object_unref(manager_proxy);
-	if (service_proxy)
-		g_object_unref(service_proxy);
-	if (bus)
-		dbus_g_connection_unref(bus);
-
-	return ret;
-#endif
-}
-
 static int __get_psk_hexascii(const char *pass, const unsigned char *salt, char *psk, unsigned int psk_len)
 {
 	if (pass == NULL || salt == NULL || psk == NULL || psk_len == 0) {
@@ -951,21 +819,15 @@ int _mh_core_get_device_info(softap_device_info_t *di)
 int _mh_core_execute_dhcp_server(void)
 {
 	char buf[DNSMASQ_CONF_LEN] = "";
-	char dns_server[MOBILE_AP_STR_INFO_LEN] = {0, };
 	FILE *fp = NULL;
 	pid_t pid;
-
-	if (__get_dns_server(dns_server, sizeof(dns_server))) {
-		ERR("Getting DNS server failed\n");
-		return MOBILE_AP_ERROR_INTERNAL;
-	}
 
 	fp = fopen(DNSMASQ_CONF_FILE, "w");
 	if (NULL == fp) {
 		ERR("Could not create the file.\n");
 		return MOBILE_AP_ERROR_RESOURCE;
 	}
-	snprintf(buf, DNSMASQ_CONF_LEN, DNSMASQ_CONF, dns_server);
+	snprintf(buf, DNSMASQ_CONF_LEN, DNSMASQ_CONF);
 	fputs(buf, fp);
 	fclose(fp);
 
@@ -976,6 +838,10 @@ int _mh_core_execute_dhcp_server(void)
 	}
 
 	if (pid == 0) {
+		/* -d : Debug mode
+		 * -p 0 : DNS off
+		 * -C file : Configuration file path
+		 */
 		if (execl("/usr/bin/dnsmasq", "/usr/bin/dnsmasq", "-d",
 					"-p", "0", "-C", DNSMASQ_CONF_FILE,
 					(char *)NULL)) {
@@ -1007,6 +873,11 @@ int _mh_core_terminate_dhcp_server(void)
 
 int _mh_core_enable_masquerade(const char *ext_if)
 {
+	if (ext_if == NULL || strlen(ext_if) == 0) {
+		ERR("ext_if[%s] is invalid\n", ext_if);
+		return MOBILE_AP_ERROR_INVALID_PARAM;
+	}
+
 	int fd = -1;
 	char cmd[MAX_BUF_SIZE] = {0, };
 
@@ -1039,6 +910,11 @@ int _mh_core_enable_masquerade(const char *ext_if)
 
 int _mh_core_disable_masquerade(const char *ext_if)
 {
+	if (ext_if == NULL || strlen(ext_if) == 0) {
+		ERR("ext_if[%s] is invalid\n", ext_if);
+		return MOBILE_AP_ERROR_INVALID_PARAM;
+	}
+
 	int fd = -1;
 	char cmd[MAX_BUF_SIZE] = {0, };
 

@@ -77,7 +77,6 @@
 			"dhcp-range=192.168.136.2,192.168.136.150,255.255.255.0\n" \
 			"dhcp-range=192.168.137.2,192.168.137.150,255.255.255.0\n" \
 			"dhcp-range=set:blue,192.168.129.4,192.168.129.150,255.255.255.0\n"\
-			"dhcp-option=option:dns-server,%s\n" \
 			"enable-dbus\n" \
 			"dhcp-option=tag:blue,option:router,192.168.129.3\n"
 #define DNSMASQ_CONF_FILE	"/tmp/dnsmasq.conf"
@@ -116,11 +115,10 @@
 #define AWK		"/usr/bin/awk"
 #define DATA_USAGE_FILE	"/tmp/tethering_data_usage.txt"
 #define MASQUERADE_RULE		"-o %s -j MASQUERADE"
-#define DNS_FORWARD_RULE	"-p udp -i %s --dport 53 -j DNAT --to %s"
+#define DNS_ORDER		1
+#define TCP_DNS_FORWARD_RULE	"-i %s -p tcp --dport 53 -j DNAT --to %s:53"
+#define UDP_DNS_FORWARD_RULE	"-i %s -p udp --dport 53 -j DNAT --to %s:53"
 #define FORWARD_RULE		"-i %s -o %s"
-#ifndef __USE_CONNMAN_DNS_ADDR__
-#define GOOGLE_PUBLIC_DNS	"8.8.8.8"
-#endif	/* __USE_CONNMAN_DNS_ADDR__ */
 
 #define MOBILE_AP_STATE_NONE	0
 #define MOBILE_AP_STATE_WIFI	1

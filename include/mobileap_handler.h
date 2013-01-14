@@ -26,4 +26,5 @@ void _start_timeout_cb(mobile_ap_type_e type);
 void _stop_timeout_cb(mobile_ap_type_e type);
 void _deinit_timeout_cb(mobile_ap_type_e type);
 
+
 #endif

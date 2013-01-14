@@ -15,13 +15,20 @@
  * limitations under the License.
  */
 
+#include <stdio.h>
 #include <stdlib.h>
+#include <net_connection.h>
 
 #include "mobileap_agent.h"
+#include "mobileap_common.h"
 #include "mobileap_network.h"
 
 static connection_h connection = NULL;
 static connection_profile_h cprof = NULL;
+static char *dns_addr = NULL;
+
+static gboolean __set_dns_forward(void);
+static gboolean __unset_dns_forward(void);
 
 static void __print_profile(connection_profile_h profile)
 {
@@ -92,12 +99,15 @@ static void __connection_opened_cb(connection_error_e result, void *user_data)
 		cprof = NULL;
 		return;
 	}
+	DBG("connection is opened\n");
 
 	if (_mobileap_is_disabled()) {
+		DBG("Tethering is disabled\n");
 		_close_network();
 		return;
 	}
 
+	DBG("Set masquerading\n");
 	if (_set_masquerade() == FALSE) {
 		ERR("_set_masquerade is failed\n");
 		_close_network();
@@ -156,6 +166,7 @@ static gboolean __is_tethering_cellular_prof(connection_profile_h profile)
 		return FALSE;
 	}
 
+	DBG("Service type : %d\n", svc_type);
 	if (svc_type != CONNECTION_CELLULAR_SERVICE_TYPE_TETHERING)
 		return FALSE;
 
@@ -180,11 +191,16 @@ static gboolean __get_tethering_cellular_prof(connection_profile_h *profile, gbo
 		connection_profile_destroy(*profile);
 		return FALSE;
 	}
+	DBG("Tethering cellular service profile\n");
+	__print_profile(*profile);
 
-	if (pstat != CONNECTION_PROFILE_STATE_CONNECTED)
+	if (pstat != CONNECTION_PROFILE_STATE_CONNECTED) {
+		DBG("Tethering profile is not connected\n");
 		*is_connected = FALSE;
-	else
+	} else {
+		DBG("Tethering profile is connected\n");
 		*is_connected = TRUE;
+	}
 
 	return TRUE;
 }
@@ -200,15 +216,19 @@ static gboolean __get_network_prof(connection_profile_h *r_prof, gboolean *is_co
 		return FALSE;
 	}
 
+	DBG("Current connected net_type : %d\n", net_type);
 	if (net_type == CONNECTION_PROFILE_TYPE_CELLULAR) {
+		DBG("Cellular profile\n");
+		__print_profile(profile);
+
 		if (__is_tethering_cellular_prof(profile) == TRUE)
 			goto DONE;
 
-		if (__get_tethering_cellular_prof(&tether_prof, is_connected) == FALSE) {
-			DBG("There is no tethering service cellular\n");
+		if (__get_tethering_cellular_prof(&tether_prof, is_connected) == FALSE)
 			goto DONE;
-		}
 		connection_profile_destroy(profile);
+
+		DBG("Getting tethering profile is successful\n");
 
 		*r_prof = tether_prof;
 		return TRUE;
@@ -290,11 +310,89 @@ gboolean _unset_masquerade(void)
 	return TRUE;
 }
 
+static gboolean __set_dns_forward(void)
+{
+	if (cprof == NULL) {
+		ERR("There is no connected network profile\n");
+		return FALSE;
+	}
+
+	char cmd[MAX_BUF_SIZE] = {0, };
+	char *interface[] = {WIFI_IF, BT_IF_ALL, USB_IF, NULL};
+	int conn_ret;
+	int i;
+
+	if (dns_addr)
+		__unset_dns_forward();
+
+	conn_ret = connection_profile_get_dns_address(cprof, DNS_ORDER,
+			CONNECTION_ADDRESS_FAMILY_IPV4, &dns_addr);
+	if (conn_ret != CONNECTION_ERROR_NONE || dns_addr == NULL) {
+		ERR("connection_profile_get_dns_address is failed : 0x%X, 0x%p\n",
+				conn_ret, dns_addr);
+		return FALSE;
+	}
+
+	if (strlen(dns_addr) == 0) {
+		ERR("DNS Address has zero length\n");
+		free(dns_addr);
+		dns_addr = NULL;
+		return FALSE;
+	}
+
+	DBG("DNS Address : %s\n", dns_addr);
+	for (i = 0; interface[i] != NULL; i++) {
+		snprintf(cmd, sizeof(cmd),
+				"%s -t nat -A PREROUTING "TCP_DNS_FORWARD_RULE,
+				IPTABLES, interface[i], dns_addr);
+		_execute_command(cmd);
+
+		snprintf(cmd, sizeof(cmd),
+				"%s -t nat -A PREROUTING "UDP_DNS_FORWARD_RULE,
+				IPTABLES, interface[i], dns_addr);
+		_execute_command(cmd);
+	}
+
+	return TRUE;
+}
+
+static gboolean __unset_dns_forward(void)
+{
+	if (dns_addr == NULL) {
+		DBG("There is no configured dns forward\n");
+		return TRUE;
+	}
+
+	char cmd[MAX_BUF_SIZE] = {0, };
+	char *interface[] = {WIFI_IF, BT_IF_ALL, USB_IF, NULL};
+	int i;
+
+	DBG("DNS Address : %s\n", dns_addr);
+	for (i = 0; interface[i] != NULL; i++) {
+		snprintf(cmd, sizeof(cmd),
+				"%s -t nat -D PREROUTING "TCP_DNS_FORWARD_RULE,
+				IPTABLES, interface[i], dns_addr);
+		_execute_command(cmd);
+
+		snprintf(cmd, sizeof(cmd),
+				"%s -t nat -D PREROUTING "UDP_DNS_FORWARD_RULE,
+				IPTABLES, interface[i], dns_addr);
+		_execute_command(cmd);
+	}
+
+	free(dns_addr);
+	dns_addr = NULL;
+
+	return TRUE;
+}
+
 gboolean _open_network(void)
 {
 	connection_profile_h profile = NULL;
 	gboolean is_connected = FALSE;
 	int conn_ret;
+
+	DBG("+\n");
 
 	if (__get_network_prof(&profile, &is_connected) == FALSE) {
 		ERR("__get_network_prof is failed\n");
@@ -303,6 +401,7 @@ gboolean _open_network(void)
 	cprof = profile;
 
 	if (is_connected == FALSE) {
+		DBG("Profile is not connected\n");
 		conn_ret = connection_open_profile(connection, cprof,
 				__connection_opened_cb, NULL);
 		if (conn_ret != CONNECTION_ERROR_NONE) {
@@ -315,11 +414,22 @@ gboolean _open_network(void)
 		return TRUE;
 	}
 
+	DBG("Set masquerading\n");
 	if (_set_masquerade() == FALSE) {
 		ERR("_set_masquerade is failed\n");
 		_close_network();
 		return FALSE;
 	}
+
+	DBG("Set dns forwarding\n");
+	if (__set_dns_forward() == FALSE) {
+		ERR("_set_dns_forward is failed\n");
+		_unset_masquerade();
+		_close_network();
+		return FALSE;
+	}
+
+	DBG("-\n");
 
 	return TRUE;
 }
@@ -331,6 +441,11 @@ gboolean _close_network(void)
 	if (cprof == NULL)
 		return TRUE;
 
+	DBG("+\n");
+
+	if (__unset_dns_forward() == FALSE)
+		ERR("__unset_dns_forward is failed\n");
+
 	if (_unset_masquerade() == FALSE)
 		ERR("_unset_masquerade is failed\n");
 
@@ -339,6 +454,8 @@ gboolean _close_network(void)
 				__connection_closed_cb, NULL);
 		if (conn_ret != CONNECTION_ERROR_NONE) {
 			ERR("connection_close_profile is failed : 0x%X\n", conn_ret);
+			connection_profile_destroy(cprof);
+			cprof = NULL;
 			return FALSE;
 		}
 
@@ -348,6 +465,7 @@ gboolean _close_network(void)
 	connection_profile_destroy(cprof);
 	cprof = NULL;
 
+	DBG("-\n");
 	return TRUE;
 }
 

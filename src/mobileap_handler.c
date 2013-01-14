@@ -45,6 +45,8 @@ static sp_timeout_handler_t sp_timeout_handler[MOBILE_AP_TYPE_MAX] = {
 	{0, NULL, NULL},
 	{0, __bt_timeout_cb, NULL}};
 
+
+
 static void __handle_flight_mode_changed_cb(keynode_t *key, void *data)
 {
 	if (key == NULL) {
@@ -55,8 +57,8 @@ static void __handle_flight_mode_changed_cb(keynode_t *key, void *data)
 	MobileAPObject *obj = (MobileAPObject *)data;
 	int vconf_key = 0;
 
-	if (_mobileap_is_disabled()) {
-		DBG("Tethering is not enabled\n");
+	if (!_mobileap_is_enabled(MOBILE_AP_STATE_WIFI)) {
+		DBG("Wi-Fi tethering is not enabled\n");
 		return;
 	}
 
@@ -69,10 +71,8 @@ static void __handle_flight_mode_changed_cb(keynode_t *key, void *data)
 	DBG("key = %s, value = %d(bool)\n",
 			vconf_keynode_get_name(key), vconf_key);
 
-	if (vconf_key == FALSE) {
-		DBG("Flight mode is turned off\n");
+	if (vconf_key == FALSE)
 		return;
-	}
 
 	DBG("Flight mode\n");
 	_disable_wifi_tethering(obj);
@@ -80,7 +80,6 @@ static void __handle_flight_mode_changed_cb(keynode_t *key, void *data)
 
 	return;
 }
-
 
 static void __handle_device_name_changed_cb(keynode_t *key, void *data)
 {
@@ -116,9 +115,6 @@ static void __handle_device_name_changed_cb(keynode_t *key, void *data)
 	return;
 }
 
-
-
-
 void _register_vconf_cb(void *user_data)
 {
 	if (user_data == NULL) {
@@ -127,7 +123,7 @@ void _register_vconf_cb(void *user_data)
 	}
 
 	vconf_reg_t vconf_reg[] = {
-		{VCONFKEY_SETAPPL_FLIGHT_MODE_BOOL,
+		{VCONFKEY_TELEPHONY_FLIGHT_MODE,
 			__handle_flight_mode_changed_cb, NULL},
 		{VCONFKEY_SETAPPL_DEVICE_NAME_STR,
 			__handle_device_name_changed_cb, NULL},
@@ -167,7 +163,7 @@ void _unregister_vconf_cb(void *user_data)
 	}
 
 	vconf_reg_t vconf_reg[] = {
-		{VCONFKEY_SETAPPL_FLIGHT_MODE_BOOL,
+		{VCONFKEY_TELEPHONY_FLIGHT_MODE,
 			__handle_flight_mode_changed_cb, NULL},
 		{VCONFKEY_SETAPPL_DEVICE_NAME_STR,
 			__handle_device_name_changed_cb, NULL},
@@ -325,3 +321,4 @@ void _deinit_timeout_cb(mobile_ap_type_e type) {
 	DBG("-\n");
 	return;
 }
+

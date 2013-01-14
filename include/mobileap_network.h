@@ -19,7 +19,6 @@
 #define __MOBILEAP_NETWORK_H__
 
 #include <glib.h>
-#include <net_connection.h>
 
 gboolean _get_network_interface_name(char **if_name);
 gboolean _set_masquerade(void);

@@ -233,11 +233,12 @@ gboolean _init_tethering(MobileAPObject *obj)
 
 	obj->init_count++;
 
-	DBG("Set masquerading / Run DHCP\n");
 	__block_device_sleep();
 
+	DBG("Open network\n");
 	_open_network();
 
+	DBG("Run DHCP server\n");
 	_mh_core_execute_dhcp_server();
 
 	return TRUE;
@@ -367,6 +368,7 @@ gboolean mobileap_get_data_packet_usage(MobileAPObject *obj,
 	return TRUE;
 }
 
+
 static DBusHandlerResult __dnsmasq_signal_filter(DBusConnection *conn,
 		DBusMessage *msg, void *user_data)
 {
@@ -462,9 +464,9 @@ static DBusHandlerResult __dnsmasq_signal_filter(DBusConnection *conn,
 			return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 		}
 
-		DBG("DhcpLeaseDeleted signal : %s  %s %s\n", ip_addr, mac, name);
+		DBG("DhcpLeaseDeleted signal : %s %s %s\n", ip_addr, mac, name);
 
-		_remove_station_info(mac, _slist_find_station_by_mac);
+		_remove_station_info(ip_addr, _slist_find_station_by_ip_addr);
 
 		return DBUS_HANDLER_RESULT_HANDLED;
 	}

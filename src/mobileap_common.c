@@ -57,6 +57,14 @@ gint _slist_find_station_by_mac(gconstpointer a, gconstpointer b)
 	return g_ascii_strcasecmp(si->mac, mac);
 }
 
+gint _slist_find_station_by_ip_addr(gconstpointer a, gconstpointer b)
+{
+	mobile_ap_station_info_t *si = (mobile_ap_station_info_t *)a;
+	const char *ip_addr = (const char *)b;
+
+	return g_ascii_strcasecmp(si->ip, ip_addr);
+}
+
 void _emit_mobileap_dbus_signal(MobileAPObject *obj,
 				mobile_ap_sig_e num, const gchar *message)
 {

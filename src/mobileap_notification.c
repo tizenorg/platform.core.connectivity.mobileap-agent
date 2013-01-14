@@ -43,6 +43,10 @@ int _create_timeout_noti(const char *content, const char *title,
 			ret = notification_delete(noti);
 			if (ret != NOTIFICATION_ERROR_NONE) {
 				ERR("Fail to notification_delete [%d]\n", ret);
+
+				ret = notification_free(noti);
+				if (ret != NOTIFICATION_ERROR_NONE)
+					ERR("Fail to notification_free [%d]\n", ret);
 				return MOBILE_AP_ERROR_INTERNAL;
 			}
 
@@ -243,12 +247,17 @@ int _update_connected_noti(const char *content)
 			content, NULL, NOTIFICATION_VARIABLE_TYPE_NONE);
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("Fail to notification_set_text [%d]\n", ret);
+
+		ret = notification_free(noti);
+		if (ret != NOTIFICATION_ERROR_NONE)
+			ERR("Fail to notification_free [%d]\n", ret);
 		return MOBILE_AP_ERROR_INTERNAL;
 	}
 
 	ret = notification_update(noti);
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("Fail to notification_update [%d]\n", ret);
+
 		ret = notification_free(noti);
 		if (ret != NOTIFICATION_ERROR_NONE)
 			ERR("Fail to notification_free [%d]\n", ret);
@@ -282,6 +291,10 @@ int _delete_connected_noti(void)
 	ret = notification_delete(noti);
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("Fail to notification_delete [%d]\n", ret);
+
+		ret = notification_free(noti);
+		if (ret != NOTIFICATION_ERROR_NONE)
+			ERR("Fail to notification_free [%d]\n", ret);
 		return MOBILE_AP_ERROR_INTERNAL;
 	}
 
