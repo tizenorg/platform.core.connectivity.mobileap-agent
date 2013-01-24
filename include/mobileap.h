@@ -56,9 +56,14 @@ extern "C" {
 #define SIGNAL_NAME_LOW_BATTERY_MODE	"low_batt_mode"
 #define SIGNAL_NAME_FLIGHT_MODE		"flight_mode"
 #define SIGNAL_NAME_DHCP_STATUS		"dhcp_status"
+#define SIGNAL_NAME_SECURITY_TYPE_CHANGED	"security_type_changed"
+#define SIGNAL_NAME_SSID_VISIBILITY_CHANGED	"ssid_visibility_changed"
+#define SIGNAL_NAME_PASSPHRASE_CHANGED		"passphrase_changed"
 
 #define SIGNAL_MSG_NOT_AVAIL_INTERFACE	"Interface is not available"
 #define SIGNAL_MSG_TIMEOUT		"There is no connection for a while"
+#define SIGNAL_MSG_SSID_VISIBLE		"ssid_visible"
+#define SIGNAL_MSG_SSID_HIDE		"ssid_hide"
 
 #define DNSMASQ_LEASES_FILE		"/var/lib/misc/dnsmasq.leases"
 #define IP_USB_SUBNET			"192.168.129"
@@ -76,6 +81,9 @@ typedef enum {
 	E_SIGNAL_NO_DATA_TIMEOUT,
 	E_SIGNAL_LOW_BATTERY_MODE,
 	E_SIGNAL_FLIGHT_MODE,
+	E_SIGNAL_SECURITY_TYPE_CHANGED,
+	E_SIGNAL_SSID_VISIBILITY_CHANGED,
+	E_SIGNAL_PASSPHRASE_CHANGED,
 	E_SIGNAL_MAX
 } mobile_ap_sig_e;
 

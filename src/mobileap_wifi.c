@@ -510,11 +510,26 @@ gboolean mobileap_set_wifi_tethering_hide_mode(MobileAPObject *obj,
 	g_assert(obj != NULL);
 	g_assert(context != NULL);
 
+	int old_hide_mode;
+
+	ret = __get_hide_mode(&old_hide_mode);
+	if (ret != MOBILE_AP_ERROR_NONE) {
+		ERR("__get_hide_mode is failed : %d\n", ret);
+	} else if (old_hide_mode == hide_mode) {
+		DBG("old_hide_mode == hide_mode\n");
+		dbus_g_method_return(context);
+		return TRUE;
+	}
+
 	ret = __set_hide_mode(hide_mode);
 	if (ret < 0) {
 		ERR("__set_hide_mode is failed : %d\n", ret);
 	}
 
+	_emit_mobileap_dbus_signal(obj, E_SIGNAL_SSID_VISIBILITY_CHANGED,
+			hide_mode == VCONFKEY_MOBILE_AP_HIDE_OFF ?
+			SIGNAL_MSG_SSID_VISIBLE :
+			SIGNAL_MSG_SSID_HIDE);
 	dbus_g_method_return(context);
 
 	return TRUE;
@@ -564,17 +579,29 @@ gboolean mobileap_get_wifi_tethering_security_type(MobileAPObject *obj,
 gboolean mobileap_set_wifi_tethering_security_type(MobileAPObject *obj,
 		gchar *security_type, DBusGMethodInvocation *context)
 {
-	int ret = 0;
+	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
+	char old_security_type[SECURITY_TYPE_LEN] = {0, };
 
 	DBG("+\n");
 	g_assert(obj != NULL);
 	g_assert(context != NULL);
+
+	ret = __get_security_type(old_security_type, sizeof(old_security_type));
+	if (ret != MOBILE_AP_ERROR_NONE) {
+		ERR("__get_security_type is failed : %d\n", ret);
+	} else if (g_strcmp0(old_security_type, security_type) == 0) {
+		DBG("old_security_type == security_type\n");
+		dbus_g_method_return(context);
+		return TRUE;
+	}
 
 	ret = __set_security_type(security_type);
 	if (ret < 0) {
 		ERR("__set_security_type is failed: %d\n", ret);
 	}
 
+	_emit_mobileap_dbus_signal(obj, E_SIGNAL_SECURITY_TYPE_CHANGED,
+			security_type);
 	dbus_g_method_return(context);
 
 	return TRUE;
@@ -583,7 +610,7 @@ gboolean mobileap_set_wifi_tethering_security_type(MobileAPObject *obj,
 gboolean mobileap_get_wifi_tethering_passphrase(MobileAPObject *obj,
 		DBusGMethodInvocation *context)
 {
-	int ret = MOBILE_AP_ERROR_NONE;
+	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
 	char passphrase[MOBILE_AP_WIFI_KEY_MAX_LEN + 1] = {0, };
 	unsigned int len = 0;
 
@@ -606,16 +633,27 @@ gboolean mobileap_set_wifi_tethering_passphrase(MobileAPObject *obj,
 		gchar *passphrase, guint len, DBusGMethodInvocation *context)
 {
 	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
+	char old_passphrase[MOBILE_AP_WIFI_KEY_MAX_LEN + 1] = {0, };
+	unsigned int old_len = 0;
 
 	DBG("+\n");
 	g_assert(obj != NULL);
 	g_assert(context != NULL);
+
+	ret = __get_passphrase(old_passphrase, sizeof(old_passphrase), &old_len);
+	if (ret != MOBILE_AP_ERROR_NONE) {
+		ERR("__get_passphrase is failed : %d\n", ret);
+	} else if (old_len == len && !g_strcmp0(old_passphrase, passphrase)) {
+		dbus_g_method_return(context);
+		return TRUE;
+	}
 
 	ret = __set_passphrase(passphrase, len);
 	if (ret != MOBILE_AP_ERROR_NONE) {
 		ERR("__set_passphrase is failed : %d\n", ret);
 	}
 
+	_emit_mobileap_dbus_signal(obj, E_SIGNAL_PASSPHRASE_CHANGED, NULL);
 	dbus_g_method_return(context);
 
 	return TRUE;

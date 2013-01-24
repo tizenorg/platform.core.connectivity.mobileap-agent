@@ -173,6 +173,18 @@
 			<arg type="s" name="name" direction="out"/>
 		</signal>
 
+		<signal name="security_type_changed">
+			<arg type="s" name="arg1" direction="out"/>
+		</signal>
+
+		<signal name="ssid_visibility_changed">
+			<arg type="s" name="arg1" direction="out"/>
+		</signal>
+
+		<signal name="passphrase_changed">
+			<arg type="s" name="arg1" direction="out"/>
+		</signal>
+
 	</interface>
 </node>
 
