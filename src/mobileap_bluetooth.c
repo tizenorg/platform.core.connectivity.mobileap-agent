@@ -182,7 +182,7 @@ static void __bt_nap_connection_changed(bool connected, const char *remote_addre
 	return;
 }
 
-static mobile_ap_error_code_e __activate_bt_nap(MobileAPObject *obj)
+static mobile_ap_error_code_e __activate_bt_nap(TetheringObject *obj)
 {
 	int bt_ret = BT_ERROR_NONE;
 
@@ -228,7 +228,7 @@ static void __bt_adapter_state_changed(int result, bt_adapter_state_e adapter_st
 		return;
 
 	int ret;
-	MobileAPObject *obj = (MobileAPObject *)user_data;
+	TetheringObject *obj = (TetheringObject *)user_data;
 	DBusGMethodInvocation *context = obj->bt_context;
 
 	obj->bt_context = NULL;
@@ -270,7 +270,7 @@ static void __bt_adapter_state_changed(int result, bt_adapter_state_e adapter_st
 	return;
 }
 
-void _bt_get_remote_device_name(MobileAPObject *obj, const char *mac, char **name)
+void _bt_get_remote_device_name(TetheringObject *obj, const char *mac, char **name)
 {
 	if (obj == NULL || mac == NULL || name == NULL) {
 		ERR("Invalid param\n");
@@ -292,7 +292,7 @@ void _bt_get_remote_device_name(MobileAPObject *obj, const char *mac, char **nam
 	return;
 }
 
-mobile_ap_error_code_e _disable_bt_tethering(MobileAPObject *obj)
+mobile_ap_error_code_e _disable_bt_tethering(TetheringObject *obj)
 {
 	int bt_ret;
 
@@ -321,7 +321,7 @@ mobile_ap_error_code_e _disable_bt_tethering(MobileAPObject *obj)
 	return MOBILE_AP_ERROR_NONE;
 }
 
-gboolean mobileap_enable_bt_tethering(MobileAPObject *obj,
+gboolean tethering_enable_bt_tethering(TetheringObject *obj,
 		DBusGMethodInvocation *context)
 {
 	int ret;
@@ -424,7 +424,7 @@ FAIL:
 }
 
 
-gboolean mobileap_disable_bt_tethering(MobileAPObject *obj,
+gboolean tethering_disable_bt_tethering(TetheringObject *obj,
 		DBusGMethodInvocation *context)
 {
 	mobile_ap_error_code_e ret;

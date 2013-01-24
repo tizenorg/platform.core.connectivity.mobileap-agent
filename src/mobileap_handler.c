@@ -54,7 +54,7 @@ static void __handle_flight_mode_changed_cb(keynode_t *key, void *data)
 		return;
 	}
 
-	MobileAPObject *obj = (MobileAPObject *)data;
+	TetheringObject *obj = (TetheringObject *)data;
 	int vconf_key = 0;
 
 	if (!_mobileap_is_enabled(MOBILE_AP_STATE_WIFI)) {
@@ -88,7 +88,7 @@ static void __handle_device_name_changed_cb(keynode_t *key, void *data)
 		return;
 	}
 
-	MobileAPObject *obj = (MobileAPObject *)data;
+	TetheringObject *obj = (TetheringObject *)data;
 	char *vconf_key = NULL;
 
 	if (!_mobileap_is_enabled(MOBILE_AP_STATE_WIFI)) {
@@ -195,7 +195,7 @@ static gboolean __wifi_timeout_cb(gpointer data)
 		return FALSE;
 	}
 
-	MobileAPObject *obj = (MobileAPObject *)data;
+	TetheringObject *obj = (TetheringObject *)data;
 
 	if (_mobileap_is_enabled(MOBILE_AP_STATE_WIFI) == FALSE) {
 		ERR("There is no conn. via Wi-Fi tethernig. But nothing to do\n");
@@ -221,7 +221,7 @@ static gboolean __bt_timeout_cb(gpointer data)
 		return FALSE;
 	}
 
-	MobileAPObject *obj = (MobileAPObject *)data;
+	TetheringObject *obj = (TetheringObject *)data;
 
 	if (_mobileap_is_enabled(MOBILE_AP_STATE_BT) == FALSE) {
 		ERR("There is no conn. via BT tethering. But nothing to do\n");

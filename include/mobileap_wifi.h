@@ -31,34 +31,34 @@ typedef enum {
 
 void _register_wifi_station_handler(void);
 void _add_wifi_device_to_array(softap_device_info_t *di, GPtrArray *array);
-mobile_ap_error_code_e _disable_wifi_tethering(MobileAPObject *obj);
+mobile_ap_error_code_e _disable_wifi_tethering(TetheringObject *obj);
 
 /* Dbus method */
-gboolean mobileap_enable_wifi_tethering(MobileAPObject *obj, gchar *ssid,
+gboolean tethering_enable_wifi_tethering(TetheringObject *obj, gchar *ssid,
 		gchar *key, gint hide_mode,
 		DBusGMethodInvocation *context);
 
-gboolean mobileap_disable_wifi_tethering(MobileAPObject *obj,
+gboolean tethering_disable_wifi_tethering(TetheringObject *obj,
 		DBusGMethodInvocation *context);
 
-gboolean mobileap_get_wifi_tethering_hide_mode(MobileAPObject *obj,
+gboolean tethering_get_wifi_tethering_hide_mode(TetheringObject *obj,
 		DBusGMethodInvocation *context);
 
-gboolean mobileap_set_wifi_tethering_hide_mode(MobileAPObject *obj,
+gboolean tethering_set_wifi_tethering_hide_mode(TetheringObject *obj,
 		gint hide_mode, DBusGMethodInvocation *context);
 
-gboolean mobileap_get_wifi_tethering_ssid(MobileAPObject *obj,
+gboolean tethering_get_wifi_tethering_ssid(TetheringObject *obj,
 		DBusGMethodInvocation *context);
 
-gboolean mobileap_get_wifi_tethering_security_type(MobileAPObject *obj,
+gboolean tethering_get_wifi_tethering_security_type(TetheringObject *obj,
 		DBusGMethodInvocation *context);
 
-gboolean mobileap_set_wifi_tethering_security_type(MobileAPObject *obj,
+gboolean tethering_set_wifi_tethering_security_type(TetheringObject *obj,
 		gchar *security_type, DBusGMethodInvocation *context);
 
-gboolean mobileap_get_wifi_tethering_passphrase(MobileAPObject *obj,
+gboolean tethering_get_wifi_tethering_passphrase(TetheringObject *obj,
 		DBusGMethodInvocation *context);
 
-gboolean mobileap_set_wifi_tethering_passphrase(MobileAPObject *obj,
+gboolean tethering_set_wifi_tethering_passphrase(TetheringObject *obj,
 		gchar *passphrase, guint len, DBusGMethodInvocation *context);
 #endif /* __MOBILEAP_WIFI_H__ */

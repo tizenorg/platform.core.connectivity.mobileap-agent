@@ -39,7 +39,7 @@ static mobile_ap_error_code_e __get_passphrase(char *passphrase, unsigned int si
 static mobile_ap_error_code_e __set_passphrase(const char *passphrase, const unsigned int size);
 static gboolean __send_station_event_cb(gpointer data);
 static void __handle_station_signal(int sig);
-static mobile_ap_error_code_e __update_wifi_data(MobileAPObject *obj);
+static mobile_ap_error_code_e __update_wifi_data(TetheringObject *obj);
 
 static int __generate_initial_passphrase(char *passphrase_buf)
 {
@@ -333,7 +333,7 @@ void _add_wifi_device_to_array(softap_device_info_t *di, GPtrArray *array)
 	}
 }
 
-mobile_ap_error_code_e _disable_wifi_tethering(MobileAPObject *obj)
+mobile_ap_error_code_e _disable_wifi_tethering(TetheringObject *obj)
 {
 	int ret = MOBILE_AP_ERROR_NONE;
 
@@ -364,7 +364,7 @@ mobile_ap_error_code_e _disable_wifi_tethering(MobileAPObject *obj)
 	return ret;
 }
 
-static mobile_ap_error_code_e __update_wifi_data(MobileAPObject *obj)
+static mobile_ap_error_code_e __update_wifi_data(TetheringObject *obj)
 {
 	if (obj == NULL) {
 		ERR("Invalid param\n");
@@ -403,7 +403,7 @@ static mobile_ap_error_code_e __update_wifi_data(MobileAPObject *obj)
 	return MOBILE_AP_ERROR_NONE;
 }
 
-gboolean mobileap_enable_wifi_tethering(MobileAPObject *obj, gchar *ssid,
+gboolean tethering_enable_wifi_tethering(TetheringObject *obj, gchar *ssid,
 		gchar *key, gint hide_mode, DBusGMethodInvocation *context)
 {
 	int ret = MOBILE_AP_ERROR_NONE;
@@ -461,7 +461,7 @@ FAIL:
 	return FALSE;
 }
 
-gboolean mobileap_disable_wifi_tethering(MobileAPObject *obj,
+gboolean tethering_disable_wifi_tethering(TetheringObject *obj,
 		DBusGMethodInvocation *context)
 {
 	int ret = MOBILE_AP_ERROR_NONE;
@@ -481,7 +481,7 @@ gboolean mobileap_disable_wifi_tethering(MobileAPObject *obj,
 		return TRUE;
 }
 
-gboolean mobileap_get_wifi_tethering_hide_mode(MobileAPObject *obj,
+gboolean tethering_get_wifi_tethering_hide_mode(TetheringObject *obj,
 		DBusGMethodInvocation *context)
 {
 	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
@@ -501,7 +501,7 @@ gboolean mobileap_get_wifi_tethering_hide_mode(MobileAPObject *obj,
 	return TRUE;
 }
 
-gboolean mobileap_set_wifi_tethering_hide_mode(MobileAPObject *obj,
+gboolean tethering_set_wifi_tethering_hide_mode(TetheringObject *obj,
 		gint hide_mode, DBusGMethodInvocation *context)
 {
 	int ret = 0;
@@ -535,7 +535,7 @@ gboolean mobileap_set_wifi_tethering_hide_mode(MobileAPObject *obj,
 	return TRUE;
 }
 
-gboolean mobileap_get_wifi_tethering_ssid(MobileAPObject *obj,
+gboolean tethering_get_wifi_tethering_ssid(TetheringObject *obj,
 		DBusGMethodInvocation *context)
 {
 	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
@@ -556,7 +556,7 @@ gboolean mobileap_get_wifi_tethering_ssid(MobileAPObject *obj,
 
 }
 
-gboolean mobileap_get_wifi_tethering_security_type(MobileAPObject *obj,
+gboolean tethering_get_wifi_tethering_security_type(TetheringObject *obj,
 		DBusGMethodInvocation *context)
 {
 	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
@@ -576,7 +576,7 @@ gboolean mobileap_get_wifi_tethering_security_type(MobileAPObject *obj,
 	return TRUE;
 }
 
-gboolean mobileap_set_wifi_tethering_security_type(MobileAPObject *obj,
+gboolean tethering_set_wifi_tethering_security_type(TetheringObject *obj,
 		gchar *security_type, DBusGMethodInvocation *context)
 {
 	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
@@ -607,7 +607,7 @@ gboolean mobileap_set_wifi_tethering_security_type(MobileAPObject *obj,
 	return TRUE;
 }
 
-gboolean mobileap_get_wifi_tethering_passphrase(MobileAPObject *obj,
+gboolean tethering_get_wifi_tethering_passphrase(TetheringObject *obj,
 		DBusGMethodInvocation *context)
 {
 	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
@@ -629,7 +629,7 @@ gboolean mobileap_get_wifi_tethering_passphrase(MobileAPObject *obj,
 	return TRUE;
 }
 
-gboolean mobileap_set_wifi_tethering_passphrase(MobileAPObject *obj,
+gboolean tethering_set_wifi_tethering_passphrase(TetheringObject *obj,
 		gchar *passphrase, guint len, DBusGMethodInvocation *context)
 {
 	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;

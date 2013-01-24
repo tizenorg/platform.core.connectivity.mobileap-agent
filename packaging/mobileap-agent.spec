@@ -44,7 +44,7 @@ rm -rf %{buildroot}
 %files
 %manifest mobileap-agent.manifest
 %defattr(-,root,root,-)
-/usr/share/dbus-1/services/com.samsung.mobileap.service
+/usr/share/dbus-1/services/org.tizen.tethering.service
 %{_bindir}/mobileap-agent
 
 %changelog

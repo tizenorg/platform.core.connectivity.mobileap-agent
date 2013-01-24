@@ -33,11 +33,11 @@
 #include "mobileap_notification.h"
 #include "mobileap_common.h"
 
-#define MOBILEAP_OBJECT_GET_CLASS(obj) \
+#define TETHERING_OBJECT_GET_CLASS(obj) \
 	(G_TYPE_INSTANCE_GET_CLASS ((obj), \
-	MOBILEAP_TYPE_OBJECT , MobileAPObjectClass))
+	TETHERING_TYPE_OBJECT , TetheringObjectClass))
 
-extern DBusConnection *mobileap_conn;
+extern DBusConnection *tethering_conn;
 
 static GSList *station_list = NULL;
 
@@ -65,10 +65,10 @@ gint _slist_find_station_by_ip_addr(gconstpointer a, gconstpointer b)
 	return g_ascii_strcasecmp(si->ip, ip_addr);
 }
 
-void _emit_mobileap_dbus_signal(MobileAPObject *obj,
+void _emit_mobileap_dbus_signal(TetheringObject *obj,
 				mobile_ap_sig_e num, const gchar *message)
 {
-	MobileAPObjectClass *klass = MOBILEAP_OBJECT_GET_CLASS(obj);
+	TetheringObjectClass *klass = TETHERING_OBJECT_GET_CLASS(obj);
 
 	DBG("Emitting signal id [%d], with message [%s]\n", num, message);
 	g_signal_emit(obj, klass->signals[num], 0, message);
@@ -76,7 +76,7 @@ void _emit_mobileap_dbus_signal(MobileAPObject *obj,
 
 void _send_dbus_station_info(const char *member, mobile_ap_station_info_t *info)
 {
-	if (mobileap_conn == NULL)
+	if (tethering_conn == NULL)
 		return;
 
 	if (member == NULL || info == NULL) {
@@ -89,8 +89,8 @@ void _send_dbus_station_info(const char *member, mobile_ap_station_info_t *info)
 	char *mac = info->mac;
 	char *hostname = info->hostname;
 
-	msg = dbus_message_new_signal("/MobileAP",
-			"com.samsung.mobileap",
+	msg = dbus_message_new_signal(TETHERING_SERVICE_OBJECT_PATH,
+			TETHERING_SERVICE_INTERFACE,
 			SIGNAL_NAME_DHCP_STATUS);
 	if (!msg) {
 		ERR("Unable to allocate D-Bus signal\n");
@@ -109,7 +109,7 @@ void _send_dbus_station_info(const char *member, mobile_ap_station_info_t *info)
 		return;
 	}
 
-	dbus_connection_send(mobileap_conn, msg, NULL);
+	dbus_connection_send(tethering_conn, msg, NULL);
 	dbus_message_unref(msg);
 
 	return;

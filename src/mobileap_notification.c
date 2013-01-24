@@ -25,6 +25,8 @@
 
 #include "mobileap_agent.h"
 
+#define MH_NOTI_APP_NAME	"org.tizen.tethering"
+
 static int connected_noti_id = 0;
 static int timeout_noti_id = 0;
 
@@ -110,7 +112,7 @@ int _create_timeout_noti(const char *content, const char *title,
 		goto FAIL;
 	}
 
-	ret = notification_set_application(noti, "org.tizen.tethering");
+	ret = notification_set_application(noti, MH_NOTI_APP_NAME);
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("Fail to notification_set_application [%d]\n", ret);
 		goto FAIL;
@@ -197,7 +199,7 @@ int _create_connected_noti(const char *content, const char *title,
 		goto FAIL;
 	}
 
-	ret = notification_set_application(noti, "org.tizen.tethering");
+	ret = notification_set_application(noti, MH_NOTI_APP_NAME);
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("Fail to notification_set_application [%d]\n", ret);
 		goto FAIL;

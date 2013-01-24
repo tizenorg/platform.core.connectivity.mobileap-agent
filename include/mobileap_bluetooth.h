@@ -20,12 +20,12 @@
 
 #include "mobileap_agent.h"
 
-void _bt_get_remote_device_name(MobileAPObject *obj, const char *mac, char **name);
-mobile_ap_error_code_e _disable_bt_tethering(MobileAPObject *obj);
+void _bt_get_remote_device_name(TetheringObject *obj, const char *mac, char **name);
+mobile_ap_error_code_e _disable_bt_tethering(TetheringObject *obj);
 
-gboolean mobileap_enable_bt_tethering(MobileAPObject *obj,
+gboolean tethering_enable_bt_tethering(TetheringObject *obj,
 		DBusGMethodInvocation *context);
-gboolean mobileap_disable_bt_tethering(MobileAPObject *obj,
+gboolean tethering_disable_bt_tethering(TetheringObject *obj,
 		DBusGMethodInvocation *context);
 
 #endif

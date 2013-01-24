@@ -48,7 +48,7 @@ IF("${ARCH}" STREQUAL "arm")
 ENDIF("${ARCH}" STREQUAL "arm")
 
 FIND_PROGRAM(DBUS_BINDING_TOOL NAMES dbus-binding-tool)
-EXEC_PROGRAM("${DBUS_BINDING_TOOL}" ARGS "--prefix=mobileap ${INCLUDE_DIR}/mobileap-dbus-interface.xml --mode=glib-server --output=${INCLUDE_DIR}/mobileap-server-stub.h")
+EXEC_PROGRAM("${DBUS_BINDING_TOOL}" ARGS "--prefix=tethering ${INCLUDE_DIR}/tethering-dbus-interface.xml --mode=glib-server --output=${INCLUDE_DIR}/tethering-server-stub.h")
 
 ADD_DEFINITIONS("-DPREFIX=\"${CMAKE_INSTALL_PREFIX}\"")
 ADD_DEFINITIONS("-DVENDOR=\"${APP_VENDOR}\"")
@@ -61,5 +61,5 @@ ADD_EXECUTABLE(${PROJECT_NAME} ${SRCS})
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${pkgs_LDFLAGS})
 
 INSTALL(TARGETS ${PROJECT_NAME} DESTINATION bin)
-INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/packaging/com.samsung.mobileap.service DESTINATION share/dbus-1/services)
+INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/packaging/org.tizen.tethering.service DESTINATION share/dbus-1/services)
 

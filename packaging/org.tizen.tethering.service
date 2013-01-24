@@ -1,3 +1,3 @@
 [D-BUS Service]
-Name=com.samsung.mobileap
+Name=org.tizen.tethering
 Exec=/usr/bin/mobileap-agent

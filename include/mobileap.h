@@ -39,9 +39,9 @@ extern "C" {
 			G_TYPE_STRING, G_TYPE_INVALID))
 
 
-#define SOFTAP_SERVICE_OBJECT_PATH	"/MobileAP"
-#define SOFTAP_SERVICE_NAME		"com.samsung.mobileap"
-#define SOFTAP_SERVICE_INTERFACE	"com.samsung.mobileap"
+#define TETHERING_SERVICE_OBJECT_PATH	"/Tethering"
+#define TETHERING_SERVICE_NAME		"org.tizen.tethering"
+#define TETHERING_SERVICE_INTERFACE	"org.tizen.tethering"
 
 #define SIGNAL_NAME_NET_CLOSED		"net_closed"
 #define SIGNAL_NAME_STA_CONNECT		"sta_connected"

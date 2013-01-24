@@ -21,15 +21,15 @@
 #include "mobileap_agent.h"
 
 
-mobile_ap_error_code_e _disable_usb_tethering(MobileAPObject *obj);
+mobile_ap_error_code_e _disable_usb_tethering(TetheringObject *obj);
 
-gboolean mobileap_enable_usb_tethering(MobileAPObject *obj,
+gboolean tethering_enable_usb_tethering(TetheringObject *obj,
 						DBusGMethodInvocation *context);
-gboolean mobileap_disable_usb_tethering(MobileAPObject *obj,
+gboolean tethering_disable_usb_tethering(TetheringObject *obj,
 						DBusGMethodInvocation *context);
-gboolean mobileap_get_usb_station_info(MobileAPObject *obj,
+gboolean tethering_get_usb_station_info(TetheringObject *obj,
 						DBusGMethodInvocation *context);
-gboolean mobileap_get_usb_interface_info(MobileAPObject *obj,
+gboolean tethering_get_usb_interface_info(TetheringObject *obj,
 						DBusGMethodInvocation *context);
 
 #endif

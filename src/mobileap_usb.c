@@ -39,7 +39,7 @@ static void __handle_usb_disconnect_cb(keynode_t *key, void *data)
 
 	char *vconf_name;
 	int vconf_key;
-	MobileAPObject *obj = (MobileAPObject *)data;
+	TetheringObject *obj = (TetheringObject *)data;
 
 	if (!_mobileap_is_enabled(MOBILE_AP_STATE_USB)) {
 		ERR("USB tethering is not enabled\n");
@@ -76,7 +76,7 @@ static void __handle_usb_mode_change(keynode_t *key, void *data)
 		return;
 	}
 
-	MobileAPObject *obj = (MobileAPObject *)data;
+	TetheringObject *obj = (TetheringObject *)data;
 	int ret;
 	int vconf_key;
 
@@ -135,7 +135,7 @@ static void __handle_usb_mode_change(keynode_t *key, void *data)
 	}
 }
 
-mobile_ap_error_code_e _disable_usb_tethering(MobileAPObject *obj)
+mobile_ap_error_code_e _disable_usb_tethering(TetheringObject *obj)
 {
 	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
 
@@ -163,7 +163,7 @@ mobile_ap_error_code_e _disable_usb_tethering(MobileAPObject *obj)
 	return ret;
 }
 
-gboolean mobileap_enable_usb_tethering(MobileAPObject *obj,
+gboolean tethering_enable_usb_tethering(TetheringObject *obj,
 						DBusGMethodInvocation *context)
 {
 	int vconf_ret;
@@ -249,7 +249,7 @@ FAIL:
 	return FALSE;
 }
 
-gboolean mobileap_disable_usb_tethering(MobileAPObject *obj,
+gboolean tethering_disable_usb_tethering(TetheringObject *obj,
 		DBusGMethodInvocation *context)
 {
 	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
@@ -313,7 +313,7 @@ static void __add_usb_station_info_to_array(GPtrArray *array, mobile_ap_station_
 	g_ptr_array_add(array, g_value_get_boxed(&value));
 }
 
-gboolean mobileap_get_usb_station_info(MobileAPObject *obj,
+gboolean tethering_get_usb_station_info(TetheringObject *obj,
 						DBusGMethodInvocation *context)
 {
 	g_assert(obj != NULL);
@@ -338,7 +338,7 @@ gboolean mobileap_get_usb_station_info(MobileAPObject *obj,
 	return TRUE;
 }
 
-gboolean mobileap_get_usb_interface_info(MobileAPObject *obj,
+gboolean tethering_get_usb_interface_info(TetheringObject *obj,
 		DBusGMethodInvocation *context)
 {
 	g_assert(obj != NULL);

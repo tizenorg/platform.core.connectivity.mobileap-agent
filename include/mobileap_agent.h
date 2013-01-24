@@ -152,7 +152,7 @@ typedef struct {
 	char ssid[MOBILE_AP_WIFI_SSID_MAX_LEN + 1];
 	char key[MOBILE_AP_WIFI_KEY_MAX_LEN + 1];
 	char security_type[SECURITY_TYPE_LEN];
-} MobileAPObject;
+} TetheringObject;
 
 typedef struct {
 	/* The parent class state. */
@@ -160,7 +160,7 @@ typedef struct {
 
 	/* class member */
 	guint signals[E_SIGNAL_MAX];
-} MobileAPObjectClass;
+} TetheringObjectClass;
 
 typedef struct {
 	unsigned int number;	/* Number of connected device */
@@ -194,8 +194,8 @@ void _mh_core_add_data_to_array(GPtrArray *array, guint type, gchar *dev_name);
 int _mh_core_set_ip_address(const char *if_name, const in_addr_t ip);
 
 
-gboolean _init_tethering(MobileAPObject *obj);
-gboolean _deinit_tethering(MobileAPObject *obj);
+gboolean _init_tethering(TetheringObject *obj);
+gboolean _deinit_tethering(TetheringObject *obj);
 gboolean _mobileap_clear_state(int state);
 
 

@@ -34,23 +34,23 @@
 #include "mobileap_usb.h"
 #include "mobileap_network.h"
 
-GType mobileap_object_get_type(void);
-#define MOBILEAP_TYPE_OBJECT (mobileap_object_get_type())
-G_DEFINE_TYPE(MobileAPObject, mobileap_object, G_TYPE_OBJECT)
+GType tethering_object_get_type(void);
+#define TETHERING_TYPE_OBJECT (tethering_object_get_type())
+G_DEFINE_TYPE(TetheringObject, tethering_object, G_TYPE_OBJECT)
 
 GMainLoop *mainloop = NULL;
 int mobileap_state = MOBILE_AP_STATE_NONE;
-DBusConnection *mobileap_conn = NULL;
+DBusConnection *tethering_conn = NULL;
 
-gboolean mobileap_deinit(MobileAPObject *obj, GError **error);
-gboolean mobileap_disable(MobileAPObject *obj, DBusGMethodInvocation *context);
-gboolean mobileap_get_station_info(MobileAPObject *obj,
-						DBusGMethodInvocation *context);
-gboolean mobileap_get_data_packet_usage(MobileAPObject *obj,
-						DBusGMethodInvocation *context);
-#include "mobileap-server-stub.h"
+gboolean tethering_deinit(TetheringObject *obj, GError **error);
+gboolean tethering_disable(TetheringObject *obj, DBusGMethodInvocation *context);
+gboolean tethering_get_station_info(TetheringObject *obj,
+		DBusGMethodInvocation *context);
+gboolean tethering_get_data_packet_usage(TetheringObject *obj,
+		DBusGMethodInvocation *context);
+#include "tethering-server-stub.h"
 
-static void mobileap_object_init(MobileAPObject *obj)
+static void tethering_object_init(TetheringObject *obj)
 {
 	DBG("+\n");
 	g_assert(obj != NULL);
@@ -63,14 +63,14 @@ static void mobileap_object_init(MobileAPObject *obj)
 	obj->transfer_check_count = 0;
 }
 
-static void mobileap_object_finalize(GObject *obj)
+static void tethering_object_finalize(GObject *obj)
 {
 	DBG("+\n");
 
-	G_OBJECT_CLASS(mobileap_object_parent_class)->finalize(obj);
+	G_OBJECT_CLASS(tethering_object_parent_class)->finalize(obj);
 }
 
-static void mobileap_object_class_init(MobileAPObjectClass *klass)
+static void tethering_object_class_init(TetheringObjectClass *klass)
 {
 	GObjectClass *object_class = (GObjectClass *)klass;
 	const gchar *signalNames[E_SIGNAL_MAX] = {
@@ -95,7 +95,7 @@ static void mobileap_object_class_init(MobileAPObjectClass *klass)
 
 	g_assert(klass != NULL);
 
-	object_class->finalize = mobileap_object_finalize;
+	object_class->finalize = tethering_object_finalize;
 
 	DBG("Creating signals\n");
 
@@ -113,8 +113,8 @@ static void mobileap_object_class_init(MobileAPObjectClass *klass)
 
 	DBG("Binding to GLib/D-Bus\n");
 
-	dbus_g_object_type_install_info(MOBILEAP_TYPE_OBJECT,
-					&dbus_glib_mobileap_object_info);
+	dbus_g_object_type_install_info(TETHERING_TYPE_OBJECT,
+					&dbus_glib_tethering_object_info);
 }
 
 static void __add_station_info_to_array(gpointer data, gpointer user_data)
@@ -223,7 +223,7 @@ static void __unblock_device_sleep(void)
 		DBG("PM control [SUCCESS]\n");
 }
 
-gboolean _init_tethering(MobileAPObject *obj)
+gboolean _init_tethering(TetheringObject *obj)
 {
 	DBG("obj->init_count: %d\n", obj->init_count);
 
@@ -247,7 +247,7 @@ gboolean _init_tethering(MobileAPObject *obj)
 	return TRUE;
 }
 
-gboolean _deinit_tethering(MobileAPObject *obj)
+gboolean _deinit_tethering(TetheringObject *obj)
 {
 	DBG("obj->init_count: %d\n", obj->init_count);
 
@@ -272,7 +272,7 @@ gboolean _deinit_tethering(MobileAPObject *obj)
 }
 
 
-gboolean mobileap_deinit(MobileAPObject *obj, GError **error)
+gboolean tethering_deinit(TetheringObject *obj, GError **error)
 {
 	DBG("+\n");
 	g_assert(obj != NULL);
@@ -285,7 +285,7 @@ gboolean mobileap_deinit(MobileAPObject *obj, GError **error)
 	return TRUE;
 }
 
-gboolean mobileap_disable(MobileAPObject *obj, DBusGMethodInvocation *context)
+gboolean tethering_disable(TetheringObject *obj, DBusGMethodInvocation *context)
 {
 	int ret = MOBILE_AP_ERROR_NONE;
 
@@ -309,7 +309,7 @@ gboolean mobileap_disable(MobileAPObject *obj, DBusGMethodInvocation *context)
 	return TRUE;
 }
 
-gboolean mobileap_get_station_info(MobileAPObject *obj,
+gboolean tethering_get_station_info(TetheringObject *obj,
 						DBusGMethodInvocation *context)
 {
 	DBG("+\n");
@@ -329,7 +329,7 @@ gboolean mobileap_get_station_info(MobileAPObject *obj,
 	return TRUE;
 }
 
-gboolean mobileap_get_data_packet_usage(MobileAPObject *obj,
+gboolean tethering_get_data_packet_usage(TetheringObject *obj,
 						DBusGMethodInvocation *context)
 {
 	char *if_name = NULL;
@@ -386,7 +386,7 @@ static DBusHandlerResult __dnsmasq_signal_filter(DBusConnection *conn,
 	char *bt_remote_device_name = NULL;
 	DBusError error;
 	mobile_ap_type_e type = MOBILE_AP_TYPE_MAX;
-	MobileAPObject *obj = (MobileAPObject *)user_data;
+	TetheringObject *obj = (TetheringObject *)user_data;
 	mobile_ap_station_info_t *info = NULL;
 	int n_station = 0;
 
@@ -479,11 +479,11 @@ static DBusHandlerResult __dnsmasq_signal_filter(DBusConnection *conn,
 
 int main(int argc, char **argv)
 {
-	MobileAPObject *mobileap_obj = NULL;
+	TetheringObject *tethering_obj = NULL;
 	DBusError dbus_error;
 	char *rule = "type='signal',interface='"DNSMASQ_DBUS_INTERFACE"'";
-	DBusGConnection *mobileap_bus = NULL;
-	DBusGProxy *mobileap_bus_proxy = NULL;
+	DBusGConnection *tethering_bus = NULL;
+	DBusGProxy *tethering_bus_proxy = NULL;
 	guint result = 0;
 	GError *error = NULL;
 	int mobileap_vconf_key = VCONFKEY_MOBILE_HOTSPOT_MODE_NONE;
@@ -505,28 +505,28 @@ int main(int argc, char **argv)
 		goto failure;
 	}
 
-	mobileap_bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error);
+	tethering_bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error);
 	if (error != NULL) {
 		ERR("Couldn't connect to system bus[%s]\n", error->message);
 		goto failure;
 	}
 
-	mobileap_conn = dbus_g_connection_get_connection(mobileap_bus);
+	tethering_conn = dbus_g_connection_get_connection(tethering_bus);
 
-	DBG("Registering the well-known name (%s)\n", SOFTAP_SERVICE_NAME);
+	DBG("Registering the well-known name (%s)\n", TETHERING_SERVICE_NAME);
 
-	mobileap_bus_proxy = dbus_g_proxy_new_for_name(mobileap_bus,
+	tethering_bus_proxy = dbus_g_proxy_new_for_name(tethering_bus,
 						       DBUS_SERVICE_DBUS, DBUS_PATH_DBUS, DBUS_INTERFACE_DBUS);
-	if (mobileap_bus_proxy == NULL) {
+	if (tethering_bus_proxy == NULL) {
 		ERR("Failed to get a proxy for D-Bus\n");
 		goto failure;
 	}
 
-	if (!dbus_g_proxy_call(mobileap_bus_proxy,
+	if (!dbus_g_proxy_call(tethering_bus_proxy,
 			       "RequestName",
 			       &error,
 			       G_TYPE_STRING,
-			       SOFTAP_SERVICE_NAME,
+			       TETHERING_SERVICE_NAME,
 			       G_TYPE_UINT, 0, G_TYPE_INVALID, G_TYPE_UINT, &result, G_TYPE_INVALID)) {
 		ERR("D-Bus.RequestName RPC failed[%s]\n", error->message);
 		goto failure;
@@ -537,27 +537,27 @@ int main(int argc, char **argv)
 		goto failure;
 	}
 
-	g_object_unref(mobileap_bus_proxy);
-	mobileap_bus_proxy = NULL;
+	g_object_unref(tethering_bus_proxy);
+	tethering_bus_proxy = NULL;
 
-	mobileap_obj = g_object_new(MOBILEAP_TYPE_OBJECT, NULL);
-	if (mobileap_obj == NULL) {
+	tethering_obj = g_object_new(TETHERING_TYPE_OBJECT, NULL);
+	if (tethering_obj == NULL) {
 		ERR("Failed to create one MobileAP instance.\n");
 		goto failure;
 	}
 
 	/* Registering it on the D-Bus */
-	dbus_g_connection_register_g_object(mobileap_bus,
-			SOFTAP_SERVICE_OBJECT_PATH, G_OBJECT(mobileap_obj));
+	dbus_g_connection_register_g_object(tethering_bus,
+			TETHERING_SERVICE_OBJECT_PATH, G_OBJECT(tethering_obj));
 
 	DBG("Ready to serve requests.\n");
 
 	_init_network(NULL);
 	_register_wifi_station_handler();
-	_register_vconf_cb((void *)mobileap_obj);
+	_register_vconf_cb((void *)tethering_obj);
 
 	dbus_error_init(&dbus_error);
-	dbus_bus_add_match(mobileap_conn, rule, &dbus_error);
+	dbus_bus_add_match(tethering_conn, rule, &dbus_error);
 	if (dbus_error_is_set(&dbus_error)) {
 		ERR("Cannot add D-BUS match rule, cause: %s", dbus_error.message);
 		dbus_error_free(&dbus_error);
@@ -565,22 +565,22 @@ int main(int argc, char **argv)
 	}
 
 	DBG("Listening to D-BUS signals from dnsmasq");
-	dbus_connection_add_filter(mobileap_conn, __dnsmasq_signal_filter, mobileap_obj, NULL);
+	dbus_connection_add_filter(tethering_conn, __dnsmasq_signal_filter, tethering_obj, NULL);
 
 	g_main_loop_run(mainloop);
 
-	_unregister_vconf_cb((void *)mobileap_obj);
+	_unregister_vconf_cb((void *)tethering_obj);
 	_deinit_network();
 
  failure:
 	ERR("Terminate the mobileap-agent\n");
 
-	if (mobileap_bus)
-		dbus_g_connection_unref(mobileap_bus);
-	if (mobileap_bus_proxy)
-		g_object_unref(mobileap_bus_proxy);
-	if (mobileap_obj)
-		g_object_unref(mobileap_obj);
+	if (tethering_bus)
+		dbus_g_connection_unref(tethering_bus);
+	if (tethering_bus_proxy)
+		g_object_unref(tethering_bus_proxy);
+	if (tethering_obj)
+		g_object_unref(tethering_obj);
 
 	return 0;
 }
