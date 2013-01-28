@@ -1,6 +1,6 @@
 Name:       mobileap-agent
 Summary:    Mobile AP daemon for setting tethering environments
-Version:    0.1.82
+Version:    0.1.83
 Release:    1
 Group:      TO_BE/FILLED_IN
 License:    Apache License Version 2.0
@@ -48,10 +48,13 @@ rm -rf %{buildroot}
 %{_bindir}/mobileap-agent
 
 %changelog
+* Mon Jan 28 2013 Seungyoun Ju <sy39.ju@samsung.com> 0.1.83-1
+- Remove unrequired log
+
 * Thu Jan 24 2013 Seungyoun Ju <sy39.ju@samsung.com> 0.1.82-1
- - Indications for Wi-Fi tethering setting change are added
- - DNS Forward and Use of Tethering cellular profile are removed
- - Dbus service / interface / object names are changed
+- Indications for Wi-Fi tethering setting change are added
+- DNS Forward and Use of Tethering cellular profile are removed
+- Dbus service / interface / object names are changed
 
 * Mon Jan 14 2013 Seungyoun Ju <sy39.ju@samsung.com> 0.1.81-1
 - dhcp lease delete is handled based on IP Address
