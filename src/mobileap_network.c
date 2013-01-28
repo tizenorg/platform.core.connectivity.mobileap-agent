@@ -41,12 +41,9 @@ static void __print_profile(connection_profile_h profile)
 	int conn_ret;
 	bool roaming;
 	char *apn;
-	char *user_name;
-	char *password;
 	char *home_url;
 	connection_cellular_network_type_e network_type;
 	connection_cellular_service_type_e service_type;
-	connection_cellular_auth_type_e auth_type;
 
 	conn_ret = connection_profile_get_cellular_network_type(profile, &network_type);
 	__check_connection_return(conn_ret);
@@ -60,15 +57,6 @@ static void __print_profile(connection_profile_h profile)
 	__check_connection_return(conn_ret);
 	DBG("APN : %s\n", apn);
 	free(apn);
-
-	conn_ret = connection_profile_get_cellular_auth_info(profile, &auth_type,
-			&user_name, &password);
-	__check_connection_return(conn_ret);
-	DBG("Auth type : %d\n", auth_type);
-	DBG("User name : %s\n", user_name);
-	DBG("Password : %s\n", password);
-	free(user_name);
-	free(password);
 
 	conn_ret = connection_profile_get_cellular_home_url(profile, &home_url);
 	__check_connection_return(conn_ret);
