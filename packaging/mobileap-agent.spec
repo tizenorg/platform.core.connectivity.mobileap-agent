@@ -1,6 +1,6 @@
 Name:       mobileap-agent
 Summary:    Mobile AP daemon for setting tethering environments
-Version:    0.1.83
+Version:    0.1.84
 Release:    1
 Group:      TO_BE/FILLED_IN
 License:    Apache License Version 2.0
@@ -48,6 +48,9 @@ rm -rf %{buildroot}
 %{_bindir}/mobileap-agent
 
 %changelog
+* Thu Feb 14 2013 Seungyoun Ju <sy39.ju@samsung.com> 0.1.84-1
+- User is specified in service file for Dbus auto activation
+
 * Mon Jan 28 2013 Seungyoun Ju <sy39.ju@samsung.com> 0.1.83-1
 - Remove unrequired log
 
