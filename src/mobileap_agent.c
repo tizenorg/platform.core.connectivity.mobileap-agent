@@ -348,12 +348,16 @@ static gboolean __hostapd_monitor_cb(GIOChannel *source)
 	}
 #else
 	GError *err = NULL;
+	GIOStatus ios;
 
-	g_io_channel_read_chars(hostapd_io_channel, buf,
+	ios = g_io_channel_read_chars(hostapd_io_channel, buf,
 			HOSTAPD_REQ_MAX_LEN, &read, &err);
 	if (err != NULL) {
 		ERR("g_io_channel_read_chars is failed : %s\n", err->message);
 		g_error_free(err);
+		return FALSE;
+	} else if (ios != G_IO_STATUS_NORMAL) {
+		ERR("g_io_channel_read_chars is failed : %d\n", ios);
 		return FALSE;
 	}
 #endif
