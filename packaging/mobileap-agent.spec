@@ -1,9 +1,9 @@
 Name:       mobileap-agent
 Summary:    Mobile AP daemon for setting tethering environments
-Version:    0.1.84
-Release:    1
+Version:    0.1.85
+Release:    2
 Group:      TO_BE/FILLED_IN
-License:    Apache License Version 2.0
+License:    Apache-2.0
 Source0:    %{name}-%{version}.tar.gz
 BuildRequires: pkgconfig(dlog)
 BuildRequires: pkgconfig(dbus-glib-1)
@@ -27,12 +27,10 @@ Mobile AP daemon for setting tethering environments
 %setup -q
 
 %build
-export CFLAGS+=" -fpie"
-CFLAGS="${CFLAGS}" cmake . -DCMAKE_INSTALL_PREFIX="%{_prefix}"
+%cmake .
 make %{?jobs:-j%jobs}
 
 %install
-rm -rf %{buildroot}
 %make_install
 
 %post
@@ -48,6 +46,11 @@ rm -rf %{buildroot}
 %{_bindir}/mobileap-agent
 
 %changelog
+* Sat Feb 16 2013 Seungyoun Ju <sy39.ju@samsung.com> 0.1.85-2
+- Function return value is checked
+- Private SSID is considered
+- Build option clean-up and g_type_init is deprecated from glib 2.35
+
 * Thu Feb 14 2013 Seungyoun Ju <sy39.ju@samsung.com> 0.1.84-1
 - User is specified in service file for Dbus auto activation
 

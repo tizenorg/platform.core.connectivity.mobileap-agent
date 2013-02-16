@@ -12,31 +12,28 @@ SET(SRCS src/mobileap_agent.c
 	src/mobileap_network.c
 )
 
-SET(APP_VENDOR "samsung")
+SET(CMAKE_INSTALL_PREFIX /usr)
+
+SET(APP_VENDOR "tizen")
 SET(APP_NAME mobileap-agent)
-SET(APP_DIR /usr/bin)
+SET(APP_DIR ${CMAKE_INSTALL_PREFIX}/bin)
 SET(INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
 
 IF("${CMAKE_BUILD_TYPE}" STREQUAL "")
 	SET(CMAKE_BUILD_TYPE "Release")
 ENDIF("${CMAKE_BUILD_TYPE}" STREQUAL "")
 
-IF("${CMAKE_BUILD_TYPE}" STREQUAL "Private")
-	SET(CMAKE_BUILD_TYPE "Release")
-	ADD_DEFINITIONS("-D__PRIVATE_CODE__")
-	SET(PRIVATE_REQUIRED_PKGS "mdm kies-control-point")
-ENDIF("${CMAKE_BUILD_TYPE}" STREQUAL "Private")
 MESSAGE("Build type: ${CMAKE_BUILD_TYPE}")
 
 INCLUDE_DIRECTORIES(${INCLUDE_DIR})
 
 INCLUDE(FindPkgConfig)
-pkg_check_modules(pkgs REQUIRED dlog dbus-glib-1 pmapi vconf notification libssl secure-storage capi-network-connection capi-network-bluetooth ${PRIVATE_REQUIRED_PKGS})
+pkg_check_modules(pkgs REQUIRED dlog dbus-glib-1 pmapi vconf notification libssl secure-storage capi-network-connection capi-network-bluetooth)
 FOREACH(flag ${pkgs_CFLAGS})
 	SET(EXTRA_CFLAGS "${EXTRA_CFLAGS} ${flag}")
 ENDFOREACH(flag)
 
-SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_CFLAGS}")
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_CFLAGS} -fpie -Wall")
 SET(CMAKE_C_FLAGS_DEBUG "-O0 -g")
 SET(CMAKE_C_FLAGS_RELEASE "-O2")
 
@@ -55,7 +52,7 @@ ADD_DEFINITIONS("-DVENDOR=\"${APP_VENDOR}\"")
 ADD_DEFINITIONS("-DAPPNAME=\"${APP_NAME}\"")
 ADD_DEFINITIONS("-DAPP_DIR=\"${APP_DIR}\"")
 
-SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--as-needed")
+SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--as-needed -pie")
 
 ADD_EXECUTABLE(${PROJECT_NAME} ${SRCS})
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${pkgs_LDFLAGS})
