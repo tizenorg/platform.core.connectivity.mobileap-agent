@@ -29,6 +29,7 @@
 
 #include "mobileap_agent.h"
 #include "mobileap_common.h"
+#include "mobileap_connman.h"
 #include "mobileap_usb.h"
 
 
@@ -97,7 +98,22 @@ static void __handle_usb_mode_change(keynode_t *key, void *data)
 			return;
 		}
 
-		DBG("USB tethering is enabled\n");
+		DBG("USB tethering mode enable\n");
+
+		ret = connman_enable_tethering(TECH_TYPE_USB, NULL,
+					NULL, NULL, 0);
+		if (ret != MOBILE_AP_ERROR_NONE) {
+			_deinit_tethering(obj);
+			ERR("connman_enable_tethering USB failed");
+			vconf_ignore_key_changed(VCONFKEY_SYSMAN_USB_STATUS,
+					__handle_usb_disconnect_cb);
+			_mobileap_clear_state(MOBILE_AP_STATE_USB);
+			dbus_g_method_return(obj->usb_context,
+				MOBILE_AP_ENABLE_USB_TETHERING_CFM, ret);
+			obj->usb_context = NULL;
+			return;
+		}
+
 		vconf_ignore_key_changed(VCONFKEY_SETAPPL_USB_MODE_INT,
 				__handle_usb_mode_change);
 		_emit_mobileap_dbus_signal(obj, E_SIGNAL_USB_TETHER_ON, NULL);
@@ -228,8 +244,13 @@ mobile_ap_error_code_e _disable_usb_tethering(TetheringObject *obj)
 	vconf_ignore_key_changed(VCONFKEY_SYSMAN_USB_STATUS,
 			__handle_usb_disconnect_cb);
 
-	_mobileap_clear_state(MOBILE_AP_STATE_USB);
+	ret = connman_disable_tethering(TECH_TYPE_USB);
+	if (ret != MOBILE_AP_ERROR_NONE) {
+		ERR("connman_disable_tethering is failed : %d\n", ret);
+		return ret;
+	}
 
+	_mobileap_clear_state(MOBILE_AP_STATE_USB);
 	DBG("_disable_usb_tethering is done\n");
 
 	return ret;
@@ -254,6 +275,12 @@ gboolean tethering_enable_usb_tethering(TetheringObject *obj,
 		return FALSE;
 	} else if (obj->usb_context == NULL) {
 		DBG("Don't need to wait for usb-setting\n");
+		ret = connman_enable_tethering(TECH_TYPE_USB, NULL, NULL,
+					NULL, 0);
+		if (ret != MOBILE_AP_ERROR_NONE) {
+			_deinit_tethering(obj);
+			return FALSE;
+		}
 		_emit_mobileap_dbus_signal(obj, E_SIGNAL_USB_TETHER_ON, NULL);
 		dbus_g_method_return(context,
 				MOBILE_AP_ENABLE_USB_TETHERING_CFM, ret);
