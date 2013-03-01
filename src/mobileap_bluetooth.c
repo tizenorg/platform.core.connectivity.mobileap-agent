@@ -26,6 +26,7 @@
 
 #include "mobileap_agent.h"
 #include "mobileap_common.h"
+#include "mobileap_connman.h"
 #include "mobileap_bluetooth.h"
 #include "mobileap_handler.h"
 #include "mobileap_notification.h"
@@ -165,11 +166,6 @@ static void __bt_nap_connection_changed(bool connected, const char *remote_addre
 			 bt_adapter_free_device_info(info);
 			return;
 		}
-
-		ret = _mh_core_set_ip_address(interface_name, remote->intf_ip);
-		if (ret != MOBILE_AP_ERROR_NONE) {
-			ERR("Setting ip address error : %d\n", ret);
-		}
 	} else {
 		_remove_station_info(remote_address, _slist_find_station_by_mac);
 		if (__del_bt_remote(remote_address) == FALSE) {
@@ -195,10 +191,11 @@ static mobile_ap_error_code_e __activate_bt_nap(TetheringObject *obj)
 		return MOBILE_AP_ERROR_RESOURCE;
 	}
 
-	bt_ret = bt_nap_activate();
-	if (bt_ret != BT_ERROR_NONE && bt_ret != BT_ERROR_ALREADY_DONE) {
+	bt_ret = connman_enable_tethering(TECH_TYPE_BLUETOOTH, NULL, NULL,
+				NULL, 0);
+	if (bt_ret != MOBILE_AP_ERROR_NONE) {
 		bt_nap_unset_connection_state_changed_cb();
-		ERR("bt_nap_activate is failed : %d\n", bt_ret);
+		ERR("connman_enable_tethering is failed : %d\n", bt_ret);
 		return MOBILE_AP_ERROR_RESOURCE;
 	}
 
@@ -208,10 +205,9 @@ static mobile_ap_error_code_e __activate_bt_nap(TetheringObject *obj)
 static void __deactivate_bt_nap(void)
 {
 	int bt_ret;
-
-	bt_ret = bt_nap_deactivate();
-	if (bt_ret != BT_ERROR_NONE)
-		ERR("bt_nap_deactivate is failed : %d\n", bt_ret);
+	bt_ret = connman_disable_tethering(TECH_TYPE_BLUETOOTH);
+	if (bt_ret != MOBILE_AP_ERROR_NONE)
+		ERR("connman_disable_tethering is failed : %d\n", bt_ret);
 
 	bt_ret = bt_nap_unset_connection_state_changed_cb();
 	if (bt_ret != BT_ERROR_NONE)
