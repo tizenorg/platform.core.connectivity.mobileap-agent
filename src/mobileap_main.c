@@ -488,7 +488,9 @@ int main(int argc, char **argv)
 	GError *error = NULL;
 	int mobileap_vconf_key = VCONFKEY_MOBILE_HOTSPOT_MODE_NONE;
 
+#if !GLIB_CHECK_VERSION(2,35,0)
 	g_type_init();
+#endif
 
 	if (vconf_get_int(VCONFKEY_MOBILE_HOTSPOT_MODE, &mobileap_vconf_key)) {
 		ERR("vconf_get_int FAIL\n");

@@ -32,7 +32,7 @@
 static int __generate_initial_passphrase(char *passphrase_buf);
 static mobile_ap_error_code_e __get_hide_mode(int *hide_mode);
 static mobile_ap_error_code_e __set_hide_mode(const int hide_mode);
-static mobile_ap_error_code_e __get_ssid(char *ssid, unsigned int size);
+static mobile_ap_error_code_e __get_common_ssid(char *ssid, unsigned int size);
 static mobile_ap_error_code_e __get_security_type(char *security_type, unsigned int len);
 static mobile_ap_error_code_e __set_security_type(const char *security_type);
 static mobile_ap_error_code_e __get_passphrase(char *passphrase, unsigned int size, unsigned int *passphrase_len);
@@ -82,7 +82,7 @@ static mobile_ap_error_code_e __set_hide_mode(const int hide_mode)
 	return MOBILE_AP_ERROR_NONE;
 }
 
-static mobile_ap_error_code_e __get_ssid(char *ssid, unsigned int size)
+static mobile_ap_error_code_e __get_common_ssid(char *ssid, unsigned int size)
 {
 	if (ssid == NULL)
 		return MOBILE_AP_ERROR_INVALID_PARAM;
@@ -374,7 +374,7 @@ static mobile_ap_error_code_e __update_wifi_data(TetheringObject *obj)
 	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
 	unsigned int read_len = 0;
 
-	ret = __get_ssid(obj->ssid, sizeof(obj->ssid));
+	ret = __get_common_ssid(obj->ssid, sizeof(obj->ssid));
 	if (ret != MOBILE_AP_ERROR_NONE)
 		return ret;
 
@@ -430,6 +430,11 @@ gboolean tethering_enable_wifi_tethering(TetheringObject *obj, gchar *ssid,
 	ret = __update_wifi_data(obj);
 	if (ret != MOBILE_AP_ERROR_NONE) {
 		goto FAIL;
+	}
+
+	if (strlen(ssid) > 0) {
+		DBG("Private(Passed) SSID is used : %s\n", ssid);
+		g_strlcpy(obj->ssid, ssid, sizeof(obj->ssid));
 	}
 
 	/* Initialize tethering */
@@ -545,15 +550,18 @@ gboolean tethering_get_wifi_tethering_ssid(TetheringObject *obj,
 	g_assert(obj != NULL);
 	g_assert(context != NULL);
 
-	ret = __get_ssid(ssid, sizeof(ssid));
-	if (ret != MOBILE_AP_ERROR_NONE) {
-		ERR("__get_ssid is failed : %d\n", ret);
+	if (_mobileap_is_enabled(MOBILE_AP_STATE_WIFI)) {
+		g_strlcpy(ssid, obj->ssid, sizeof(ssid));
+	} else {
+		ret = __get_common_ssid(ssid, sizeof(ssid));
+		if (ret != MOBILE_AP_ERROR_NONE) {
+			ERR("__get_common_ssid is failed : %d\n", ret);
+		}
 	}
 
 	dbus_g_method_return(context, ssid);
 
 	return TRUE;
-
 }
 
 gboolean tethering_get_wifi_tethering_security_type(TetheringObject *obj,
