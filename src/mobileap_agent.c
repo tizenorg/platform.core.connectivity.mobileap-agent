@@ -884,32 +884,7 @@ int _mh_core_enable_masquerade(const char *ext_if)
 		return MOBILE_AP_ERROR_INVALID_PARAM;
 	}
 
-	int fd = -1;
-	char cmd[MAX_BUF_SIZE] = {0, };
-
-	fd = open(IP_FORWARD, O_WRONLY);
-	if (fd < 0) {
-		ERR("open failed\n");
-		return MOBILE_AP_ERROR_RESOURCE;
-	}
-
-	if (write(fd, "1", 1) != 1) {
-		ERR("write failed\n");
-		close(fd);
-		return MOBILE_AP_ERROR_INTERNAL;
-	}
-	close(fd);
-
-	snprintf(cmd, sizeof(cmd), "%s -t nat -A POSTROUTING "MASQUERADE_RULE,
-			IPTABLES, ext_if);
-	if (_execute_command(cmd)) {
-		ERR("iptables failed : %s\n", cmd);
-		return MOBILE_AP_ERROR_INTERNAL;
-	}
-
-	_add_data_usage_rule(WIFI_IF, ext_if);
-	_add_data_usage_rule(BT_IF_ALL, ext_if);
-	_add_data_usage_rule(USB_IF, ext_if);
+	_add_data_usage_rule(TETHER_IF, ext_if);
 
 	return MOBILE_AP_ERROR_NONE;
 }
@@ -921,32 +896,7 @@ int _mh_core_disable_masquerade(const char *ext_if)
 		return MOBILE_AP_ERROR_INVALID_PARAM;
 	}
 
-	int fd = -1;
-	char cmd[MAX_BUF_SIZE] = {0, };
-
-	fd = open(IP_FORWARD, O_WRONLY);
-	if (fd < 0) {
-		ERR("open failed\n");
-		return MOBILE_AP_ERROR_RESOURCE;
-	}
-
-	if (write(fd, "0", 1) != 1) {
-		ERR("write failed\n");
-		close(fd);
-		return MOBILE_AP_ERROR_INTERNAL;
-	}
-	close(fd);
-
-	snprintf(cmd, sizeof(cmd), "%s -t nat -D POSTROUTING "MASQUERADE_RULE,
-			IPTABLES, ext_if);
-	if (_execute_command(cmd)) {
-		ERR("iptables failed : %s\n", cmd);
-		return MOBILE_AP_ERROR_INTERNAL;
-	}
-
-	_del_data_usage_rule(WIFI_IF, ext_if);
-	_del_data_usage_rule(BT_IF_ALL, ext_if);
-	_del_data_usage_rule(USB_IF, ext_if);
+	_del_data_usage_rule(TETHER_IF, ext_if);
 
 	return MOBILE_AP_ERROR_NONE;
 }

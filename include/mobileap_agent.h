@@ -54,6 +54,8 @@
 #define USB_IF			"usb0"
 #define IP_ADDRESS_USB		0xC0A88103	/* 192.168.129.3 */
 
+#define TETHER_IF		"tether"
+
 #define BT_IF_PREFIX		"bnep"
 #define BT_IF_ALL		BT_IF_PREFIX"+"
 #define IP_ADDRESS_BT_1		0xC0A88201	/* 192.168.130.1 */

@@ -249,8 +249,8 @@ gboolean _init_tethering(TetheringObject *obj)
 
 	__block_device_sleep();
 
-	/*DBG("Open network\n");
-	_open_network();*/
+	DBG("Open network\n");
+	_open_network();
 
 	/*DBG("Run DHCP server\n");
 	_mh_core_execute_dhcp_server();*/
@@ -275,8 +275,8 @@ gboolean _deinit_tethering(TetheringObject *obj)
 	obj->init_count = 0;
 
 	/*DBG("Terminate DHCP / IPTABLES\n");
-	_mh_core_terminate_dhcp_server();
-	_close_network();*/
+	_mh_core_terminate_dhcp_server();*/
+	_close_network();
 	__unblock_device_sleep();
 
 	return TRUE;
@@ -350,12 +350,6 @@ gboolean tethering_get_data_packet_usage(TetheringObject *obj,
 						DBusGMethodInvocation *context)
 {
 	char *if_name = NULL;
-	unsigned long long wifi_tx_bytes = 0;
-	unsigned long long wifi_rx_bytes = 0;
-	unsigned long long bt_tx_bytes = 0;
-	unsigned long long bt_rx_bytes = 0;
-	unsigned long long usb_tx_bytes = 0;
-	unsigned long long usb_rx_bytes = 0;
 	unsigned long long tx_bytes = 0;
 	unsigned long long rx_bytes = 0;
 
@@ -366,21 +360,10 @@ gboolean tethering_get_data_packet_usage(TetheringObject *obj,
 		return FALSE;
 	}
 
-	if (_mobileap_is_enabled(MOBILE_AP_STATE_WIFI))
-		_get_data_usage(WIFI_IF, if_name,
-				&wifi_tx_bytes, &wifi_rx_bytes);
-
-	if (_mobileap_is_enabled(MOBILE_AP_STATE_BT))
-		_get_data_usage(BT_IF_ALL, if_name,
-				&bt_tx_bytes, &bt_rx_bytes);
-
-	if (_mobileap_is_enabled(MOBILE_AP_STATE_USB))
-		_get_data_usage(USB_IF, if_name,
-				&usb_tx_bytes, &usb_rx_bytes);
+	if (!_mobileap_is_disabled())
+		_get_data_usage(TETHER_IF, if_name,
+				&tx_bytes, &rx_bytes);
 	free(if_name);
-
-	tx_bytes = wifi_tx_bytes + bt_tx_bytes + usb_tx_bytes;
-	rx_bytes = wifi_rx_bytes + bt_rx_bytes + usb_rx_bytes;
 
 	dbus_g_method_return(context, MOBILE_AP_GET_DATA_PACKET_USAGE_CFM,
 			tx_bytes, rx_bytes);
