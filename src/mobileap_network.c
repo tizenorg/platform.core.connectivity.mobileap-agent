@@ -193,7 +193,7 @@ static void __connection_type_changed_cb(connection_type_e type, void *user_data
 		return;
 	}
 
-	_open_network();
+	/*_open_network();*/
 
 	return;
 }
