@@ -28,6 +28,7 @@
 
 #include "mobileap_agent.h"
 #include "mobileap_common.h"
+#include "mobileap_connman.h"
 #include "mobileap_wifi.h"
 #include "mobileap_handler.h"
 #include "mobileap_notification.h"
@@ -372,8 +373,8 @@ mobile_ap_error_code_e _enable_wifi_tethering(TetheringObject *obj, gchar *ssid)
 	}
 
 	/* Upload driver */
-	ret = _mh_core_enable_softap(obj->ssid, obj->security_type,
-			obj->key, obj->hide_mode);
+	ret = connman_enable_tethering(TECH_TYPE_WIFI, obj->ssid,
+			obj->security_type, obj->key, obj->hide_mode);
 	if (ret != MOBILE_AP_ERROR_NONE) {
 		_deinit_tethering(obj);
 		_mobileap_clear_state(MOBILE_AP_STATE_WIFI);
@@ -404,9 +405,9 @@ mobile_ap_error_code_e _disable_wifi_tethering(TetheringObject *obj)
 		ERR("_remove_station_info_all is failed. Ignore it.\n");
 	}
 
-	ret = _mh_core_disable_softap();
+	ret = connman_disable_tethering(TECH_TYPE_WIFI);
 	if (ret != MOBILE_AP_ERROR_NONE) {
-		ERR("_mh_core_disable_softap is failed : %d\n", ret);
+		ERR("connman_disable_tethering is failed : %d\n", ret);
 		return ret;
 	}
 
