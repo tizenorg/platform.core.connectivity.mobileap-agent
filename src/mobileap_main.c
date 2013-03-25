@@ -252,9 +252,6 @@ gboolean _init_tethering(TetheringObject *obj)
 	DBG("Open network\n");
 	_open_network();
 
-	DBG("Run DHCP server\n");
-	_mh_core_execute_dhcp_server();
-
 	return TRUE;
 }
 
@@ -274,8 +271,6 @@ gboolean _deinit_tethering(TetheringObject *obj)
 
 	obj->init_count = 0;
 
-	DBG("Terminate DHCP / IPTABLES\n");
-	_mh_core_terminate_dhcp_server();
 	_close_network();
 	__unblock_device_sleep();
 
