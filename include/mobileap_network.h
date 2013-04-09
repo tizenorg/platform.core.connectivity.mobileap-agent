@@ -21,6 +21,7 @@
 #include <glib.h>
 
 gboolean _get_network_interface_name(char **if_name);
+gboolean _is_trying_network_operation(void);
 gboolean _set_masquerade(void);
 gboolean _unset_masquerade(void);
 gboolean _open_network(void);
@@ -28,4 +29,4 @@ gboolean _close_network(void);
 gboolean _init_network(void *user_data);
 gboolean _deinit_network(void);
 
-#endif
+#endif /* __MOBILEAP_NETWORK_H__ */

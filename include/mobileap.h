@@ -28,7 +28,7 @@ extern "C" {
 
 #define DBUS_STRUCT_STATIONS (dbus_g_type_get_struct ("GValueArray", \
 			G_TYPE_UINT, G_TYPE_STRING, G_TYPE_STRING, \
-			G_TYPE_STRING, G_TYPE_INVALID))
+			G_TYPE_STRING, G_TYPE_UINT, G_TYPE_INVALID))
 
 #define DBUS_STRUCT_STATION (dbus_g_type_get_struct ("GValueArray", \
 			G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, \
@@ -90,7 +90,7 @@ typedef enum {
 /**
 * WiFi tethering configuration
 */
-#define MOBILE_AP_WIFI_CHANNEL		7	/**< Channel number */
+#define MOBILE_AP_WIFI_CHANNEL		6	/**< Channel number */
 #define MOBILE_AP_WIFI_BSSID_LEN	6	/**< BSSID Length */
 #define MOBILE_AP_WIFI_SSID_MAX_LEN	31	/**< Maximum length of ssid */
 #define MOBILE_AP_WIFI_KEY_MIN_LEN	8	/**< Minimum length of wifi key */
@@ -182,6 +182,7 @@ typedef struct {
 	char ip[MOBILE_AP_STR_INFO_LEN];                /**< assigned IP address */
 	char mac[MOBILE_AP_STR_INFO_LEN];               /**< MAC Address */
 	char hostname[MOBILE_AP_STR_HOSTNAME_LEN];      /**< alphanumeric name */
+	time_t tm;	/**< connection time*/
 } mobile_ap_station_info_t;
 
 typedef struct {

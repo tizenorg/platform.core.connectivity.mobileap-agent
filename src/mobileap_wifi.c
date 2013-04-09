@@ -28,6 +28,7 @@
 #include "mobileap_common.h"
 #include "mobileap_wifi.h"
 #include "mobileap_handler.h"
+#include "mobileap_notification.h"
 
 static int __generate_initial_passphrase(char *passphrase_buf);
 static mobile_ap_error_code_e __get_hide_mode(int *hide_mode);
@@ -333,6 +334,57 @@ void _add_wifi_device_to_array(softap_device_info_t *di, GPtrArray *array)
 	}
 }
 
+mobile_ap_error_code_e _enable_wifi_tethering(TetheringObject *obj, gchar *ssid)
+{
+	mobile_ap_error_code_e ret;
+
+	if (_mobileap_is_enabled(MOBILE_AP_STATE_WIFI)) {
+		ERR("Wi-Fi tethering is already enabled\n");
+		ret = MOBILE_AP_ERROR_ALREADY_ENABLED;
+		return ret;
+	}
+
+	/* Update global state */
+	if (!_mobileap_set_state(MOBILE_AP_STATE_WIFI)) {
+		ret = MOBILE_AP_ERROR_RESOURCE;
+		return ret;
+	}
+
+	/* Update Wi-Fi hotspot data to common object */
+	ret = __update_wifi_data(obj);
+	if (ret != MOBILE_AP_ERROR_NONE) {
+		_mobileap_clear_state(MOBILE_AP_STATE_WIFI);
+		return ret;
+	}
+
+	if (ssid != NULL && strlen(ssid) > 0) {
+		DBG("Private(Passed) SSID is used : %s\n", ssid);
+		g_strlcpy(obj->ssid, ssid, sizeof(obj->ssid));
+	}
+
+	/* Initialize tethering */
+	if (!_init_tethering(obj)) {
+		_mobileap_clear_state(MOBILE_AP_STATE_WIFI);
+		ret = MOBILE_AP_ERROR_RESOURCE;
+		return ret;
+	}
+
+	/* Upload driver */
+	ret = _mh_core_enable_softap(obj->ssid, obj->security_type,
+			obj->key, obj->hide_mode);
+	if (ret != MOBILE_AP_ERROR_NONE) {
+		_deinit_tethering(obj);
+		_mobileap_clear_state(MOBILE_AP_STATE_WIFI);
+		return ret;
+	}
+
+	_delete_timeout_noti();
+	_init_timeout_cb(MOBILE_AP_TYPE_WIFI, (void *)obj);
+	_start_timeout_cb(MOBILE_AP_TYPE_WIFI);
+
+	return MOBILE_AP_ERROR_NONE;
+}
+
 mobile_ap_error_code_e _disable_wifi_tethering(TetheringObject *obj)
 {
 	int ret = MOBILE_AP_ERROR_NONE;
@@ -406,65 +458,26 @@ static mobile_ap_error_code_e __update_wifi_data(TetheringObject *obj)
 gboolean tethering_enable_wifi_tethering(TetheringObject *obj, gchar *ssid,
 		gchar *key, gint hide_mode, DBusGMethodInvocation *context)
 {
-	int ret = MOBILE_AP_ERROR_NONE;
+	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
+	gboolean ret_val = FALSE;
 
 	g_assert(obj != NULL);
 	g_assert(context != NULL);
 
 
-	if (_mobileap_is_enabled(MOBILE_AP_STATE_WIFI)) {
-		ERR("Wi-Fi tethering is already enabled\n");
-		ret = MOBILE_AP_ERROR_ALREADY_ENABLED;
-		dbus_g_method_return(context,
-				MOBILE_AP_ENABLE_WIFI_TETHERING_CFM, ret);
-		return FALSE;
-	}
-
-	/* Update global state */
-	if (!_mobileap_set_state(MOBILE_AP_STATE_WIFI)) {
-		ret = MOBILE_AP_ERROR_RESOURCE;
-		goto FAIL;
-	}
-
-	/* Update Wi-Fi hotspot data to common object */
-	ret = __update_wifi_data(obj);
+	ret = _enable_wifi_tethering(obj, ssid);
 	if (ret != MOBILE_AP_ERROR_NONE) {
-		goto FAIL;
+		ERR("_enable_wifi_tethering is failed\n");
+	} else {
+		_emit_mobileap_dbus_signal(obj, E_SIGNAL_WIFI_TETHER_ON, NULL);
+		ret_val = TRUE;
 	}
 
-	if (strlen(ssid) > 0) {
-		DBG("Private(Passed) SSID is used : %s\n", ssid);
-		g_strlcpy(obj->ssid, ssid, sizeof(obj->ssid));
-	}
-
-	/* Initialize tethering */
-	if (!_init_tethering(obj)) {
-		ret = MOBILE_AP_ERROR_RESOURCE;
-		goto FAIL;
-	}
-
-	/* Upload driver */
-	ret = _mh_core_enable_softap(obj->ssid, obj->security_type,
-			obj->key, obj->hide_mode);
-	if (ret != MOBILE_AP_ERROR_NONE) {
-		_deinit_tethering(obj);
-		goto FAIL;
-	}
-
-	_init_timeout_cb(MOBILE_AP_TYPE_WIFI, (void *)obj);
-	_start_timeout_cb(MOBILE_AP_TYPE_WIFI);
-
-	_emit_mobileap_dbus_signal(obj, E_SIGNAL_WIFI_TETHER_ON, NULL);
 	dbus_g_method_return(context, MOBILE_AP_ENABLE_WIFI_TETHERING_CFM, ret);
 
-	return TRUE;
-
-FAIL:
-	_mobileap_clear_state(MOBILE_AP_STATE_WIFI);
-	dbus_g_method_return(context, MOBILE_AP_ENABLE_WIFI_TETHERING_CFM, ret);
-
-	return FALSE;
+	return ret_val;
 }
+
 
 gboolean tethering_disable_wifi_tethering(TetheringObject *obj,
 		DBusGMethodInvocation *context)
@@ -482,8 +495,8 @@ gboolean tethering_disable_wifi_tethering(TetheringObject *obj,
 
 	if (ret != MOBILE_AP_ERROR_NONE)
 		return FALSE;
-	else
-		return TRUE;
+
+	return TRUE;
 }
 
 gboolean tethering_get_wifi_tethering_hide_mode(TetheringObject *obj,

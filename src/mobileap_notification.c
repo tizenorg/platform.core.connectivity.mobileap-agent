@@ -26,6 +26,7 @@
 #include "mobileap_agent.h"
 
 #define MH_NOTI_APP_NAME	"org.tizen.tethering"
+#define MH_AGENT_PKG_NAME "mobileap-agent"
 
 static int connected_noti_id = 0;
 static int timeout_noti_id = 0;
@@ -61,10 +62,9 @@ int _create_timeout_noti(const char *content, const char *title,
 		timeout_noti_id = 0;
 	}
 
-	noti = notification_new(NOTIFICATION_TYPE_NOTI,
-			NOTIFICATION_GROUP_ID_NONE, NOTIFICATION_PRIV_ID_NONE);
+	noti = notification_create(NOTIFICATION_TYPE_NOTI);
 	if (!noti) {
-		ERR("Fail to notification_new [%d]\n", ret);
+		ERR("Fail to notification_create\n");
 		return MOBILE_AP_ERROR_INTERNAL;
 	}
 
@@ -141,6 +141,33 @@ FAIL:
 	return MOBILE_AP_ERROR_INTERNAL;
 }
 
+int _delete_timeout_noti(void)
+{
+	notification_error_e ret = NOTIFICATION_ERROR_NONE;
+	notification_list_h noti_list = NULL;
+	notification_h noti = NULL;
+
+	ret = notification_get_detail_list(MH_AGENT_PKG_NAME,
+							     NOTIFICATION_GROUP_ID_NONE,
+							     NOTIFICATION_PRIV_ID_NONE,
+							     -1,
+							     &noti_list);
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		ERR("Fail to notification_get_detail_list\n");
+		return MOBILE_AP_ERROR_INTERNAL;
+	}
+
+	if (noti_list) {
+		noti = notification_list_get_data(noti_list);
+		if (noti)
+			notification_delete(noti);
+
+		notification_free_list(noti_list);
+	}
+
+	return MOBILE_AP_ERROR_NONE;
+}
+
 int _create_connected_noti(const char *content, const char *title,
 		const char *icon_path)
 {
@@ -148,10 +175,9 @@ int _create_connected_noti(const char *content, const char *title,
 	notification_h noti = NULL;
 	notification_error_e ret = NOTIFICATION_ERROR_NONE;
 
-	noti = notification_new(NOTIFICATION_TYPE_ONGOING,
-			NOTIFICATION_GROUP_ID_NONE, NOTIFICATION_PRIV_ID_NONE);
+	noti = notification_create(NOTIFICATION_TYPE_ONGOING);
 	if (!noti) {
-		ERR("Fail to notification_new [%d]\n", ret);
+		ERR("Fail to notification_create\n");
 		return MOBILE_AP_ERROR_INTERNAL;
 	}
 
@@ -310,3 +336,18 @@ int _delete_connected_noti(void)
 	return MOBILE_AP_ERROR_NONE;
 }
 
+int _create_status_noti(const char *content)
+{
+	if (content == NULL)
+		return MOBILE_AP_ERROR_INVALID_PARAM;
+
+	notification_error_e ret;
+
+	ret = notification_status_message_post(content);
+	if (ret != NOTIFICATION_ERROR_NONE) {
+		ERR("notification_status_message_post() is failed : %d\n", ret);
+		return MOBILE_AP_ERROR_INTERNAL;
+	}
+
+	return MOBILE_AP_ERROR_NONE;
+}

@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+#include <fcntl.h>
+#include <unistd.h>
 #include <glib.h>
 #include <dbus/dbus.h>
 #include <dbus/dbus-glib.h>
@@ -42,13 +44,20 @@ GMainLoop *mainloop = NULL;
 int mobileap_state = MOBILE_AP_STATE_NONE;
 DBusConnection *tethering_conn = NULL;
 
+gboolean tethering_init(TetheringObject *obj, GError **error);
 gboolean tethering_deinit(TetheringObject *obj, GError **error);
 gboolean tethering_disable(TetheringObject *obj, DBusGMethodInvocation *context);
 gboolean tethering_get_station_info(TetheringObject *obj,
 		DBusGMethodInvocation *context);
 gboolean tethering_get_data_packet_usage(TetheringObject *obj,
 		DBusGMethodInvocation *context);
+gboolean tethering_set_ip_forward_status(TetheringObject *obj,
+		gint forward_mode,  DBusGMethodInvocation *context);
+gboolean tethering_get_ip_forward_status(TetheringObject *obj, gint *forward_mode);
+
 #include "tethering-server-stub.h"
+
+int ref_agent = 0;
 
 static void tethering_object_init(TetheringObject *obj)
 {
@@ -127,7 +136,7 @@ static void __add_station_info_to_array(gpointer data, gpointer user_data)
 	g_value_take_boxed(&value,
 			dbus_g_type_specialized_construct(DBUS_STRUCT_STATIONS));
 	dbus_g_type_struct_set(&value, 0, si->interface, 1, si->ip,
-			2, si->mac, 3, si->hostname, G_MAXUINT);
+			2, si->mac, 3, si->hostname, 4, (guint)(si->tm), G_MAXUINT);
 	g_ptr_array_add(array, g_value_get_boxed(&value));
 }
 
@@ -271,16 +280,22 @@ gboolean _deinit_tethering(TetheringObject *obj)
 	return TRUE;
 }
 
+gboolean tethering_init(TetheringObject *obj, GError **error)
+{
+	DBG("There are [%d] references\n", ++ref_agent);
+
+	return TRUE;
+}
 
 gboolean tethering_deinit(TetheringObject *obj, GError **error)
 {
-	DBG("+\n");
-	g_assert(obj != NULL);
-
-	if (_mobileap_is_disabled()) {
-		DBG("Mobile AP is not activated, so we quit the mobileap-agent.\n");
+	if (--ref_agent <= 0 && _mobileap_is_disabled() &&
+			!_is_trying_network_operation()) {
+		DBG("Terminate mobileap-agent\n");
 		g_main_loop_quit(mainloop);
 	}
+
+	DBG("There are [%d] references\n", ref_agent);
 
 	return TRUE;
 }
@@ -345,7 +360,7 @@ gboolean tethering_get_data_packet_usage(TetheringObject *obj,
 	if (_get_network_interface_name(&if_name) == FALSE) {
 		ERR("No network interface\n");
 		dbus_g_method_return(context, MOBILE_AP_GET_DATA_PACKET_USAGE_CFM,
-				0, 0);
+				0ULL, 0ULL);
 		return FALSE;
 	}
 
@@ -371,6 +386,51 @@ gboolean tethering_get_data_packet_usage(TetheringObject *obj,
 	return TRUE;
 }
 
+gboolean tethering_set_ip_forward_status(TetheringObject *obj,
+		gint forward_mode,  DBusGMethodInvocation *context)
+{
+	g_assert(obj != NULL);
+
+	gboolean ret;
+
+	if (forward_mode == 0) {
+		ret = _unset_masquerade();
+	} else {
+		ret = _set_masquerade();
+	}
+
+	dbus_g_method_return(context, ret);
+
+	return TRUE;
+}
+
+gboolean tethering_get_ip_forward_status(TetheringObject *obj, gint *forward_mode)
+{
+	g_assert(obj != NULL);
+
+	int fd;
+	int ret;
+	char value[2] = {0, };
+
+	fd = open(IP_FORWARD, O_RDONLY);
+	if (fd < 0) {
+		ERR("open failed\n");
+		return FALSE;
+	}
+
+	ret = read(fd, value, sizeof(value));
+	if (ret < 0) {
+		ERR("read is failed\n");
+		close(fd);
+		return FALSE;
+	}
+	close(fd);
+
+	*forward_mode = atoi(value);
+
+	return TRUE;
+}
+
 
 static DBusHandlerResult __dnsmasq_signal_filter(DBusConnection *conn,
 		DBusMessage *msg, void *user_data)
@@ -389,6 +449,7 @@ static DBusHandlerResult __dnsmasq_signal_filter(DBusConnection *conn,
 	TetheringObject *obj = (TetheringObject *)user_data;
 	mobile_ap_station_info_t *info = NULL;
 	int n_station = 0;
+	time_t tm;
 
 	dbus_error_init(&error);
 	if (dbus_message_is_signal(msg, DNSMASQ_DBUS_INTERFACE,
@@ -441,6 +502,8 @@ static DBusHandlerResult __dnsmasq_signal_filter(DBusConnection *conn,
 				free(bt_remote_device_name);
 			}
 		}
+		time(&tm);
+		info->tm = tm;
 
 		if (_add_station_info(info) != MOBILE_AP_ERROR_NONE) {
 			free(info);

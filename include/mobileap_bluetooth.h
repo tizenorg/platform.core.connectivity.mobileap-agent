@@ -28,4 +28,4 @@ gboolean tethering_enable_bt_tethering(TetheringObject *obj,
 gboolean tethering_disable_bt_tethering(TetheringObject *obj,
 		DBusGMethodInvocation *context);
 
-#endif
+#endif /* __MOBILEAP_BLUETOOTH_H__ */

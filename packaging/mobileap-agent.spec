@@ -1,7 +1,7 @@
 Name:       mobileap-agent
 Summary:    Mobile AP daemon for setting tethering environments
-Version:    0.1.85
-Release:    2
+Version:    0.1.86
+Release:    1
 Group:      TO_BE/FILLED_IN
 License:    Apache-2.0
 Source0:    %{name}-%{version}.tar.gz
@@ -46,6 +46,16 @@ make %{?jobs:-j%jobs}
 %{_bindir}/mobileap-agent
 
 %changelog
+* Tue Apr 09 2013 Seungyoun Ju <sy39.ju@samsung.com> 0.1.86-1
+- Fix the multiple notification issue
+- Support i80211n
+- Channel is changed to 6
+- Implement status notification for bluetooth visibility
+- Change the power manager api
+- Implement connection timer
+- Reference count is used
+- Support Mobile AP
+
 * Sat Feb 16 2013 Seungyoun Ju <sy39.ju@samsung.com> 0.1.85-2
 - Function return value is checked
 - Private SSID is considered

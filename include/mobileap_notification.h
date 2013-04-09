@@ -25,10 +25,10 @@
 
 int _create_timeout_noti(const char *content, const char *title,
 		const char *icon_path);
-
+int _delete_timeout_noti(void);
 int _create_connected_noti(const char *content, const char *title,
 		const char *icon_path);
 int _update_connected_noti(const char *content);
 int _delete_connected_noti(void);
-
+int _create_status_noti(const char *content);
 #endif

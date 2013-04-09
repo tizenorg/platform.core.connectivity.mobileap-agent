@@ -9,6 +9,9 @@
 
 		<!-- Method definitions -->
 
+		<method name="init">
+		</method>
+
 		<method name="deinit">
 		</method>
 
@@ -60,7 +63,7 @@
 		<method name="get_station_info">
 			<annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
 			<arg type="u" name="type" direction="out"/>
-			<arg type="a(usss)" name="station" direction="out"/>
+			<arg type="a(usssu)" name="station" direction="out"/>
 		</method>
 
 		<method name="get_usb_station_info">
@@ -79,6 +82,16 @@
 			<annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
 			<arg type="a(ssss)" name="interface" direction="out"/>
 		</method>
+
+                <method name="set_ip_forward_status">
+                        <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+                        <arg type="i" name="forward_status" direction="in"/>
+                        <arg type="i" name="result" direction="out"/>
+                </method>
+
+                <method name="get_ip_forward_status">
+                        <arg type="i" name="forward_status" direction="out"/>
+                </method>
 
 		<method name="get_wifi_tethering_hide_mode">
 			<annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
@@ -171,6 +184,7 @@
 			<arg type="s" name="ip" direction="out"/>
 			<arg type="s" name="mac" direction="out"/>
 			<arg type="s" name="name" direction="out"/>
+			<arg type="u" name="time" direction="out"/>
 		</signal>
 
 		<signal name="security_type_changed">
