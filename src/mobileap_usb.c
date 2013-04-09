@@ -135,61 +135,23 @@ static void __handle_usb_mode_change(keynode_t *key, void *data)
 	}
 }
 
-mobile_ap_error_code_e _disable_usb_tethering(TetheringObject *obj)
+mobile_ap_error_code_e _enable_usb_tethering(TetheringObject *obj,
+		DBusGMethodInvocation *context)
 {
 	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
-
-	if (!_mobileap_is_enabled(MOBILE_AP_STATE_USB)) {
-		ERR("USB tethering has not been enabled\n");
-		ret = MOBILE_AP_ERROR_NOT_ENABLED;
-		return ret;
-	}
-
-	_deinit_tethering(obj);
-
-	if (_remove_station_info_all(MOBILE_AP_TYPE_USB) != MOBILE_AP_ERROR_NONE) {
-		ERR("_remove_station_info_all is failed. Ignore it\n");
-	}
-
-	vconf_ignore_key_changed(VCONFKEY_SETAPPL_USB_MODE_INT,
-			__handle_usb_disconnect_cb);
-	vconf_ignore_key_changed(VCONFKEY_SYSMAN_USB_STATUS,
-			__handle_usb_disconnect_cb);
-
-	_mobileap_clear_state(MOBILE_AP_STATE_USB);
-
-	DBG("_disable_usb_tethering is done\n");
-
-	return ret;
-}
-
-gboolean tethering_enable_usb_tethering(TetheringObject *obj,
-						DBusGMethodInvocation *context)
-{
 	int vconf_ret;
 	int usb_mode = SETTING_USB_NONE_MODE;
-	int ret = MOBILE_AP_ERROR_NONE;
-
-	DBG("+\n");
-
-	g_assert(obj != NULL);
-	g_assert(context != NULL);
-
 
 	if (_mobileap_is_enabled(MOBILE_AP_STATE_USB)) {
 		ERR("USB tethering is already enabled\n");
 		ret = MOBILE_AP_ERROR_ALREADY_ENABLED;
-		dbus_g_method_return(context,
-				MOBILE_AP_ENABLE_USB_TETHERING_CFM, ret);
-		return FALSE;
+		return ret;
 	}
 
 	if (obj->usb_context) {
 		ERR("USB request is progressing\n");
 		ret = MOBILE_AP_ERROR_IN_PROGRESS;
-		dbus_g_method_return(context,
-				MOBILE_AP_ENABLE_USB_TETHERING_CFM, ret);
-		return FALSE;
+		return ret;
 	}
 
 	vconf_notify_key_changed(VCONFKEY_SYSMAN_USB_STATUS,
@@ -227,27 +189,79 @@ gboolean tethering_enable_usb_tethering(TetheringObject *obj,
 	}
 
 	if (usb_mode == SETTING_USB_TETHERING_MODE) {
-		DBG("Don't need to wait for usb-setting\n");
 		obj->usb_context = NULL;
 		vconf_ignore_key_changed(VCONFKEY_SETAPPL_USB_MODE_INT,
 				__handle_usb_mode_change);
-		_emit_mobileap_dbus_signal(obj, E_SIGNAL_USB_TETHER_ON, NULL);
-		dbus_g_method_return(context,
-				MOBILE_AP_ENABLE_USB_TETHERING_CFM, ret);
-		return TRUE;
 	}
 
 	DBG("-\n");
-	return TRUE;
+	return MOBILE_AP_ERROR_NONE;
 
 FAIL:
 	vconf_ignore_key_changed(VCONFKEY_SYSMAN_USB_STATUS,
 			__handle_usb_disconnect_cb);
 	_mobileap_clear_state(MOBILE_AP_STATE_USB);
-	dbus_g_method_return(context,
-			MOBILE_AP_ENABLE_USB_TETHERING_CFM, ret);
-	return FALSE;
+
+	return ret;
 }
+
+mobile_ap_error_code_e _disable_usb_tethering(TetheringObject *obj)
+{
+	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
+
+	if (!_mobileap_is_enabled(MOBILE_AP_STATE_USB)) {
+		ERR("USB tethering has not been enabled\n");
+		ret = MOBILE_AP_ERROR_NOT_ENABLED;
+		return ret;
+	}
+
+	_deinit_tethering(obj);
+
+	if (_remove_station_info_all(MOBILE_AP_TYPE_USB) != MOBILE_AP_ERROR_NONE) {
+		ERR("_remove_station_info_all is failed. Ignore it\n");
+	}
+
+	vconf_ignore_key_changed(VCONFKEY_SETAPPL_USB_MODE_INT,
+			__handle_usb_disconnect_cb);
+	vconf_ignore_key_changed(VCONFKEY_SYSMAN_USB_STATUS,
+			__handle_usb_disconnect_cb);
+
+	_mobileap_clear_state(MOBILE_AP_STATE_USB);
+
+	DBG("_disable_usb_tethering is done\n");
+
+	return ret;
+}
+
+gboolean tethering_enable_usb_tethering(TetheringObject *obj,
+		DBusGMethodInvocation *context)
+{
+	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
+
+	DBG("+\n");
+
+	g_assert(obj != NULL);
+	g_assert(context != NULL);
+
+
+	ret = _enable_usb_tethering(obj, context);
+	if (ret != MOBILE_AP_ERROR_NONE) {
+		ERR("_enable_usb_tethering() is failed : %d\n", ret);
+		dbus_g_method_return(context,
+				MOBILE_AP_ENABLE_USB_TETHERING_CFM, ret);
+		return FALSE;
+	} else if (obj->usb_context == NULL) {
+		DBG("Don't need to wait for usb-setting\n");
+		_emit_mobileap_dbus_signal(obj, E_SIGNAL_USB_TETHER_ON, NULL);
+		dbus_g_method_return(context,
+				MOBILE_AP_ENABLE_USB_TETHERING_CFM, ret);
+	} else {
+		DBG("dbus will be returned by vconf callback\n");
+	}
+
+	return TRUE;
+}
+
 
 gboolean tethering_disable_usb_tethering(TetheringObject *obj,
 		DBusGMethodInvocation *context)

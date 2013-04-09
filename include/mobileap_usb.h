@@ -31,5 +31,4 @@ gboolean tethering_get_usb_station_info(TetheringObject *obj,
 						DBusGMethodInvocation *context);
 gboolean tethering_get_usb_interface_info(TetheringObject *obj,
 						DBusGMethodInvocation *context);
-
-#endif
+#endif /* __MOBILEAP_USB_H__ */

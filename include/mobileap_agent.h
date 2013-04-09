@@ -97,6 +97,7 @@
 				"channel=%d\n" \
 				"ignore_broadcast_ssid=%d\n" \
 				"max_num_sta=%d\n" \
+				"ieee80211n=1\n" \
 				"%s\n"
 #define HOSTAPD_DEBUG_FILE	"/tmp/hostapd.log"
 #define HOSTAPD_REQ_MAX_LEN	128

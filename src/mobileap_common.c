@@ -103,6 +103,7 @@ void _send_dbus_station_info(const char *member, mobile_ap_station_info_t *info)
 				DBUS_TYPE_STRING, &ip,
 				DBUS_TYPE_STRING, &mac,
 				DBUS_TYPE_STRING, &hostname,
+				DBUS_TYPE_UINT32, &info->tm,
 				DBUS_TYPE_INVALID)) {
 		ERR("Event sending failed\n");
 		dbus_message_unref(msg);
@@ -177,6 +178,7 @@ int _add_station_info(mobile_ap_station_info_t *info)
 		DBG("[%d] station MAC : %s\n", i, si->mac);
 		DBG("[%d] station Hostname : %s\n", i, si->hostname);
 		DBG("[%d] station IP : %s\n", i, si->ip);
+		DBG("[%d] station connected time : %d\n", i, si->tm);
 		i++;
 	}
 
@@ -395,7 +397,6 @@ int _get_data_usage(const char *src, const char *dest,
 	snprintf(cmd, sizeof(cmd),
 			"%s -L FORWARD -vx | %s \"%s[ ]*%s\" | %s '{ print $2 }' > %s",
 			IPTABLES, GREP, src, dest, AWK, DATA_USAGE_FILE);
-	DBG("GET DATA USAGE : %s\n", cmd);
 	if (system(cmd) < 0) {
 		ERR("\"cmd\" is failed\n");
 	}
@@ -404,7 +405,6 @@ int _get_data_usage(const char *src, const char *dest,
 	snprintf(cmd, sizeof(cmd),
 			"%s -L FORWARD -vx | %s \"%s[ ]*%s\" | %s '{ print $2 }' >> %s",
 			IPTABLES, GREP, dest, src, AWK, DATA_USAGE_FILE);
-	DBG("GET DATA USAGE : %s\n", cmd);
 	if (system(cmd) < 0) {
 		ERR("\"cmd\" is failed\n");
 	}
@@ -420,13 +420,11 @@ int _get_data_usage(const char *src, const char *dest,
 		*tx = 0LL;
 	else
 		*tx = atoll(buf);
-	DBG("Tx(%s -> %s) : %llu\n", src, dest, *tx);
 
 	if (fgets(buf, sizeof(buf), fp) == NULL)
 		*rx = 0LL;
 	else
 		*rx = atoll(buf);
-	DBG("Rx(%s -> %s) : %llu\n", dest, src, *rx);
 
 	fclose(fp);
 	unlink(DATA_USAGE_FILE);

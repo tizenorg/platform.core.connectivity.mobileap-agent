@@ -26,6 +26,7 @@
 #include "mobileap_common.h"
 #include "mobileap_bluetooth.h"
 #include "mobileap_handler.h"
+#include "mobileap_notification.h"
 
 typedef struct {
 	bt_device_info_s *info;
@@ -228,6 +229,8 @@ static void __bt_adapter_state_changed(int result, bt_adapter_state_e adapter_st
 		return;
 
 	int ret;
+	int duration;
+	bt_adapter_visibility_mode_e mode;
 	TetheringObject *obj = (TetheringObject *)user_data;
 	DBusGMethodInvocation *context = obj->bt_context;
 
@@ -250,6 +253,10 @@ static void __bt_adapter_state_changed(int result, bt_adapter_state_e adapter_st
 		_emit_mobileap_dbus_signal(obj, E_SIGNAL_BT_TETHER_OFF,
 				SIGNAL_MSG_NOT_AVAIL_INTERFACE);
 		return;
+	} else {
+		ret = bt_adapter_get_visibility(&mode, &duration);
+		if (ret == BT_ERROR_NONE && mode == BT_ADAPTER_VISIBILITY_MODE_NON_DISCOVERABLE)
+			_create_status_noti("Bluetooth visible time is off. You may not find your device.");
 	}
 
 	ret = __activate_bt_nap(obj);
@@ -292,62 +299,25 @@ void _bt_get_remote_device_name(TetheringObject *obj, const char *mac, char **na
 	return;
 }
 
-mobile_ap_error_code_e _disable_bt_tethering(TetheringObject *obj)
-{
-	int bt_ret;
-
-	if (!_mobileap_is_enabled(MOBILE_AP_STATE_BT)) {
-		ERR("BT tethering has not been enabled\n");
-		return MOBILE_AP_ERROR_NOT_ENABLED;
-	}
-
-	__deactivate_bt_nap();
-
-	bt_ret = bt_adapter_unset_state_changed_cb();
-	if (bt_ret != BT_ERROR_NONE)
-		ERR("bt_adapter_unset_state_changed_cb is failed : %d\n", bt_ret);
-
-	bt_ret = bt_deinitialize();
-	if (bt_ret != BT_ERROR_NONE)
-		ERR("bt_deinitialize is failed : %d\n", bt_ret);
-
-	_remove_station_info_all(MOBILE_AP_TYPE_BT);
-	__del_bt_remote_all();
-	_deinit_timeout_cb(MOBILE_AP_TYPE_BT);
-
-	_deinit_tethering(obj);
-	_mobileap_clear_state(MOBILE_AP_STATE_BT);
-
-	return MOBILE_AP_ERROR_NONE;
-}
-
-gboolean tethering_enable_bt_tethering(TetheringObject *obj,
+mobile_ap_error_code_e _enable_bt_tethering(TetheringObject *obj,
 		DBusGMethodInvocation *context)
 {
-	int ret;
+	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
 	int bt_ret;
+	int duration;
+	bt_adapter_visibility_mode_e mode;
 	bt_adapter_state_e adapter_state = BT_ADAPTER_DISABLED;
-
-	DBG("+\n");
-
-	g_assert(obj != NULL);
-	g_assert(context != NULL);
-
 
 	if (_mobileap_is_enabled(MOBILE_AP_STATE_BT)) {
 		ERR("Bluetooth tethering is already enabled\n");
 		ret = MOBILE_AP_ERROR_ALREADY_ENABLED;
-		dbus_g_method_return(context,
-				MOBILE_AP_ENABLE_BT_TETHERING_CFM, ret);
-		return FALSE;
+		return ret;
 	}
 
 	if (obj->bt_context != NULL) {
 		ERR("Bluetooth tethering request is progressing\n");
 		ret = MOBILE_AP_ERROR_IN_PROGRESS;
-		dbus_g_method_return(context,
-				MOBILE_AP_ENABLE_BT_TETHERING_CFM, ret);
-		return FALSE;
+		return ret;
 	}
 
 	if (!_mobileap_set_state(MOBILE_AP_STATE_BT)) {
@@ -398,7 +368,12 @@ gboolean tethering_enable_bt_tethering(TetheringObject *obj,
 			goto FAIL;
 		}
 		obj->bt_context = context;
-		return TRUE;
+		return ret;
+	} else {
+		bt_ret = bt_adapter_get_visibility(&mode, &duration);
+		if (bt_ret == BT_ERROR_NONE && mode == BT_ADAPTER_VISIBILITY_MODE_NON_DISCOVERABLE)
+			_create_status_noti("Bluetooth visible time is off. You may not find your device.");
+
 	}
 
 	ret = __activate_bt_nap(obj);
@@ -410,17 +385,71 @@ gboolean tethering_enable_bt_tethering(TetheringObject *obj,
 		goto FAIL;
 	}
 
+	_delete_timeout_noti();
 	_init_timeout_cb(MOBILE_AP_TYPE_BT, (void *)obj);
 	_start_timeout_cb(MOBILE_AP_TYPE_BT);
 
-	_emit_mobileap_dbus_signal(obj, E_SIGNAL_BT_TETHER_ON, NULL);
-	dbus_g_method_return(context, MOBILE_AP_ENABLE_BT_TETHERING_CFM, ret);
-	return TRUE;
+	return ret;
 
 FAIL:
 	_mobileap_clear_state(MOBILE_AP_STATE_BT);
-	dbus_g_method_return(context, MOBILE_AP_ENABLE_BT_TETHERING_CFM, ret);
-	return FALSE;
+
+	return ret;
+}
+
+mobile_ap_error_code_e _disable_bt_tethering(TetheringObject *obj)
+{
+	int bt_ret;
+
+	if (!_mobileap_is_enabled(MOBILE_AP_STATE_BT)) {
+		ERR("BT tethering has not been enabled\n");
+		return MOBILE_AP_ERROR_NOT_ENABLED;
+	}
+
+	__deactivate_bt_nap();
+
+	bt_ret = bt_adapter_unset_state_changed_cb();
+	if (bt_ret != BT_ERROR_NONE)
+		ERR("bt_adapter_unset_state_changed_cb is failed : %d\n", bt_ret);
+
+	bt_ret = bt_deinitialize();
+	if (bt_ret != BT_ERROR_NONE)
+		ERR("bt_deinitialize is failed : %d\n", bt_ret);
+
+	_remove_station_info_all(MOBILE_AP_TYPE_BT);
+	__del_bt_remote_all();
+	_deinit_timeout_cb(MOBILE_AP_TYPE_BT);
+
+	_deinit_tethering(obj);
+	_mobileap_clear_state(MOBILE_AP_STATE_BT);
+
+	return MOBILE_AP_ERROR_NONE;
+}
+
+gboolean tethering_enable_bt_tethering(TetheringObject *obj,
+		DBusGMethodInvocation *context)
+{
+	mobile_ap_error_code_e ret;
+
+	DBG("+\n");
+
+	g_assert(obj != NULL);
+	g_assert(context != NULL);
+
+
+	ret = _enable_bt_tethering(obj, context);
+	if (ret != MOBILE_AP_ERROR_NONE) {
+		ERR("_enable_bt_tethering() is failed : %d\n", ret);
+		dbus_g_method_return(context,
+				MOBILE_AP_ENABLE_BT_TETHERING_CFM, ret);
+		return FALSE;
+	} else if (obj->bt_context == NULL) {
+		_emit_mobileap_dbus_signal(obj, E_SIGNAL_BT_TETHER_ON, NULL);
+		dbus_g_method_return(context,
+				MOBILE_AP_ENABLE_BT_TETHERING_CFM, ret);
+	}
+
+	return TRUE;
 }
 
 

@@ -23,56 +23,67 @@
 #include "mobileap_common.h"
 #include "mobileap_network.h"
 
+
+extern int ref_agent;
 static connection_h connection = NULL;
 static connection_profile_h cprof = NULL;
-static connection_profile_h old_prof = NULL;
 
 static void __print_profile(connection_profile_h profile)
 {
-#define __check_connection_return(conn_ret)	\
-	do {	\
-		if (conn_ret != CONNECTION_ERROR_NONE)	\
-			ERR("connection API fail : 0x%X\n", conn_ret);	\
-	} while(0)
-
 	if (profile == NULL)
 		return;
 
 	int conn_ret;
 	bool roaming;
-	char *apn;
-	char *home_url;
+	char *apn = NULL;
+	char *home_url = NULL;
 	connection_cellular_network_type_e network_type;
 	connection_cellular_service_type_e service_type;
 
 	conn_ret = connection_profile_get_cellular_network_type(profile, &network_type);
-	__check_connection_return(conn_ret);
-	DBG("Network type : %d\n", network_type);
+	if (conn_ret != CONNECTION_ERROR_NONE)
+		ERR("connection API fail : 0x%X\n", conn_ret);
+	else
+		DBG("Network type : %d\n", network_type);
 
 	conn_ret = connection_profile_get_cellular_service_type(profile, &service_type);
-	__check_connection_return(conn_ret);
-	DBG("Service type : %d\n", service_type);
+	if (conn_ret != CONNECTION_ERROR_NONE)
+		ERR("connection API fail : 0x%X\n", conn_ret);
+	else
+		DBG("Service type : %d\n", service_type);
 
 	conn_ret = connection_profile_get_cellular_apn(profile, &apn);
-	__check_connection_return(conn_ret);
-	DBG("APN : %s\n", apn);
-	free(apn);
+	if (conn_ret != CONNECTION_ERROR_NONE)
+		ERR("connection API fail : 0x%X\n", conn_ret);
+	else {
+		DBG("APN : %s\n", apn);
+		free(apn);
+	}
 
 	conn_ret = connection_profile_get_cellular_home_url(profile, &home_url);
-	__check_connection_return(conn_ret);
-	DBG("Home url : %s\n", home_url);
-	free(home_url);
+	if (conn_ret != CONNECTION_ERROR_NONE)
+		ERR("connection API fail : 0x%X\n", conn_ret);
+	else {
+		DBG("Home url : %s\n", home_url);
+		free(home_url);
+	}
 
 	conn_ret = connection_profile_is_cellular_roaming(profile, &roaming);
-	__check_connection_return(conn_ret);
-	DBG("Roaming : %d\n", roaming);
+	if (conn_ret != CONNECTION_ERROR_NONE)
+		ERR("connection API fail : 0x%X\n", conn_ret);
+	else
+		DBG("Roaming : %d\n", roaming);
 
-#undef __check_connection_return
 	return;
 }
 
-static gboolean __is_connected_prof(connection_profile_h profile)
+static gboolean __is_connected_profile(connection_profile_h profile)
 {
+	if (profile == NULL) {
+		ERR("profile is NULL\n");
+		return FALSE;
+	}
+
 	int conn_ret;
 	connection_profile_state_e pstat = CONNECTION_PROFILE_STATE_DISCONNECTED;
 
@@ -91,8 +102,14 @@ static gboolean __is_connected_prof(connection_profile_h profile)
 	return TRUE;
 }
 
-static gboolean __get_current_prof(connection_profile_h *r_prof, connection_profile_type_e *r_net_type)
+
+static gboolean __get_connected_profile(connection_profile_h *r_prof, connection_profile_type_e *r_net_type)
 {
+	if (r_prof == NULL || r_net_type == NULL) {
+		ERR("Invalid param [%p] [%p]\n", r_prof, r_net_type);
+		return FALSE;
+	}
+
 	int conn_ret;
 	connection_profile_h profile = NULL;
 	connection_profile_type_e net_type = CONNECTION_PROFILE_TYPE_CELLULAR;
@@ -115,20 +132,32 @@ static gboolean __get_current_prof(connection_profile_h *r_prof, connection_prof
 	return TRUE;
 }
 
-static gboolean __get_network_prof(connection_profile_h *r_prof)
+static gboolean __get_network_profile(connection_profile_h *r_prof)
 {
+	if (r_prof == NULL) {
+		ERR("r_prof is NULL\n");
+		return FALSE;
+	}
+
 	connection_profile_h profile;
 	connection_profile_type_e net_type = CONNECTION_PROFILE_TYPE_CELLULAR;
 
-	if (__get_current_prof(&profile, &net_type) != TRUE) {
+	if (__get_connected_profile(&profile, &net_type) == FALSE) {
 		ERR("There is no available network\n");
 		return FALSE;
 	}
 
 	DBG("Current connected net_type : %d\n", net_type);
-	if (net_type == CONNECTION_PROFILE_TYPE_CELLULAR) {
-		__print_profile(profile);
+	if (net_type == CONNECTION_PROFILE_TYPE_WIFI) {
+		*r_prof = profile;
+		return TRUE;
 	}
+
+	if (net_type != CONNECTION_PROFILE_TYPE_CELLULAR) {
+		ERR("Network type [%d] is not supported\n", net_type);
+		return FALSE;
+	}
+	__print_profile(profile);
 
 	*r_prof = profile;
 	return TRUE;
@@ -136,32 +165,56 @@ static gboolean __get_network_prof(connection_profile_h *r_prof)
 
 static void __connection_type_changed_cb(connection_type_e type, void *user_data)
 {
+	DBG("Changed connection type is %s\n",
+			type == CONNECTION_TYPE_DISCONNECTED ? "DISCONNECTED" :
+			type == CONNECTION_TYPE_WIFI ? "Wi-Fi" :
+			type == CONNECTION_TYPE_CELLULAR ? "Cellular" :
+			type == CONNECTION_TYPE_ETHERNET ? "Ethernet" :
+			"Unknown");
+
+
 	if (_mobileap_is_disabled()) {
 		DBG("Tethering is not enabled\n");
 		return;
 	}
 
-	DBG("Changed connection type is %s\n",
-			type == CONNECTION_TYPE_DISCONNECTED ? "DISCONNECTED" :
-			type == CONNECTION_TYPE_WIFI ? "Wi-FI" :
-			type == CONNECTION_TYPE_CELLULAR ? "Cellular" :
-			type == CONNECTION_TYPE_ETHERNET ? "Ethernet" :
-			"Unknown");
+	if (_unset_masquerade() == FALSE) {
+		ERR("_unset_masquerade is failed\n");
+	}
 
-	_close_network();
-	if (type == CONNECTION_TYPE_DISCONNECTED)
+	if (cprof) {
+		connection_profile_destroy(cprof);
+		cprof = NULL;
+	}
+
+	if (type == CONNECTION_TYPE_DISCONNECTED) {
 		return;
+	}
 
 	_open_network();
+
 	return;
+}
+
+gboolean _is_trying_network_operation(void)
+{
+
+	return FALSE;
 }
 
 gboolean _get_network_interface_name(char **if_name)
 {
-	int conn_ret = 0;
-
-	if (cprof == NULL)
+	if (if_name == NULL) {
+		ERR("if_name is NULL\n");
 		return FALSE;
+	}
+
+	if (cprof == NULL) {
+		ERR("There is no connected profile\n");
+		return FALSE;
+	}
+
+	int conn_ret = 0;
 
 	conn_ret = connection_profile_get_network_interface_name(cprof, if_name);
 	if (conn_ret != CONNECTION_ERROR_NONE) {
@@ -190,6 +243,11 @@ gboolean _set_masquerade(void)
 
 gboolean _unset_masquerade(void)
 {
+	if (cprof == NULL) {
+		DBG("There is nothing to unset masquerading\n");
+		return TRUE;
+	}
+
 	char *if_name = NULL;
 
 	if (_get_network_interface_name(&if_name) == FALSE) {
@@ -210,18 +268,17 @@ gboolean _open_network(void)
 
 	DBG("+\n");
 
-	if (__get_network_prof(&profile) == FALSE) {
-		ERR("__get_network_prof is failed\n");
+	if (__get_network_profile(&profile) == FALSE) {
+		ERR("__get_network_profile is failed\n");
 		return FALSE;
+	}
+
+	if (!__is_connected_profile(profile)) {
+		connection_profile_destroy(profile);
+		return TRUE;
 	}
 	cprof = profile;
 
-	if (__is_connected_prof(cprof) == FALSE) {
-		DBG("Connection is not yet opened\n");
-		return TRUE;
-	}
-
-	DBG("Set masquerading\n");
 	if (_set_masquerade() == FALSE) {
 		ERR("_set_masquerade is failed\n");
 		_close_network();
@@ -239,11 +296,6 @@ gboolean _close_network(void)
 
 	DBG("+\n");
 
-	if (cprof == NULL && old_prof == NULL) {
-		ERR("There is nothing to handle\n");
-		return TRUE;
-	}
-
 	ret = _unset_masquerade();
 	if (ret == FALSE)
 		ERR("_unset_masquerade is failed\n");
@@ -252,6 +304,7 @@ gboolean _close_network(void)
 	cprof = NULL;
 
 	DBG("-\n");
+
 	return TRUE;
 }
 

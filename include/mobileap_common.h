@@ -48,4 +48,4 @@ int _get_data_usage(const char *src, const char *dest, unsigned long long *tx, u
 int _execute_command(const char *cmd);
 int _get_tethering_type_from_ip(const char *ip, mobile_ap_type_e *type);
 
-#endif
+#endif /* __MOBILEAP_COMMON_H__ */
