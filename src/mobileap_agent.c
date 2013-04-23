@@ -128,7 +128,7 @@ static int __execute_hostapd(const char *ssid, const char *security,
 		}
 
 		snprintf(sec_buf, HOSTAPD_CONF_LEN,
-				"\nwpa=2\nrsn_pairwise=CCMP\nwpa_psk=%s",
+				"wpa=2\nrsn_pairwise=CCMP\nwpa_psk=%s\nwps_state=2\neap_server=1",
 				psk);
 	}
 
@@ -158,7 +158,7 @@ static int __execute_hostapd(const char *ssid, const char *security,
         if (pid == 0) {
 		if (execl(HOSTAPD_BIN, HOSTAPD_BIN, "-e", HOSTAPD_ENTROPY_FILE,
 					HOSTAPD_CONF_FILE,
-					"-f", HOSTAPD_DEBUG_FILE, "-d",
+					"-f", HOSTAPD_DEBUG_FILE, "-dd",
 					(char *)NULL)) {
 			ERR("execl failed\n");
 		}
