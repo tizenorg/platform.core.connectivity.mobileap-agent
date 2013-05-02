@@ -3,7 +3,7 @@ Summary:    Mobile AP daemon for setting tethering environments
 Version:    0.1.87
 Release:    1
 Group:      TO_BE/FILLED_IN
-License:    Apache-2.0
+License:    Flora License
 Source0:    %{name}-%{version}.tar.gz
 BuildRequires: pkgconfig(dlog)
 BuildRequires: pkgconfig(dbus-glib-1)

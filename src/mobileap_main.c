@@ -1,18 +1,20 @@
 /*
- * mobileap-agent
- * Copyright (c) 2012 Samsung Electronics Co., Ltd.
+ *  mobileap-agent
  *
- * Licensed under the Apache License, Version 2.0 (the License);
+ * Copyright 2012-2013  Samsung Electronics Co., Ltd
+ *
+ * Licensed under the Flora License, Version 1.1 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://floralicense.org/license
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
 #include <fcntl.h>
@@ -146,6 +148,7 @@ gboolean _mobileap_set_state(int state)
 
 	DBG("Before mobileap_state : %d\n", mobileap_state);
 	mobileap_state |= state;
+
 	DBG("After mobileap_state : %d\n", mobileap_state);
 
 	vconf_ret = vconf_set_int(VCONFKEY_MOBILE_HOTSPOT_MODE, mobileap_state);
