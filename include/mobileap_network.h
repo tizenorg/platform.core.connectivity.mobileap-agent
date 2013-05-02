@@ -1,5 +1,5 @@
 /*
- *  mobile-agent
+ *  mobileap-agent
  *
  * Copyright 2012-2013  Samsung Electronics Co., Ltd
  *

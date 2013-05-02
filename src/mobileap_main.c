@@ -148,7 +148,6 @@ gboolean _mobileap_set_state(int state)
 
 	DBG("Before mobileap_state : %d\n", mobileap_state);
 	mobileap_state |= state;
-
 	DBG("After mobileap_state : %d\n", mobileap_state);
 
 	vconf_ret = vconf_set_int(VCONFKEY_MOBILE_HOTSPOT_MODE, mobileap_state);
@@ -218,6 +217,7 @@ static void __block_device_sleep(void)
 	int ret = 0;
 
 	ret = pm_lock_state(LCD_OFF, STAY_CUR_STATE, 0);
+
 	if (ret < 0)
 		ERR("PM control [ERROR] result = %d\n", ret);
 	else
