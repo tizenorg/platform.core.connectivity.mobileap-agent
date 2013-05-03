@@ -217,7 +217,6 @@ static void __block_device_sleep(void)
 	int ret = 0;
 
 	ret = pm_lock_state(LCD_OFF, STAY_CUR_STATE, 0);
-
 	if (ret < 0)
 		ERR("PM control [ERROR] result = %d\n", ret);
 	else
