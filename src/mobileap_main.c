@@ -420,6 +420,7 @@ static DBusHandlerResult __dnsmasq_signal_filter(DBusConnection *conn,
 		return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 	}
 
+	char *ap_type = NULL;
 	char *ip_addr = NULL;
 	char *mac = NULL;
 	char *name = NULL;
@@ -432,9 +433,10 @@ static DBusHandlerResult __dnsmasq_signal_filter(DBusConnection *conn,
 	time_t tm;
 
 	dbus_error_init(&error);
-	if (dbus_message_is_signal(msg, DNSMASQ_DBUS_INTERFACE,
+	if (dbus_message_is_signal(msg, CONNMAN_DBUS_INTERFACE,
 				"DhcpConnected")) {
 		if (!dbus_message_get_args(msg, &error,
+					DBUS_TYPE_STRING, &ap_type,
 					DBUS_TYPE_STRING, &ip_addr,
 					DBUS_TYPE_STRING, &mac,
 					DBUS_TYPE_STRING, &name,
@@ -443,7 +445,8 @@ static DBusHandlerResult __dnsmasq_signal_filter(DBusConnection *conn,
 			dbus_error_free(&error);
 			return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 		}
-		DBG("DhcpConnected signal : %s  %s %s\n", ip_addr, mac, name);
+		DBG("DhcpConnected signal : %s  %s  %s %s\n",
+					ap_type, ip_addr, mac, name);
 
 		if (_get_tethering_type_from_ip(ip_addr, &type) != MOBILE_AP_ERROR_NONE)
 			return DBUS_HANDLER_RESULT_HANDLED;
@@ -498,9 +501,10 @@ static DBusHandlerResult __dnsmasq_signal_filter(DBusConnection *conn,
 		_send_dbus_station_info("DhcpConnected", info);
 
 		return DBUS_HANDLER_RESULT_HANDLED;
-	} else if (dbus_message_is_signal(msg, DNSMASQ_DBUS_INTERFACE,
+	} else if (dbus_message_is_signal(msg, CONNMAN_DBUS_INTERFACE,
 				"DhcpLeaseDeleted")) {
 		if (!dbus_message_get_args(msg, &error,
+					DBUS_TYPE_STRING, &ap_type,
 					DBUS_TYPE_STRING, &ip_addr,
 					DBUS_TYPE_STRING, &mac,
 					DBUS_TYPE_STRING, &name,
@@ -510,7 +514,8 @@ static DBusHandlerResult __dnsmasq_signal_filter(DBusConnection *conn,
 			return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 		}
 
-		DBG("DhcpLeaseDeleted signal : %s %s %s\n", ip_addr, mac, name);
+		DBG("DhcpLeaseDeleted signal : %s  %s %s %s\n",
+					ap_type, ip_addr, mac, name);
 
 		_remove_station_info(ip_addr, _slist_find_station_by_ip_addr);
 
@@ -524,7 +529,7 @@ int main(int argc, char **argv)
 {
 	TetheringObject *tethering_obj = NULL;
 	DBusError dbus_error;
-	char *rule = "type='signal',interface='"DNSMASQ_DBUS_INTERFACE"'";
+	char *rule = "type='signal',interface='"CONNMAN_DBUS_INTERFACE"'";
 	DBusGConnection *tethering_bus = NULL;
 	DBusGProxy *tethering_bus_proxy = NULL;
 	guint result = 0;
