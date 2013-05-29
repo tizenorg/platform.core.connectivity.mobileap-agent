@@ -132,6 +132,7 @@
 #define MOBILE_AP_STATE_ALL	7
 
 #define DNSMASQ_DBUS_INTERFACE "uk.org.thekelleys.dnsmasq"
+#define CONNMAN_DBUS_INTERFACE "net.connman.Technology"
 
 #define PROC_NET_DEV			"/proc/net/dev"
 #define TETHERING_CONN_TIMEOUT		(1200000)	/* 20 Mins */
