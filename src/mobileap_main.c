@@ -416,6 +416,21 @@ gboolean tethering_get_ip_forward_status(TetheringObject *obj, gint *forward_mod
 	return TRUE;
 }
 
+mobile_ap_type_e _mobileap_type_convert(char *type)
+{
+	mobile_ap_type_e result = MOBILE_AP_TYPE_MAX;
+	if (type == NULL)
+		return result;
+
+	if (g_strcmp0(type,"wifi") == 0)
+		result = MOBILE_AP_TYPE_WIFI;
+	else if (g_strcmp0(type,"gadget") == 0)
+		result = MOBILE_AP_TYPE_USB;
+	else if (g_strcmp0(type,"bluetooth") == 0)
+		result = MOBILE_AP_TYPE_BT;
+
+	return result;
+}
 
 static DBusHandlerResult __dnsmasq_signal_filter(DBusConnection *conn,
 		DBusMessage *msg, void *user_data)
@@ -452,8 +467,12 @@ static DBusHandlerResult __dnsmasq_signal_filter(DBusConnection *conn,
 		}
 		DBG("DhcpConnected signal : %s  %s  %s %s\n",
 					ap_type, ip_addr, mac, name);
-
+		/*
 		if (_get_tethering_type_from_ip(ip_addr, &type) != MOBILE_AP_ERROR_NONE)
+			return DBUS_HANDLER_RESULT_HANDLED;
+		*/
+		type = _mobileap_type_convert(ap_type);
+		if (type == MOBILE_AP_TYPE_MAX)
 			return DBUS_HANDLER_RESULT_HANDLED;
 
 		if (_mobileap_is_enabled_by_type(type) == FALSE) {
