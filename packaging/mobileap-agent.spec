@@ -5,6 +5,7 @@ Release:    1
 Group:      TO_BE/FILLED_IN
 License:    Flora License
 Source0:    %{name}-%{version}.tar.gz
+Source1001: 	mobileap-agent.manifest
 BuildRequires: pkgconfig(dlog)
 BuildRequires: pkgconfig(dbus-glib-1)
 BuildRequires: pkgconfig(glib-2.0)
@@ -25,6 +26,7 @@ Mobile AP daemon for setting tethering environments
 
 %prep
 %setup -q
+cp %{SOURCE1001} .
 
 %build
 %cmake .
@@ -40,7 +42,7 @@ make %{?jobs:-j%jobs}
 /usr/bin/vconftool set -t int db/mobile_hotspot/hide "0" -u 0 -f
 
 %files
-%manifest mobileap-agent.manifest
+%manifest %{name}.manifest
 %defattr(-,root,root,-)
 /usr/share/dbus-1/services/org.tizen.tethering.service
 %{_bindir}/mobileap-agent
