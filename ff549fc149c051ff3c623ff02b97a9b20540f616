@@ -1,0 +1,8 @@
+Change-Id: Iff549fc149c051ff3c623ff02b97a9b20540f616
+Code-Review+2: Ryan Ware <ware@linux.intel.com>
+Verified+1: Ryan Ware <ware@linux.intel.com>
+Submitted-by: Ryan Ware <ware@linux.intel.com>
+Submitted-at: Mon, 08 Jul 2013 10:06:51 -0700
+Reviewed-on: https://review.tizen.org/gerrit/4530
+Project: platform/core/connectivity/mobileap-agent
+Branch: refs/heads/tizen
