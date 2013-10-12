@@ -38,6 +38,8 @@ gint __enable_tethering(const gchar *path, const gchar *ssid,
 		const gchar *security, const gchar *key, gint hide_mode)
 {
 	gint ret = MOBILE_AP_ERROR_NONE;
+	const gchar *psk = NULL;
+	gboolean hidden = hide_mode ? TRUE:FALSE;
 	GError *error = NULL;
 	GDBusProxyFlags flags = G_DBUS_PROXY_FLAGS_NONE
 		|G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES
@@ -67,7 +69,12 @@ gint __enable_tethering(const gchar *path, const gchar *ssid,
 		goto done;
 	}
 
-	if (ssid != NULL && key != NULL) {
+	if (ssid != NULL && key != NULL && security != NULL) {
+		if (strcmp(security, "open") == 0)
+			psk = "";
+		else
+			psk = key;
+
 		g_dbus_proxy_call_sync(technology_proxy, "SetProperty",
 					g_variant_new("(sv)",
 					"TetheringIdentifier",
@@ -86,7 +93,22 @@ gint __enable_tethering(const gchar *path, const gchar *ssid,
 		g_dbus_proxy_call_sync(technology_proxy, "SetProperty",
 					g_variant_new("(sv)",
 					"TetheringPassphrase",
-					g_variant_new_string(key)),
+					g_variant_new_string(psk)),
+					G_DBUS_CALL_FLAGS_NONE,
+					-1,
+					NULL,
+					&error);
+		if (error) {
+			ERR("SetProperties failed[%s]", error->message);
+			g_error_free(error);
+			ret = MOBILE_AP_ERROR_INTERNAL;
+			goto done;
+		}
+
+		g_dbus_proxy_call_sync(technology_proxy, "SetProperty",
+					g_variant_new("(sv)",
+					"Hidden",
+					g_variant_new_boolean(hidden)),
 					G_DBUS_CALL_FLAGS_NONE,
 					-1,
 					NULL,
