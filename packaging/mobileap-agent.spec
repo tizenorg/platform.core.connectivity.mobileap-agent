@@ -45,7 +45,7 @@ make %{?jobs:-j%jobs}
 %files
 %manifest %{name}.manifest
 %defattr(-,root,root,-)
-/usr/share/dbus-1/services/org.tizen.tethering.service
+/usr/share/dbus-1/system-services/org.tizen.tethering.service
 %{_bindir}/mobileap-agent
 
 %changelog
