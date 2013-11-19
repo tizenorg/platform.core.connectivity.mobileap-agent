@@ -337,6 +337,22 @@ void _add_wifi_device_to_array(softap_device_info_t *di, GPtrArray *array)
 	}
 }
 
+#ifdef TIZEN_ARM
+mobile_ap_error_code_e _wifi_softap_driverloader(gboolean action)
+{
+	char cmd[MAX_BUF_SIZE];
+	int ret_status = MOBILE_AP_ERROR_NONE;
+
+	char *str = action ? "softap":"stop";
+	snprintf(cmd, sizeof(cmd), "%s %s", WLAN_SCRIPT, str);
+	if (_execute_command(cmd)) {
+		ERR("execute script failed : %s\n", cmd);
+		ret_status = MOBILE_AP_ERROR_INTERNAL;
+	}
+	return ret_status;
+}
+#endif
+
 mobile_ap_error_code_e _enable_wifi_tethering(TetheringObject *obj, gchar *ssid)
 {
 	mobile_ap_error_code_e ret;
@@ -373,9 +389,21 @@ mobile_ap_error_code_e _enable_wifi_tethering(TetheringObject *obj, gchar *ssid)
 	}
 
 	/* Upload driver */
+#ifdef TIZEN_ARM
+	ret = _wifi_softap_driverloader(TRUE);
+	if (ret != MOBILE_AP_ERROR_NONE) {
+		_deinit_tethering(obj);
+		_mobileap_clear_state(MOBILE_AP_STATE_WIFI);
+		return ret;
+	}
+#endif
+
 	ret = connman_enable_tethering(TECH_TYPE_WIFI, obj->ssid,
 			obj->security_type, obj->key, obj->hide_mode);
 	if (ret != MOBILE_AP_ERROR_NONE) {
+#ifdef TIZEN_ARM
+		_wifi_softap_driverloader(FALSE);
+#endif
 		_deinit_tethering(obj);
 		_mobileap_clear_state(MOBILE_AP_STATE_WIFI);
 		return ret;
@@ -413,6 +441,14 @@ mobile_ap_error_code_e _disable_wifi_tethering(TetheringObject *obj)
 
 	_deinit_tethering(obj);
 	_mobileap_clear_state(MOBILE_AP_STATE_WIFI);
+
+#ifdef TIZEN_ARM
+	ret = _wifi_softap_driverloader(FALSE);
+	if (ret != MOBILE_AP_ERROR_NONE) {
+		ERR("unload softap driver is failed : %d\n", ret);
+		return ret;
+	}
+#endif
 
 	DBG("_disable_wifi_tethering is done\n");
 

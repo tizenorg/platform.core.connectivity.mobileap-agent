@@ -31,6 +31,9 @@ cp %{SOURCE1001} .
 
 %build
 %cmake .
+%ifarch %arm
+CFLAGS+=" -DTIZEN_ARM"
+%endif
 make %{?jobs:-j%jobs}
 
 %install
