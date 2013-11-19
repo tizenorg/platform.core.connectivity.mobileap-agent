@@ -33,6 +33,8 @@ cp %{SOURCE1001} .
 %cmake .
 make %{?jobs:-j%jobs}
 
+TIZEN_EXT=y; export TIZEN_EXT
+
 %install
 %make_install
 
