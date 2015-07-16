@@ -29,7 +29,7 @@ MESSAGE("Build type: ${CMAKE_BUILD_TYPE}")
 INCLUDE_DIRECTORIES(${INCLUDE_DIR})
 
 INCLUDE(FindPkgConfig)
-pkg_check_modules(pkgs REQUIRED dlog dbus-glib-1 gio-2.0 pmapi vconf notification libssl secure-storage capi-network-connection capi-network-bluetooth ${PRIVATE_REQUIRED_PKGS})
+pkg_check_modules(pkgs REQUIRED dlog dbus-glib-1 gio-2.0 pmapi vconf notification libssl key-manager capi-network-connection capi-network-bluetooth ${PRIVATE_REQUIRED_PKGS})
 FOREACH(flag ${pkgs_CFLAGS})
 	SET(EXTRA_CFLAGS "${EXTRA_CFLAGS} ${flag}")
 ENDFOREACH(flag)

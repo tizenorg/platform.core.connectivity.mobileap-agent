@@ -24,7 +24,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <ss_manager.h>
+#include <ckmc/ckmc-manager.h>
 
 #include "mobileap_agent.h"
 #include "mobileap_common.h"
@@ -32,6 +32,8 @@
 #include "mobileap_wifi.h"
 #include "mobileap_handler.h"
 #include "mobileap_notification.h"
+
+#define TETHERING_WIFI_PASSPHRASE_STORE_ALIAS "/ tethering_wifi_passphrase"
 
 static int __generate_initial_passphrase(char *passphrase_buf);
 static mobile_ap_error_code_e __get_hide_mode(int *hide_mode);
@@ -165,6 +167,24 @@ static mobile_ap_error_code_e __set_security_type(const char *security_type)
 	return MOBILE_AP_ERROR_NONE;
 }
 
+/*static char *add_shared_owner_prefix(const char *name)
+{
+	size_t alias_len = strlen(name) + strlen(ckmc_label_shared_owner) + strlen(ckmc_label_name_separator);
+	char *ckm_alias = (char *)malloc(alias_len + 1);
+	if (!ckm_alias) {
+		SLOGE("Failed to allocate memory");
+		return NULL;
+	}    
+
+	memset(ckm_alias, 0, alias_len);
+	strncat(ckm_alias, ckmc_label_shared_owner, strlen(ckmc_label_shared_owner));
+        strncat(ckm_alias, ckmc_label_name_separator, strlen(ckmc_label_name_separator) );
+	strncat(ckm_alias, name, strlen(name) );
+
+	return ckm_alias;
+} */
+
+
 static mobile_ap_error_code_e __get_passphrase(char *passphrase,
 		unsigned int size, unsigned int *passphrase_len)
 {
@@ -174,40 +194,21 @@ static mobile_ap_error_code_e __get_passphrase(char *passphrase,
 	}
 
 	int ret = 0;
-	ssm_file_info_t sfi;
+	char *password = NULL;
+	ckmc_raw_buffer_s *ckmc_buf;
 
-	ret = ssm_getinfo(SOFTAP_PASSPHRASE_PATH, &sfi,
-			SSM_FLAG_SECRET_OPERATION, NULL);
-	if (ret == -SS_FILE_OPEN_ERROR) {
-		*passphrase_len = __generate_initial_passphrase(passphrase);
-
-		ret = __set_passphrase(passphrase, *passphrase_len);
-		if (ret != MOBILE_AP_ERROR_NONE) {
-			memset(passphrase, 0x00, size);
-			*passphrase_len = 0;
-			return ret;
-		}
-
-		ret = ssm_getinfo(SOFTAP_PASSPHRASE_PATH, &sfi,
-				SSM_FLAG_SECRET_OPERATION, NULL);
-		if (ret < 0) {
-			ERR("ssm_getinfo is failed : %d\n", ret);
-			memset(passphrase, 0x00, size);
-			*passphrase_len = 0;
-			return MOBILE_AP_ERROR_RESOURCE;
-		}
-	} else if (ret < 0) {
-		ERR("ssm_getinfo is failed : %d\n", ret);
+	ret = ckmc_get_data(TETHERING_WIFI_PASSPHRASE_STORE_ALIAS, password, &ckmc_buf);
+	if (ret != CKMC_ERROR_NONE) {
+		ERR("Fail to get passphrase from key manager : %d\n", ret);
 		return MOBILE_AP_ERROR_RESOURCE;
 	}
 
-	memset(passphrase, 0x00, size);
-	ret = ssm_read(SOFTAP_PASSPHRASE_PATH, passphrase, sfi.originSize,
-			passphrase_len, SSM_FLAG_SECRET_OPERATION, NULL);
-	if (ret < 0) {
-		ERR("ssm_read is failed : %d\n", ret);
-		return MOBILE_AP_ERROR_RESOURCE;
-	}
+	*passphrase_len = ckmc_buf->size;
+	g_strlcpy(passphrase, ckmc_buf->data, (*passphrase_len) + 1);
+	passphrase = (char*)ckmc_buf->data;
+
+	if (ckmc_buf)
+		ckmc_buffer_free(ckmc_buf);
 
 	return MOBILE_AP_ERROR_NONE;
 }
@@ -221,11 +222,18 @@ static mobile_ap_error_code_e __set_passphrase(const char *passphrase, const uns
 	}
 
 	int ret = 0;
+	ckmc_raw_buffer_s ckmc_buf;
+	ckmc_policy_s ckmc_policy;
 
-	ret = ssm_write_buffer((char *)passphrase, size, SOFTAP_PASSPHRASE_PATH,
-			SSM_FLAG_SECRET_OPERATION, NULL);
-	if (ret < 0) {
-		ERR("ssm_write_buffer is failed : %d\n", ret);
+	ckmc_policy.password = NULL;
+	ckmc_policy.extractable = true;
+
+	ckmc_buf.data = (unsigned char *) passphrase;
+	ckmc_buf.size = strlen(passphrase);
+
+	ret = ckmc_save_data(TETHERING_WIFI_PASSPHRASE_STORE_ALIAS, ckmc_buf, ckmc_policy);
+	if (ret != CKMC_ERROR_NONE) {
+		ERR("Fail to save the passphrase : %d\n", ret);
 		return MOBILE_AP_ERROR_RESOURCE;
 	}
 
