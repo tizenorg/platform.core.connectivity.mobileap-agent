@@ -1,6 +1,6 @@
 Name:       mobileap-agent
 Summary:    Mobile AP daemon for setting tethering environments
-Version:    0.1.89
+Version:    0.1.90
 Release:    1
 Group:      TO_BE/FILLED_IN
 License:    Flora License
@@ -15,7 +15,7 @@ BuildRequires: pkgconfig(pmapi)
 BuildRequires: pkgconfig(vconf)
 BuildRequires: pkgconfig(notification)
 BuildRequires: pkgconfig(libssl)
-BuildRequires: pkgconfig(secure-storage)
+BuildRequires: pkgconfig(key-manager)
 BuildRequires: pkgconfig(capi-network-connection)
 BuildRequires: pkgconfig(capi-network-bluetooth)
 BuildRequires: cmake
