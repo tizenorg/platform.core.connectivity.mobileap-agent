@@ -39,14 +39,7 @@ static void __print_profile(connection_profile_h profile)
 	bool roaming;
 	char *apn = NULL;
 	char *home_url = NULL;
-	connection_cellular_network_type_e network_type;
 	connection_cellular_service_type_e service_type;
-
-	conn_ret = connection_profile_get_cellular_network_type(profile, &network_type);
-	if (conn_ret != CONNECTION_ERROR_NONE)
-		ERR("connection API fail : 0x%X\n", conn_ret);
-	else
-		DBG("Network type : %d\n", network_type);
 
 	conn_ret = connection_profile_get_cellular_service_type(profile, &service_type);
 	if (conn_ret != CONNECTION_ERROR_NONE)
