@@ -1,66 +1,78 @@
 /*
- *  mobileap-agent
+ * mobileap-agent
+ * Copyright (c) 2012 Samsung Electronics Co., Ltd.
  *
- * Copyright 2012-2013  Samsung Electronics Co., Ltd
- *
- * Licensed under the Flora License, Version 1.1 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the License);
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://floralicense.org/license
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 #ifndef __MOBILEAP_WIFI_H__
 #define __MOBILEAP_WIFI_H__
 
-#include "mobileap_agent.h"
+#include "mobileap_softap.h"
 
+#define VCONFKEY_MOBILE_HOTSPOT_SSID		"memory/private/mobileap-agent/ssid"
 #define SOFTAP_SECURITY_TYPE_OPEN_STR		"open"
 #define SOFTAP_SECURITY_TYPE_WPA2_PSK_STR	"wpa2-psk"
 #define SOFTAP_PASSPHRASE_PATH			"wifi_tethering.txt"
+#define SOFTAP_PASSPHRASE_GROUP_ID		"secure-storage::tethering"
 
 typedef enum {
 	SOFTAP_SECURITY_TYPE_OPEN,
 	SOFTAP_SECURITY_TYPE_WPA2_PSK,
 } softap_security_type_e;
 
-void _register_wifi_station_handler(void);
-void _add_wifi_device_to_array(softap_device_info_t *di, GPtrArray *array);
-mobile_ap_error_code_e _disable_wifi_tethering(TetheringObject *obj);
+typedef struct {
+	int hide_mode;
+	char *ssid;
+	char *key;
+	softap_security_type_e security_type;
+} wifi_saved_settings;
+
+int _get_wifi_name_from_lease_info(const char *mac, char **name_buf);
+mobile_ap_error_code_e _enable_wifi_tethering(Tethering *obj, gchar *ssid,
+	gchar *passphrase, int hide_mode, softap_security_type_e security_type);
+mobile_ap_error_code_e _disable_wifi_tethering(Tethering *obj);
+gboolean _is_trying_wifi_operation(void);
+mobile_ap_error_code_e _reload_softap_settings(Tethering *obj,
+		gchar *ssid, gchar *key, gint hide_mode, gint security_type);
+mobile_ap_error_code_e _reload_softap_settings_for_ap(Tethering *obj,
+	gchar *ssid, gchar *key, gint hide_mode, gint security_type);
 
 /* Dbus method */
-gboolean tethering_enable_wifi_tethering(TetheringObject *obj, gchar *ssid,
-		gchar *key, gint hide_mode,
-		DBusGMethodInvocation *context);
+mobile_ap_error_code_e _enable_wifi_ap(Tethering *obj, gchar *ssid,
+		gchar *passphrase, int hide_mode,
+                softap_security_type_e security_type);
+mobile_ap_error_code_e _disable_wifi_ap(Tethering *obj);
+gboolean tethering_enable_wifi_tethering(Tethering *obj,
+		GDBusMethodInvocation *context, gchar *ssid,
+		gchar *key, gint visibility, gint security_type);
 
-gboolean tethering_disable_wifi_tethering(TetheringObject *obj,
-		DBusGMethodInvocation *context);
+softap_settings_t  *_get_softap_settings();
 
-gboolean tethering_get_wifi_tethering_hide_mode(TetheringObject *obj,
-		DBusGMethodInvocation *context);
+gboolean tethering_disable_wifi_tethering(Tethering *obj,
+		GDBusMethodInvocation *context);
 
-gboolean tethering_set_wifi_tethering_hide_mode(TetheringObject *obj,
-		gint hide_mode, DBusGMethodInvocation *context);
+gboolean tethering_reload_wifi_settings(Tethering *obj,
+		GDBusMethodInvocation *context,
+		gchar *ssid, gchar *key, gint visibility, gint security_type);
 
-gboolean tethering_get_wifi_tethering_ssid(TetheringObject *obj,
-		DBusGMethodInvocation *context);
+gboolean tethering_reload_wifi_ap_settings(Tethering *obj,
+				GDBusMethodInvocation *context, gchar *ssid, gchar *key,
+				gint hide_mode, gint security);
 
-gboolean tethering_get_wifi_tethering_security_type(TetheringObject *obj,
-		DBusGMethodInvocation *context);
+gboolean tethering_enable_wifi_ap(Tethering *obj, GDBusMethodInvocation *context,
+		gchar *ssid, gchar *key, gint hide_mode, gint security_type);
 
-gboolean tethering_set_wifi_tethering_security_type(TetheringObject *obj,
-		gchar *security_type, DBusGMethodInvocation *context);
-
-gboolean tethering_get_wifi_tethering_passphrase(TetheringObject *obj,
-		DBusGMethodInvocation *context);
-
-gboolean tethering_set_wifi_tethering_passphrase(TetheringObject *obj,
-		gchar *passphrase, guint len, DBusGMethodInvocation *context);
+gboolean tethering_disable_wifi_ap(Tethering *obj,
+		GDBusMethodInvocation *context);
 #endif /* __MOBILEAP_WIFI_H__ */
