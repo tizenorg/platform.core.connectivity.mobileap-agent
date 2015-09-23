@@ -33,7 +33,7 @@
 #include "mobileap_handler.h"
 #include "mobileap_notification.h"
 
-#define TETHERING_WIFI_PASSPHRASE_STORE_ALIAS "/ tethering_wifi_passphrase"
+#define TETHERING_WIFI_PASSPHRASE_STORE_KEY "tethering_wifi_passphrase"
 
 static int __generate_initial_passphrase(char *passphrase_buf);
 static mobile_ap_error_code_e __get_hide_mode(int *hide_mode);
@@ -167,6 +167,20 @@ static mobile_ap_error_code_e __set_security_type(const char *security_type)
 	return MOBILE_AP_ERROR_NONE;
 }
 
+static char *__add_shared_owner_prefix(const char *name)
+{
+	char *ckm_alias = NULL;
+
+	 if (name == NULL) {
+		 ERR("Invalid parameter\n");
+		 return MOBILE_AP_ERROR_INVALID_PARAM;
+	 }
+
+	 ckm_alias = g_strconcat(ckmc_owner_id_system, ckmc_owner_id_separator, name, NULL);
+
+	 return ckm_alias;
+}
+
 static mobile_ap_error_code_e __get_passphrase(char *passphrase,
 		unsigned int size, unsigned int *passphrase_len)
 {
@@ -178,8 +192,9 @@ static mobile_ap_error_code_e __get_passphrase(char *passphrase,
 	int ret = 0;
 	char *password = NULL;
 	ckmc_raw_buffer_s *ckmc_buf;
+	char *alias = __add_shared_owner_prefix(TETHERING_WIFI_PASSPHRASE_STORE_KEY);
 
-	ret = ckmc_get_data(TETHERING_WIFI_PASSPHRASE_STORE_ALIAS, password, &ckmc_buf);
+	ret = ckmc_get_data(alias, password, &ckmc_buf);
 	if (ret != CKMC_ERROR_NONE) {
 		ERR("Fail to get passphrase from key manager : %d\n", ret);
 		return MOBILE_AP_ERROR_RESOURCE;
@@ -204,6 +219,7 @@ static mobile_ap_error_code_e __set_passphrase(const char *passphrase, const uns
 	}
 
 	int ret = 0;
+	char *alias = __add_shared_owner_prefix(TETHERING_WIFI_PASSPHRASE_STORE_KEY);
 	ckmc_raw_buffer_s ckmc_buf;
 	ckmc_policy_s ckmc_policy;
 
@@ -213,7 +229,7 @@ static mobile_ap_error_code_e __set_passphrase(const char *passphrase, const uns
 	ckmc_buf.data = (unsigned char *) passphrase;
 	ckmc_buf.size = strlen(passphrase);
 
-	ret = ckmc_save_data(TETHERING_WIFI_PASSPHRASE_STORE_ALIAS, ckmc_buf, ckmc_policy);
+	ret = ckmc_save_data(alias, ckmc_buf, ckmc_policy);
 	if (ret != CKMC_ERROR_NONE) {
 		ERR("Fail to save the passphrase : %d\n", ret);
 		return MOBILE_AP_ERROR_RESOURCE;
