@@ -62,6 +62,8 @@ make %{?jobs:-j%jobs}
 
 %install
 %make_install
+mkdir -p %{buildroot}%{_sysconfdir}/dbus-1/system.d
+cp mobileap-agent.conf %{buildroot}%{_sysconfdir}/dbus-1/system.d/mobileap-agent.conf
 
 %post
 /usr/bin/vconftool set -t string memory/private/mobileap-agent/ssid "" -u 0 -i -s system::vconf_network
@@ -72,6 +74,7 @@ make %{?jobs:-j%jobs}
 %manifest mobileap-agent.manifest
 %defattr(-,root,root,-)
 /usr/share/dbus-1/system-services/org.tizen.tethering.service
+%attr(644,root,root) %{_sysconfdir}/dbus-1/system.d/mobileap-agent.conf
 
 %{_bindir}/mobileap-agent
 /opt/etc/dump.d/module.d/tethering_dump.sh
