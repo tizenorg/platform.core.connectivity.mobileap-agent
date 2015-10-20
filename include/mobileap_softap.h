@@ -83,8 +83,8 @@
 			"dhcp-range=192.168.137.2,192.168.137.150,255.255.255.0\n" \
 			"dhcp-range=set:blue,192.168.129.4,192.168.129.150,255.255.255.0\n"\
 			"enable-dbus\n" \
-			"group=app\n" \
-			"user=app\n" \
+			"group=system\n" \
+			"user=system\n" \
 			"dhcp-option=tag:blue,option:router,192.168.129.3\n"
 #define DNSMASQ_CONF_FILE	"/tmp/dnsmasq.conf"
 
