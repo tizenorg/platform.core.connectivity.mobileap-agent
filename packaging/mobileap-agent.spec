@@ -39,11 +39,11 @@ make %{?jobs:-j%jobs}
 %install
 %make_install
 
-%post
-/usr/bin/vconftool set -t int memory/mobile_hotspot/connected_device "0" -u 0 -i -f
-/usr/bin/vconftool set -t int memory/mobile_hotspot/mode "0" -u 0 -i -f
-/usr/bin/vconftool set -t int db/mobile_hotspot/security "0" -u 0 -f
-/usr/bin/vconftool set -t int db/mobile_hotspot/hide "0" -u 0 -f
+#%post
+#/usr/bin/vconftool set -t int memory/mobile_hotspot/connected_device "0" -u 0 -i -f
+#/usr/bin/vconftool set -t int memory/mobile_hotspot/mode "0" -u 0 -i -f
+#/usr/bin/vconftool set -t int db/mobile_hotspot/security "0" -u 0 -f
+#/usr/bin/vconftool set -t int db/mobile_hotspot/hide "0" -u 0 -f
 
 %files
 %manifest %{name}.manifest
