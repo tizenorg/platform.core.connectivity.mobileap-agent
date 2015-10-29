@@ -1,6 +1,6 @@
 Name:		mobileap-agent
 Summary:	Mobile AP daemon for setting tethering environments
-Version:	1.0.37
+Version:	1.0.38
 Release:	1
 Group:		System/Network
 License:	Apache-2.0
@@ -28,7 +28,6 @@ BuildRequires:	pkgconfig(alarm-service)
 BuildRequires:	pkgconfig(appsvc)
 BuildRequires:	pkgconfig(libssl)
 BuildRequires:	cmake
-Requires(post):	/usr/bin/vconftool
 %if "%{?tizen_profile_name}" != "tv"
 Requires(post):	bluetooth-agent
 %endif
@@ -66,8 +65,6 @@ mkdir -p %{buildroot}%{_sysconfdir}/dbus-1/system.d
 cp mobileap-agent.conf %{buildroot}%{_sysconfdir}/dbus-1/system.d/mobileap-agent.conf
 
 %post
-/usr/bin/vconftool set -t string memory/private/mobileap-agent/ssid "" -u 0 -i -s system::vconf_network
-
 /bin/chmod +x /opt/etc/dump.d/module.d/tethering_dump.sh
 
 %files
