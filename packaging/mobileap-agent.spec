@@ -26,7 +26,7 @@ BuildRequires:	pkgconfig(capi-network-wifi-direct)
 BuildRequires:	pkgconfig(capi-network-wifi)
 BuildRequires:	pkgconfig(alarm-service)
 BuildRequires:	pkgconfig(appsvc)
-BuildRequires:	pkgconfig(libssl)
+BuildRequires:	pkgconfig(libcrypto)
 BuildRequires:	cmake
 %if "%{?tizen_profile_name}" != "tv"
 Requires(post):	bluetooth-agent
