@@ -51,7 +51,7 @@ export FFLAGS="$FFLAGS -DTIZEN_DEBUG_ENABLE"
 %if "%{?tizen_profile_name}" == "tv"
 	-DTIZEN_TV=1 \
 %endif
-%if "%{?tizen_target_name}" == "Z300H"
+%if "%{?tizen_target_name}" == "TM1"
 	-DTIZEN_WLAN_BOARD_SPRD=1 \
 %endif
 	.
