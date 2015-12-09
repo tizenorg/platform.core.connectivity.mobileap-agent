@@ -1,12 +1,12 @@
 Name:		mobileap-agent
 Summary:	Mobile AP daemon for setting tethering environments
-Version:	1.0.38
+Version:	1.0.39
 Release:	1
 Group:		System/Network
 License:	Apache-2.0
 Source0:	%{name}-%{version}.tar.gz
 
-%if "%{?tizen_profile_name}" == "tv"
+%if "%{?profile}" == "tv"
 ExcludeArch: %{arm} %ix86 x86_64
 %endif
 
@@ -28,7 +28,7 @@ BuildRequires:	pkgconfig(alarm-service)
 BuildRequires:	pkgconfig(appsvc)
 BuildRequires:	pkgconfig(libcrypto)
 BuildRequires:	cmake
-%if "%{?tizen_profile_name}" != "tv"
+%if "%{?profile}" != "tv"
 Requires(post):	bluetooth-agent
 %endif
 Requires:	iproute2
@@ -48,7 +48,7 @@ export CXXFLAGS="$CXXFLAGS -DTIZEN_DEBUG_ENABLE"
 export FFLAGS="$FFLAGS -DTIZEN_DEBUG_ENABLE"
 
 %cmake -DCMAKE_BUILD_TYPE="" \
-%if "%{?tizen_profile_name}" == "tv"
+%if "%{?profile}" == "tv"
 	-DTIZEN_TV=1 \
 %endif
 %if "%{?tizen_target_name}" == "TM1"
