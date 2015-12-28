@@ -75,4 +75,11 @@ gboolean tethering_enable_wifi_ap(Tethering *obj, GDBusMethodInvocation *context
 
 gboolean tethering_disable_wifi_ap(Tethering *obj,
 		GDBusMethodInvocation *context);
+
+gboolean tethering_get_wifi_tethering_passphrase(Tethering *obj,
+		GDBusMethodInvocation *context);
+
+gboolean tethering_set_wifi_tethering_passphrase(Tethering *obj,
+		GDBusMethodInvocation *context, gchar *passphrase);
+
 #endif /* __MOBILEAP_WIFI_H__ */

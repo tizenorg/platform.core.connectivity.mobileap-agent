@@ -1,6 +1,6 @@
 Name:		mobileap-agent
 Summary:	Mobile AP daemon for setting tethering environments
-Version:	1.0.39
+Version:	1.0.40
 Release:	1
 Group:		System/Network
 License:	Apache-2.0
@@ -27,6 +27,7 @@ BuildRequires:	pkgconfig(capi-network-wifi)
 BuildRequires:	pkgconfig(alarm-service)
 BuildRequires:	pkgconfig(appsvc)
 BuildRequires:	pkgconfig(libcrypto)
+BuildRequires:	pkgconfig(key-manager)
 BuildRequires:	cmake
 %if "%{?profile}" != "tv"
 Requires(post):	bluetooth-agent
