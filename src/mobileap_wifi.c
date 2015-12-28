@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <wifi.h>
 #include <wifi-direct.h>
+#include <ckmc/ckmc-manager.h>
 
 #include "mobileap_softap.h"
 #include "mobileap_common.h"
@@ -30,10 +31,19 @@
 #include "mobileap_notification.h"
 
 #define WIFI_RECOVERY_GUARD_TIME	1000	/* ms */
+#define MOBILE_AP_WIFI_KEY_MIN_LEN	8	/**< Minimum length of wifi key */
+#define MOBILE_AP_WIFI_KEY_MAX_LEN	64	/**< Maximum length of wifi key */
+
+#define MOBILE_AP_WIFI_PASSPHRASE_STORE_KEY "tethering_wifi_passphrase"
 
 static mobile_ap_error_code_e __update_softap_settings(softap_settings_t *st,
 	gchar *ssid, gchar *passphrase, int hide_mode, softap_security_type_e security_type);
+static mobile_ap_error_code_e __get_passphrase(char *passphrase,
+	unsigned int passphrase_size, unsigned int *passphrase_len);
+static mobile_ap_error_code_e __set_passphrase(const char *passphrase, const unsigned int size);
+static char *__get_key_manager_alias(const char* name);
 static int __turn_off_wifi(Tethering *obj);
+static unsigned int __generate_initial_passphrase(char *passphrase, unsigned int size);
 
 static GDBusMethodInvocation *g_context = NULL;
 static guint wifi_recovery_timeout_id = 0;
@@ -863,4 +873,158 @@ gboolean tethering_reload_wifi_ap_settings(Tethering *obj,
 gboolean _is_trying_wifi_operation(void)
 {
 	return (g_context || wifi_recovery_timeout_id ? TRUE : FALSE);
+}
+
+static char *__get_key_manager_alias(const char* name)
+{
+	size_t alias_len = strlen(name) + strlen(ckmc_owner_id_system) + strlen(ckmc_owner_id_separator);
+	char *ckm_alias = (char *)malloc(alias_len + 1);
+	if (!ckm_alias) {
+		ERR("Fail to allocate memory\n");
+		return NULL;
+	}
+
+	memset(ckm_alias, 0, alias_len);
+	strncat(ckm_alias, ckmc_owner_id_system, strlen(ckmc_owner_id_system));
+	strncat(ckm_alias, ckmc_owner_id_separator, strlen(ckmc_owner_id_separator));
+	strncat(ckm_alias, name, strlen(name));
+
+	return ckm_alias;
+}
+
+static mobile_ap_error_code_e __set_passphrase(const char *passphrase, const unsigned int size)
+{
+	if (passphrase == NULL || size == 0)
+		return MOBILE_AP_ERROR_INVALID_PARAM;
+
+	int ret = -1;
+	char *alias;
+	ckmc_raw_buffer_s ckmc_buf;
+	ckmc_policy_s ckmc_policy;
+
+	ckmc_policy.password = NULL;
+	ckmc_policy.extractable = true;
+
+	ckmc_buf.data = (unsigned char *) passphrase;
+	ckmc_buf.size = strlen(passphrase) + 1;
+
+	alias = __get_key_manager_alias(MOBILE_AP_WIFI_PASSPHRASE_STORE_KEY);
+
+	ret = ckmc_remove_data(alias);
+	if (ret != CKMC_ERROR_NONE && ret != CKMC_ERROR_DB_ALIAS_UNKNOWN) {
+		ERR("Fail to remove old data : %d", ret);
+		return MOBILE_AP_ERROR_INTERNAL;
+	}
+
+	ret = ckmc_save_data(alias, ckmc_buf, ckmc_policy);
+	if (ret != CKMC_ERROR_NONE) {
+		ERR("Fail to save the passphrase : %d", ret);
+		return MOBILE_AP_ERROR_INTERNAL;
+	}
+
+	if (alias)
+		free(alias);
+
+	return MOBILE_AP_ERROR_NONE;
+}
+
+static unsigned int __generate_initial_passphrase(char *passphrase, unsigned int size)
+{
+	if (passphrase == NULL || size == 0 || size < MOBILE_AP_WIFI_KEY_MIN_LEN + 1)
+		return 0;
+
+	guint32 rand_int = 0;
+	int index = 0;
+
+	for (index = 0; index < MOBILE_AP_WIFI_KEY_MIN_LEN; index++) {
+		rand_int = g_random_int_range('a', 'z');
+		passphrase[index] = rand_int;
+	}
+
+	passphrase[index] = '\0';
+	return index;
+}
+
+static mobile_ap_error_code_e __get_passphrase(char *passphrase,
+		unsigned int passphrase_size, unsigned int *passphrase_len)
+{
+	if (passphrase == NULL || passphrase_size == 0) {
+		ERR("Invalid parameter\n");
+		return MOBILE_AP_ERROR_INVALID_PARAM;
+	}
+
+	int ret = 0;
+	char *alias = NULL;
+	char *passwd = NULL;
+	char tmp[MOBILE_AP_WIFI_KEY_MAX_LEN + 1] = {0, };
+	ckmc_raw_buffer_s *ckmc_buf;
+
+	alias = __get_key_manager_alias(MOBILE_AP_WIFI_PASSPHRASE_STORE_KEY);
+	ret = ckmc_get_data(alias, passwd, &ckmc_buf);
+	if (ret < 0) {
+		DBG("Create new password\n");
+		ret = __generate_initial_passphrase(tmp, sizeof(tmp));
+
+		if (ret == 0) {
+			ERR("generate_initial_passphrase failed : %d\n", *passphrase_len);
+			return MOBILE_AP_ERROR_INTERNAL;
+		} else {
+			*passphrase_len = ret;
+			g_strlcpy(passphrase, tmp, (*passphrase_len)+1);
+
+			if (__set_passphrase(passphrase, *passphrase_len) != MOBILE_AP_ERROR_NONE) {
+				DBG("set_passphrase is failed : %s, %d", passphrase, *passphrase_len);
+				return MOBILE_AP_ERROR_INTERNAL;
+			}
+		}
+	} else {
+		*passphrase_len = ckmc_buf->size;
+		g_strlcpy(passphrase, (char *)ckmc_buf->data, (*passphrase_len) + 1);
+	}
+
+    if (alias)
+		free(alias);
+
+	return MOBILE_AP_ERROR_NONE;
+}
+
+gboolean tethering_get_wifi_tethering_passphrase(Tethering *obj,
+		GDBusMethodInvocation *context)
+{
+	char passphrase_buf[MOBILE_AP_WIFI_KEY_MAX_LEN + 1] = {0, };
+	unsigned int len = 0;
+	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
+
+	ret = __get_passphrase(passphrase_buf, sizeof(passphrase_buf), &len);
+	if (ret != MOBILE_AP_ERROR_NONE) {
+		tethering_complete_get_wifi_tethering_passphrase(obj, context, 0ULL, 0, ret);
+		return false;
+	}
+
+	tethering_complete_get_wifi_tethering_passphrase(obj, context, passphrase_buf, len, ret);
+
+	return true;
+}
+
+gboolean tethering_set_wifi_tethering_passphrase(Tethering *obj,
+		GDBusMethodInvocation *context, gchar *passphrase)
+{
+    char old_passphrase[MOBILE_AP_WIFI_KEY_MAX_LEN + 1] = {0, };
+    unsigned int old_len = 0;
+    unsigned int passphrase_len = sizeof(passphrase);
+    mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
+
+    ret = __get_passphrase(old_passphrase, sizeof(old_passphrase), &old_len);
+    if (ret == MOBILE_AP_ERROR_NONE && old_len == passphrase_len &&
+        !g_strcmp0(old_passphrase, passphrase)) {
+        ret =  MOBILE_AP_ERROR_NONE;
+        tethering_complete_set_wifi_tethering_passphrase(obj, context, ret);
+        return true;
+    }
+   
+    ret = __set_passphrase(passphrase, passphrase_len);
+
+    tethering_complete_set_wifi_tethering_passphrase(obj, context, ret);
+
+    return true;
 }
