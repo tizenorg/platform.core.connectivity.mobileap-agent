@@ -462,6 +462,10 @@ static void on_bus_acquired_cb (GDBusConnection *connection, const gchar *name,
 			G_CALLBACK(tethering_get_station_info), NULL);
 	g_signal_connect(tethering_obj, "handle-get-data-packet-usage",
 			G_CALLBACK(tethering_get_data_packet_usage), NULL);
+	g_signal_connect(tethering_obj, "handle-get-wifi-tethering-passphrase",
+			G_CALLBACK(tethering_get_wifi_tethering_passphrase), NULL);
+	g_signal_connect(tethering_obj, "handle-set-wifi-tethering-passphrase",
+			G_CALLBACK(tethering_set_wifi_tethering_passphrase), NULL);
 
 	_init_network((void *)tethering_obj);
 	_register_vconf_cb((void *)tethering_obj);

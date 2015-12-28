@@ -102,6 +102,17 @@
 			<arg type="t" name="tx_data" direction="out"/>
 		</method>
 
+		<method name="get_wifi_tethering_passphrase">
+			<arg type="s" name="passphrase" direction="out"/>
+			<arg type="i" name="len" direction="out"/>
+			<arg type="u" name="result" direction="out"/>
+		</method>
+
+		<method name="set_wifi_tethering_passphrase">
+		   <arg type="s" name="passphrase" direction="in"/>
+		   <arg type="u" name="result" direction="out"/>
+		</method>
+
 		<!-- Signal (D-Bus) definitions -->
 		<signal name="net_closed">
 		</signal>
