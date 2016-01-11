@@ -20,6 +20,7 @@
 			<arg type="s" name="mode" direction="in"/>
 			<arg type="i" name="channel" direction="in"/>
 			<arg type="i" name="visibility" direction="in"/>
+			<arg type="i" name="mac_filter" direction="in"/>
 			<arg type="i" name="security" direction="in"/>
 			<arg type="u" name="result" direction="out"/>
 		</method>
@@ -84,6 +85,7 @@
 			<arg type="s" name="mode" direction="in"/>
 			<arg type="i" name="channel" direction="in"/>
 			<arg type="i" name="visibility" direction="in"/>
+			<arg type="i" name="mac_filter" direction="in"/>
 			<arg type="i" name="security" direction="in"/>
 			<arg type="u" name="result" direction="out"/>
 		</method>
