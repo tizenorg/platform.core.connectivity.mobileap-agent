@@ -133,7 +133,7 @@ static int __get_psk_hexascii(const char *pass, const unsigned char *salt,
 }
 
 static int __execute_hostapd(const mobile_ap_type_e type, const char *ssid,
-		const char *security, const char *passphrase, int hide_mode)
+		const char *security, const char *passphrase, int hide_mode, int mac_filter)
 {
 	DBG("+\n");
 
@@ -151,7 +151,8 @@ static int __execute_hostapd(const mobile_ap_type_e type, const char *ssid,
 			ssid,
 			MOBILE_AP_WIFI_CHANNEL,
 			hide_mode ? 2 : 0,
-			MOBILE_AP_MAX_WIFI_STA);
+			MOBILE_AP_MAX_WIFI_STA,
+			mac_filter);
 	conf = g_strdup(buf);
 
 	/* Vendor elements conf. */
@@ -767,7 +768,7 @@ static int __mh_core_softap_firmware_stop(void)
 }
 
 int _mh_core_enable_softap(const mobile_ap_type_e type, const char *ssid,
-		const char *security, const char *key, int hide_mode)
+		const char *security, const char *key, int hide_mode, int mac_filter)
 {
 	if (ssid == NULL || security == NULL || key == NULL) {
 		ERR("Invalid param\n");
@@ -856,7 +857,7 @@ int _mh_core_enable_softap(const mobile_ap_type_e type, const char *ssid,
 			break;
 		}
 
-		ret_status = __execute_hostapd(type, ssid, security, key, hide_mode);
+		ret_status = __execute_hostapd(type, ssid, security, key, hide_mode, mac_filter);
 		if (ret_status != MOBILE_AP_ERROR_NONE) {
 			ERR("__execute_hostapd is failed\n");
 			break;
