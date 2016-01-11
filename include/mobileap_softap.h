@@ -106,6 +106,9 @@
 				"ignore_broadcast_ssid=%d\n" \
 				"hw_mode=g\n" \
 				"max_num_sta=%d\n" \
+				"macaddr_acl=%d\n" \
+				"accept_mac_file=/etc/hostapd.accept\n" \
+				"deny_mac_file=/etc/hostapd.deny\n" \
 				"ieee80211n=1\n"
 #else
 #define HOSTAPD_CONF		"interface=%s\n" \
@@ -116,6 +119,9 @@
 				"ignore_broadcast_ssid=%d\n" \
 				"hw_mode=g\n" \
 				"max_num_sta=%d\n" \
+				"macaddr_acl=%d\n" \
+				"accept_mac_file=/etc/hostapd.accept\n" \
+				"deny_mac_file=/etc/hostapd.deny\n" \
 				"ieee80211n=1\n" \
 				"wowlan_triggers=any\n"
 #endif
@@ -175,6 +181,7 @@ typedef struct {
 	/* in AP case, hex key will be passed from library, so one extra byte is needed */
 	char key[MOBILE_AP_WIFI_KEY_MAX_LEN + 1];
 	char security_type[SECURITY_TYPE_LEN];
+	int mac_filter;
 } softap_settings_t;
 
 typedef struct {
@@ -202,7 +209,7 @@ typedef struct {
 
 /* ssid : 32  key : 64 */
 int _mh_core_enable_softap(const mobile_ap_type_e type, const char *ssid,
-		const char *security, const char *key, int hide_mode);
+		const char *security, const char *key, int hide_mode, int mac_filter);
 int _mh_core_disable_softap(void);
 int _mh_core_get_device_info(softap_device_info_t *di);
 int _mh_core_execute_dhcp_server(void);

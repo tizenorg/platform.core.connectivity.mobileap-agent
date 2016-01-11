@@ -33,6 +33,7 @@ typedef enum {
 
 typedef struct {
 	int hide_mode;
+	int mac_filter;
 	char *ssid;
 	char *key;
 	softap_security_type_e security_type;
@@ -40,11 +41,11 @@ typedef struct {
 
 int _get_wifi_name_from_lease_info(const char *mac, char **name_buf);
 mobile_ap_error_code_e _enable_wifi_tethering(Tethering *obj, gchar *ssid,
-	gchar *passphrase, int hide_mode, softap_security_type_e security_type);
+	gchar *passphrase, int hide_mode, int mac_filter, softap_security_type_e security_type);
 mobile_ap_error_code_e _disable_wifi_tethering(Tethering *obj);
 gboolean _is_trying_wifi_operation(void);
 mobile_ap_error_code_e _reload_softap_settings(Tethering *obj,
-		gchar *ssid, gchar *key, gint hide_mode, gint security_type);
+		gchar *ssid, gchar *key, gint hide_mode, gint mac_filter, gint security_type);
 mobile_ap_error_code_e _reload_softap_settings_for_ap(Tethering *obj,
 	gchar *ssid, gchar *key, gint hide_mode, gint security_type);
 
@@ -55,7 +56,7 @@ mobile_ap_error_code_e _enable_wifi_ap(Tethering *obj, gchar *ssid,
 mobile_ap_error_code_e _disable_wifi_ap(Tethering *obj);
 gboolean tethering_enable_wifi_tethering(Tethering *obj,
 		GDBusMethodInvocation *context, gchar *ssid,
-		gchar *key, gint visibility, gint security_type);
+		gchar *key, gint visibility, gint mac_filter, gint security_type);
 
 softap_settings_t  *_get_softap_settings();
 
@@ -64,7 +65,7 @@ gboolean tethering_disable_wifi_tethering(Tethering *obj,
 
 gboolean tethering_reload_wifi_settings(Tethering *obj,
 		GDBusMethodInvocation *context,
-		gchar *ssid, gchar *key, gint visibility, gint security_type);
+		gchar *ssid, gchar *key, gint visibility, gint mac_filter, gint security_type);
 
 gboolean tethering_reload_wifi_ap_settings(Tethering *obj,
 				GDBusMethodInvocation *context, gchar *ssid, gchar *key,
