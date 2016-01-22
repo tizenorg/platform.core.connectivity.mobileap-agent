@@ -28,6 +28,7 @@ BuildRequires:	pkgconfig(alarm-service)
 BuildRequires:	pkgconfig(appsvc)
 BuildRequires:	pkgconfig(libcrypto)
 BuildRequires:	pkgconfig(key-manager)
+BuildRequires:	pkgconfig(tracker)
 BuildRequires:	cmake
 %if "%{?profile}" != "tv"
 Requires(post):	bluetooth-agent

@@ -29,6 +29,7 @@
 #include <appcore-common.h>
 #include <wifi.h>
 #include <alarm.h>
+#include <tracker.h>
 
 #include "mobileap_softap.h"
 #include "mobileap_handler.h"
@@ -179,6 +180,9 @@ void _block_device_sleep(void)
 		ERR("PM control [ERROR] result = %d\n", ret);
 	else
 		DBG("PM control [SUCCESS]\n");
+	ret = tracker_start_services(TRACKER_SERVICE_NETWORK);
+	if (ret != TRACKER_ERROR_NONE)
+		ERR("Failed to notice that network service is started");
 }
 
 void _unblock_device_sleep(void)
@@ -190,6 +194,9 @@ void _unblock_device_sleep(void)
 		ERR("PM control [ERROR] result = %d\n", ret);
 	else
 		DBG("PM control [SUCCESS]\n");
+	ret = tracker_stop_services(TRACKER_SERVICE_NETWORK);
+	if (ret != TRACKER_ERROR_NONE)
+		ERR("Failed to notice that network service is stopped");
 }
 
 int _init_tethering(void)
