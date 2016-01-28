@@ -133,7 +133,7 @@ static int __get_psk_hexascii(const char *pass, const unsigned char *salt,
 }
 
 static int __execute_hostapd(const mobile_ap_type_e type, const char *ssid,
-		const char *security, const char *passphrase, int hide_mode)
+		const char *security, const char *passphrase, const char* mode, int channel, int hide_mode)
 {
 	DBG("+\n");
 
@@ -144,15 +144,26 @@ static int __execute_hostapd(const mobile_ap_type_e type, const char *ssid,
 	pid_t pid;
 	int ret;
 	char key[MOBILE_AP_WIFI_KEY_MAX_LEN + 1];
+	char *hw_mode = NULL;
+
+	if (strcmp(mode, "b") && strcmp(mode, "a") && strcmp(mode, "ad")) {
+		hw_mode = g_strdup("g");
+	} else {
+		hw_mode = g_strdup(mode);
+	}
+
 	/* Default conf. */
 	snprintf(buf, sizeof(buf), HOSTAPD_CONF,
 			WIFI_IF,
 			HOSTAPD_CTRL_INTF_DIR,
 			ssid,
-			MOBILE_AP_WIFI_CHANNEL,
+			channel,
 			hide_mode ? 2 : 0,
+			hw_mode,
 			MOBILE_AP_MAX_WIFI_STA);
 	conf = g_strdup(buf);
+
+	free(hw_mode);
 
 	/* Vendor elements conf. */
 	if (type == MOBILE_AP_TYPE_WIFI) {
@@ -767,7 +778,7 @@ static int __mh_core_softap_firmware_stop(void)
 }
 
 int _mh_core_enable_softap(const mobile_ap_type_e type, const char *ssid,
-		const char *security, const char *key, int hide_mode)
+		const char *security, const char *key, const char *mode, int channel, int hide_mode)
 {
 	if (ssid == NULL || security == NULL || key == NULL) {
 		ERR("Invalid param\n");
@@ -856,7 +867,7 @@ int _mh_core_enable_softap(const mobile_ap_type_e type, const char *ssid,
 			break;
 		}
 
-		ret_status = __execute_hostapd(type, ssid, security, key, hide_mode);
+		ret_status = __execute_hostapd(type, ssid, security, key, mode, channel, hide_mode);
 		if (ret_status != MOBILE_AP_ERROR_NONE) {
 			ERR("__execute_hostapd is failed\n");
 			break;
