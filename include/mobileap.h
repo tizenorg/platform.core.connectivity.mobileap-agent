@@ -82,6 +82,7 @@ typedef enum {
 #define MOBILE_AP_WIFI_KEY_MIN_LEN	8	/**< Minimum length of wifi key */
 #define MOBILE_AP_WIFI_PLAIN_TEXT_KEY_MAX_LEN	63	/**< Maximum length of wifi plain text key */
 #define MOBILE_AP_WIFI_KEY_MAX_LEN	64	/**< Maximum length of wifi hash key */
+#define MOBILE_AP_WIFI_MODE_MAX_LEN 10	/**< Minimum length of wifi mode */
 
 /**
 * Common configuration

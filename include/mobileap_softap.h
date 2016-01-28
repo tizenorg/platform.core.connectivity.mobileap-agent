@@ -97,6 +97,8 @@
 #define HOSTAPD_CONF_FILE	"/opt/var/lib/misc/hostapd.conf"
 #define HOSTAPD_CTRL_INTF_DIR	"/opt/var/lib/misc/hostapd"
 #define HOSTAPD_CONF_LEN	1024
+#define HOSTAPD_DEFAULT_HW_MODE	"g"
+
 #ifndef TIZEN_WLAN_BOARD_SPRD
 #define HOSTAPD_CONF		"interface=%s\n" \
 				"driver=nl80211\n" \
@@ -104,7 +106,7 @@
 				"ssid=%s\n" \
 				"channel=%d\n" \
 				"ignore_broadcast_ssid=%d\n" \
-				"hw_mode=g\n" \
+				"hw_mode=%s\n" \
 				"max_num_sta=%d\n" \
 				"ieee80211n=1\n"
 #else
@@ -114,7 +116,7 @@
 				"ssid=%s\n" \
 				"channel=%d\n" \
 				"ignore_broadcast_ssid=%d\n" \
-				"hw_mode=g\n" \
+				"hw_mode=%s\n" \
 				"max_num_sta=%d\n" \
 				"ieee80211n=1\n" \
 				"wowlan_triggers=any\n"
@@ -175,6 +177,8 @@ typedef struct {
 	/* in AP case, hex key will be passed from library, so one extra byte is needed */
 	char key[MOBILE_AP_WIFI_KEY_MAX_LEN + 1];
 	char security_type[SECURITY_TYPE_LEN];
+	char mode[MOBILE_AP_WIFI_MODE_MAX_LEN + 1];
+	int channel;
 } softap_settings_t;
 
 typedef struct {
@@ -202,7 +206,7 @@ typedef struct {
 
 /* ssid : 32  key : 64 */
 int _mh_core_enable_softap(const mobile_ap_type_e type, const char *ssid,
-		const char *security, const char *key, int hide_mode);
+		const char *security, const char *key, const char *mode, int channel, int hide_mode);
 int _mh_core_disable_softap(void);
 int _mh_core_get_device_info(softap_device_info_t *di);
 int _mh_core_execute_dhcp_server(void);
