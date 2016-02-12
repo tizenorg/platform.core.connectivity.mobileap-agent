@@ -1011,6 +1011,34 @@ static mobile_ap_error_code_e __get_passphrase(char *passphrase,
 	return MOBILE_AP_ERROR_NONE;
 }
 
+gboolean tethering_enable_dhcp(Tethering *obj,
+		GDBusMethodInvocation *context, gboolean enable)
+{
+	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
+
+	if (enable) {
+		ret = _mh_core_execute_dhcp_server();
+	}
+	else {
+		ret = _mh_core_terminate_dhcp_server();
+	}
+
+	tethering_complete_enable_dhcp(obj, context, ret);
+	return TRUE;
+}
+
+gboolean tethering_dhcp_range(Tethering *obj,
+		GDBusMethodInvocation *context, gchar *rangestart, gchar *rangestop)
+{
+	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
+
+	ERR("+\n");
+	ret = _mh_core_execute_dhcp_server_range(rangestart, rangestop);
+
+	tethering_complete_dhcp_range(obj, context, ret);
+	return TRUE;
+}
+
 gboolean tethering_get_wifi_tethering_passphrase(Tethering *obj,
 		GDBusMethodInvocation *context)
 {

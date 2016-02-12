@@ -1100,37 +1100,41 @@ int _mh_core_execute_dhcp_server(void)
 	FILE *fp = NULL;
 	pid_t pid;
 
-	fp = fopen(DNSMASQ_CONF_FILE, "w");
-	if (NULL == fp) {
-		ERR("Could not create the file.\n");
-		return MOBILE_AP_ERROR_RESOURCE;
-	}
-	snprintf(buf, DNSMASQ_CONF_LEN, DNSMASQ_CONF);
-	fputs(buf, fp);
-	fclose(fp);
+	if (dnsmasq_pid == 0) {
+		fp = fopen(DNSMASQ_CONF_FILE, "w");
+		if (NULL == fp) {
+			ERR("Could not create the file.\n");
+			return MOBILE_AP_ERROR_RESOURCE;
+		}
+		snprintf(buf, DNSMASQ_CONF_LEN, DNSMASQ_CONF);
+		fputs(buf, fp);
+		fclose(fp);
 
-	pid = fork();
-	if (pid < 0) {
-		ERR("fork failed\n");
-		return MOBILE_AP_ERROR_RESOURCE;
-	}
-
-	if (pid == 0) {
-		/* -d : Debug mode
-		 * -p 0 : DNS off
-		 * -C file : Configuration file path
-		 */
-		if (execl("/usr/bin/dnsmasq", "/usr/bin/dnsmasq", "-d",
-					"-p", "0", "-C", DNSMASQ_CONF_FILE,
-					(char *)NULL)) {
-			ERR("execl failed\n");
+		pid = fork();
+		if (pid < 0) {
+			ERR("fork failed\n");
+			return MOBILE_AP_ERROR_RESOURCE;
 		}
 
-		ERR("Should not get here!");
-		return MOBILE_AP_ERROR_RESOURCE;
-	}
+		if (pid == 0) {
+			/* -d : Debug mode
+			 * -p 0 : DNS off
+			 * -C file : Configuration file path
+			 */
+			if (execl("/usr/bin/dnsmasq", "/usr/bin/dnsmasq", "-d",
+						"-p", "0", "-C", DNSMASQ_CONF_FILE,
+						(char *)NULL)) {
+				ERR("execl failed\n");
+			}
 
-	dnsmasq_pid = pid;
+			ERR("Should not get here!");
+			return MOBILE_AP_ERROR_RESOURCE;
+		}
+
+		dnsmasq_pid = pid;
+	} else {
+		DBG("DNS-SERVER is already running.\n");
+	}
 
 	return MOBILE_AP_ERROR_NONE;
 }
@@ -1151,6 +1155,43 @@ int _mh_core_terminate_dhcp_server(void)
 	ret = unlink(DNSMASQ_CONF_FILE);
 	if (ret < 0) {
 		ERR("unlink is failed : %s\n", strerror(errno));
+	}
+
+	return MOBILE_AP_ERROR_NONE;
+}
+
+int _mh_core_execute_dhcp_server_range(gchar *rangestart, gchar *rangestop)
+{
+	pid_t pid;
+	char buf[DNSMASQ_RANGE_LEN];
+
+	DBG("+\n");
+	if (dnsmasq_pid == 0) {
+		pid = fork();
+		if (pid < 0) {
+			ERR("fork failed");
+			return MOBILE_AP_ERROR_RESOURCE;
+		}
+
+		if (pid == 0) {
+			/* -d : Debug mode
+			 * -p0 : DNS off
+			 * -F : Dhcp range
+			 */
+
+			snprintf(buf, sizeof(buf), "%s,%s", rangestart, rangestop);
+			
+			if (execl("/usr/bin/dnsmasq", "/usr/bin/dnsmasq", "-d", "-p", "0",
+						"-F", buf, (char *)NULL)) {
+				ERR("execl failed\n");
+			}
+
+			ERR("Should not get here!");
+			return MOBILE_AP_ERROR_RESOURCE;
+		}
+		dnsmasq_pid = pid;
+	} else {
+		DBG("DNS-SERVER is already running.\n");
 	}
 
 	return MOBILE_AP_ERROR_NONE;

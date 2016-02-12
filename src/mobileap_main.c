@@ -466,6 +466,10 @@ static void on_bus_acquired_cb (GDBusConnection *connection, const gchar *name,
 			G_CALLBACK(tethering_get_wifi_tethering_passphrase), NULL);
 	g_signal_connect(tethering_obj, "handle-set-wifi-tethering-passphrase",
 			G_CALLBACK(tethering_set_wifi_tethering_passphrase), NULL);
+	g_signal_connect(tethering_obj, "handle-enable-dhcp",
+			G_CALLBACK(tethering_enable_dhcp), NULL);
+	g_signal_connect(tethering_obj, "handle-dhcp-range",
+			G_CALLBACK(tethering_dhcp_range), NULL);
 
 	_init_network((void *)tethering_obj);
 	_register_vconf_cb((void *)tethering_obj);

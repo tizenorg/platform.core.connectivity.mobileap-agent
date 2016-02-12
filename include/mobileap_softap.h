@@ -43,6 +43,7 @@
 #define NET_BUF_LEN		12
 #define INTERFACE_NAME_LEN	12
 #define SECURITY_TYPE_LEN	32
+#define DNSMASQ_RANGE_LEN	32
 
 /* Network Interface */
 #define IP_SUBNET_MASK		"255.255.255.0"
@@ -218,6 +219,7 @@ int _mh_core_disable_softap(void);
 int _mh_core_get_device_info(softap_device_info_t *di);
 int _mh_core_execute_dhcp_server(void);
 int _mh_core_terminate_dhcp_server(void);
+int _mh_core_execute_dhcp_server_range(gchar *rangestart, gchar *rangestop);
 int _mh_core_enable_masquerade(const char *ext_if);
 int _mh_core_disable_masquerade(const char *ext_if);
 void _mh_core_add_data_to_array(GPtrArray *array, guint type, gchar *dev_name);
