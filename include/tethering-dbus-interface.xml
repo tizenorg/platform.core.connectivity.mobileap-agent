@@ -119,6 +119,17 @@
 		   <arg type="u" name="result" direction="out"/>
 		</method>
 
+		<method name="enable_dhcp">
+			<arg type="b" name="enable" direction="in"/>
+			<arg type="u" name="result" direction="out"/>
+		</method>
+
+		<method name="dhcp_range">
+			<arg type="s" name="rangestart" direction="in"/>
+			<arg type="s" name="rangestop" direction="in"/>
+			<arg type="u" name="result" direction="out"/>
+		</method>
+
 		<!-- Signal (D-Bus) definitions -->
 		<signal name="net_closed">
 		</signal>

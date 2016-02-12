@@ -85,4 +85,10 @@ gboolean tethering_get_wifi_tethering_passphrase(Tethering *obj,
 gboolean tethering_set_wifi_tethering_passphrase(Tethering *obj,
 		GDBusMethodInvocation *context, gchar *passphrase);
 
+gboolean tethering_enable_dhcp(Tethering *obj,
+		GDBusMethodInvocation *context, gboolean enable);
+
+gboolean tethering_dhcp_range(Tethering *obj,
+		GDBusMethodInvocation *context, gchar *rangestart, gchar *rangestop);
+
 #endif /* __MOBILEAP_WIFI_H__ */
