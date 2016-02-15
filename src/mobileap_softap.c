@@ -146,7 +146,7 @@ static int __execute_hostapd(const mobile_ap_type_e type, const char *ssid,
 	char key[MOBILE_AP_WIFI_KEY_MAX_LEN + 1];
 	char *hw_mode = NULL;
 
-	if (strcmp(mode, "b") && strcmp(mode, "a") && strcmp(mode, "ad")) {
+	if (mode == NULL) {
 		hw_mode = g_strdup("g");
 	} else {
 		hw_mode = g_strdup(mode);

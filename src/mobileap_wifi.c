@@ -284,9 +284,7 @@ static mobile_ap_error_code_e __update_softap_settings(softap_settings_t *st,
 		return MOBILE_AP_ERROR_INTERNAL;
 	}
 
-	if (mode == NULL) {
-		g_strlcpy(st->mode, "", sizeof(st->mode));
-	} else {
+	if (mode != NULL) {
 		g_strlcpy(st->mode, mode, sizeof(st->mode));
 	}
 
@@ -294,8 +292,8 @@ static mobile_ap_error_code_e __update_softap_settings(softap_settings_t *st,
 	st->hide_mode = hide_mode;
 	st->mac_filter = mac_filter;
 
-	SDBG("ssid : %s security type : %s hide mode : %d mac filter : %d\n",
-			st->ssid, st->security_type, st->hide_mode, st->mac_filter);
+	SDBG("ssid : %s security type : %s hide mode : %d mac filter : %d hw_mode: %s\n",
+			st->ssid, st->security_type, st->hide_mode, st->mac_filter, st->mode);
 
 	return MOBILE_AP_ERROR_NONE;
 }
