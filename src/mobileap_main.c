@@ -47,6 +47,7 @@ GDBusObjectManagerServer *manager_server = NULL;
 guint owner_id = 0;
 GDBusConnection *teth_gdbus_conn = NULL;
 Tethering *tethering_obj = NULL;
+Softap *softap_obj = NULL;
 static int init_count = 0;
 guint conn_sig_id = 0;
 guint deleted_sig_id = 0;
@@ -421,6 +422,7 @@ static void on_bus_acquired_cb (GDBusConnection *connection, const gchar *name,
 {
 	DBG("+\n");
 	GDBusInterfaceSkeleton *intf = NULL;
+	GDBusInterfaceSkeleton *softap_intf = NULL;
 	teth_gdbus_conn = connection;
 
 	manager_server = g_dbus_object_manager_server_new(TETHERING_SERVICE_OBJECT_PATH);
@@ -432,6 +434,15 @@ static void on_bus_acquired_cb (GDBusConnection *connection, const gchar *name,
 	intf = G_DBUS_INTERFACE_SKELETON(tethering_obj);
 	if (!g_dbus_interface_skeleton_export(intf, connection,
 			TETHERING_SERVICE_OBJECT_PATH, NULL)) {
+		ERR("Export with path failed");
+	} else {
+		DBG("Export sucessss");
+	}
+
+	softap_obj = softap_skeleton_new();
+	softap_intf = G_DBUS_INTERFACE_SKELETON(softap_obj);
+	if (!g_dbus_interface_skeleton_export(softap_intf, connection,
+				TETHERING_SERVICE_OBJECT_PATH, NULL)) {
 		ERR("Export with path failed");
 	} else {
 		DBG("Export sucessss");
@@ -470,6 +481,11 @@ static void on_bus_acquired_cb (GDBusConnection *connection, const gchar *name,
 			G_CALLBACK(tethering_enable_dhcp), NULL);
 	g_signal_connect(tethering_obj, "handle-dhcp-range",
 			G_CALLBACK(tethering_dhcp_range), NULL);
+
+	g_signal_connect(softap_obj, "handle-enable",
+			G_CALLBACK(softap_enable), NULL);
+	g_signal_connect(softap_obj, "handle-disable",
+			G_CALLBACK(softap_disable), NULL);
 
 	_init_network((void *)tethering_obj);
 	_register_vconf_cb((void *)tethering_obj);

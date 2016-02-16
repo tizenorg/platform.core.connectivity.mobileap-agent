@@ -22,9 +22,10 @@
 extern "C" {
 #endif
 
-#define TETHERING_SERVICE_OBJECT_PATH	"/Tethering"
-#define TETHERING_SERVICE_NAME		"org.tizen.tethering"
+#define TETHERING_SERVICE_OBJECT_PATH	"/MobileapAgent"
+#define TETHERING_SERVICE_NAME		"org.tizen.MobileapAgent"
 #define TETHERING_SERVICE_INTERFACE	"org.tizen.tethering"
+#define SOFTAP_SERVICE_INTERFACE	"org.tizen.softap"
 
 #define SIGNAL_NAME_NET_CLOSED		"net_closed"
 #define SIGNAL_NAME_STA_CONNECT		"sta_connected"
@@ -70,6 +71,8 @@ typedef enum {
 	E_SIGNAL_SECURITY_TYPE_CHANGED,
 	E_SIGNAL_SSID_VISIBILITY_CHANGED,
 	E_SIGNAL_PASSPHRASE_CHANGED,
+	E_SIGANL_SOFTAP_ON,
+	E_SIGNAL_SOFTAP_OFF,
 	E_SIGNAL_MAX
 } mobile_ap_sig_e;
 

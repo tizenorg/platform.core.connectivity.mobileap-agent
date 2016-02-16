@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE node PUBLIC
+	"-//freedesktop//DTD D-Bus Object Introspection 1.0//EN"
+	"http://standards.freedesktop.org/dbus/1.0/introspect.dtd">
+
+<node>
+	<interface name="org.tizen.softap">
+
+		<!-- Method definitions -->
+
+		<method name="enable">
+			<arg type="s" name="ssid" direction="in"/>
+			<arg type="s" name="key" direction="in"/>
+			<arg type="i" name="visibility" direction="in"/>
+			<arg type="i" name="security" direction="in"/>
+			<arg type="u" name="result" direction="out"/>
+		</method>
+
+		<method name="disable">
+			<arg type="u" name="result" direction="out"/>
+		</method>
+
+		<method name="reload_settings">
+			<arg type="s" name="ssid" direction="in"/>
+			<arg type="s" name="key" direction="in"/>
+			<arg type="i" name="visibility" direction="in"/>
+			<arg type="i" name="security" direction="in"/>
+			<arg type="u" name="result" direction="out"/>
+		</method>
+
+		<method name="get_station_info">
+		<arg type="a(a{sv})" name="station" direction="out"/>
+		</method>
+
+		<!-- Signal (D-Bus) definitions -->
+		<signal name="sta_connected">
+			<arg type="s" name="arg1" direction="out"/>
+		</signal>
+
+		<signal name="sta_disconnected">
+			<arg type="s" name="arg1" direction="out"/>
+		</signal>
+
+		<signal name="soft_ap_on">
+		</signal>
+
+		<signal name="soft_ap_off">
+			<arg type="s" name="arg1" direction="out"/>
+		</signal>
+
+		<signal name="low_batt_mode">
+		</signal>
+
+		<signal name="flight_mode">
+		</signal>
+
+		<signal name="dhcp_status">
+			<arg type="s" name="signalName" direction="out"/>
+			<arg type="u" name="type" direction="out"/>
+			<arg type="s" name="ip" direction="out"/>
+			<arg type="s" name="mac" direction="out"/>
+			<arg type="s" name="hostName" direction="out"/>
+			<arg type="u" name="tm" direction="out"/>
+		</signal>
+	</interface>
+</node>

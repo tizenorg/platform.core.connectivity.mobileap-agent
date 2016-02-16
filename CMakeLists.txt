@@ -62,18 +62,18 @@ SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--as-needed -pie")
 
 ADD_CUSTOM_COMMAND(
 	WORKING_DIRECTORY
-	OUTPUT ${CMAKE_BINARY_DIR}/tethering-server-stub.c
+	OUTPUT ${CMAKE_BINARY_DIR}/mobileap-agent-server-stub.c
 	COMMAND gdbus-codegen --interface-prefix org.tizen.
-			--generate-c-code tethering-server-stub
+			--generate-c-code mobileap-agent-server-stub
 			--c-generate-object-manager
 			--generate-docbook generated-docs
-			${INCLUDE_DIR}/tethering-dbus-interface.xml
+			${INCLUDE_DIR}/tethering-dbus-interface.xml ${INCLUDE_DIR}/softap-dbus-interface.xml
 			COMMENT "Generating GDBus .c/.h")
 
-ADD_EXECUTABLE(${PROJECT_NAME} ${SRCS} ${CMAKE_BINARY_DIR}/tethering-server-stub.c)
+ADD_EXECUTABLE(${PROJECT_NAME} ${SRCS} ${CMAKE_BINARY_DIR}/mobileap-agent-server-stub.c)
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${pkgs_LDFLAGS})
 
 INSTALL(TARGETS ${PROJECT_NAME} DESTINATION bin)
-INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/packaging/org.tizen.tethering.service DESTINATION share/dbus-1/system-services)
+INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/packaging/org.tizen.MobileapAgent.service DESTINATION share/dbus-1/system-services)
 INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/tethering_dump.sh DESTINATION /opt/etc/dump.d/module.d/)
 

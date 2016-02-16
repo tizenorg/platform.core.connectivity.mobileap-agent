@@ -1,4 +1,4 @@
 [D-BUS Service]
-Name=org.tizen.tethering
+Name=org.tizen.MobileapAgent
 Exec=/usr/bin/mobileap-agent
 User=root

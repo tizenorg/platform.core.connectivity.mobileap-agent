@@ -22,7 +22,7 @@
 #include <gio/gio.h>
 
 #include "mobileap_softap.h"
-#include <tethering-server-stub.h>
+#include <mobileap-agent-server-stub.h>
 
 gint _slist_find_station_by_interface(gconstpointer a, gconstpointer b);
 gint _slist_find_station_by_mac(gconstpointer a, gconstpointer b);

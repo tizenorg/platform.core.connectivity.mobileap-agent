@@ -698,6 +698,120 @@ DONE:
 	return ret;
 }
 
+mobile_ap_error_code_e _enable_soft_ap(Softap *obj,
+					gchar *ssid, gchar *passphrase, int hide_mode,
+					softap_security_type_e security_type)
+{
+	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
+
+	if (obj == NULL || ssid == NULL || !strlen(ssid)) {
+		ERR("invalid parameters\n");
+		return MOBILE_AP_ERROR_INVALID_PARAM;
+	}
+
+	if (security_type == SOFTAP_SECURITY_TYPE_WPA2_PSK &&
+		(passphrase == NULL || strlen(passphrase) >= MOBILE_AP_WIFI_KEY_MAX_LEN)) {
+		ERR("hex key length is not correct\n");
+		return MOBILE_AP_ERROR_INVALID_PARAM;
+	}
+
+	if (_mobileap_is_enabled(MOBILE_AP_STATE_WIFI | MOBILE_AP_STATE_BT
+			| MOBILE_AP_STATE_USB)) {
+		ERR("Tethering is already enabled\n");
+		return MOBILE_AP_ERROR_RESOURCE;
+	}
+
+	if (_mobileap_is_enabled(MOBILE_AP_STATE_WIFI_AP)) {
+		ERR("Wi-Fi AP is already enabled\n");
+		return MOBILE_AP_ERROR_ALREADY_ENABLED;
+	}
+
+	if (!_mobileap_set_state(MOBILE_AP_STATE_WIFI_AP)) {
+		return MOBILE_AP_ERROR_RESOURCE;
+	}
+	ret = __update_softap_settings(&obj_softap_settings, ssid, passphrase,
+			NULL, MOBILE_AP_WIFI_CHANNEL, hide_mode, false, security_type);
+	if (ret != MOBILE_AP_ERROR_NONE) {
+		_mobileap_clear_state(MOBILE_AP_STATE_WIFI_AP);
+		return ret;
+	}
+
+	_block_device_sleep();
+
+	if (_init_tethering() != MOBILE_AP_ERROR_NONE) {
+		_mobileap_clear_state(MOBILE_AP_STATE_WIFI_AP);
+		ret = MOBILE_AP_ERROR_RESOURCE;
+		goto DONE;
+	}
+
+	/* Upload driver */
+	ret = _mh_core_enable_softap(MOBILE_AP_TYPE_WIFI_AP,
+			obj_softap_settings.ssid,
+			obj_softap_settings.security_type,
+			obj_softap_settings.key,
+			NULL,
+			obj_softap_settings.channel,
+			obj_softap_settings.hide_mode,
+			obj_softap_settings.mac_filter);
+	if (ret != MOBILE_AP_ERROR_NONE) {
+		_deinit_tethering();
+		_mobileap_clear_state(MOBILE_AP_STATE_WIFI_AP);
+		goto DONE;
+	}
+
+	_delete_timeout_noti();
+	_init_timeout_cb(MOBILE_AP_TYPE_WIFI_AP, (void *)obj);
+	_start_timeout_cb(MOBILE_AP_TYPE_WIFI_AP, time(NULL) + WIFI_AP_CONN_TIMEOUT);
+	_add_interface_routing(WIFI_IF, IP_ADDRESS_SOFTAP);
+	_add_routing_rule(WIFI_IF);
+
+DONE:
+	_unblock_device_sleep();
+	return ret;
+}
+
+mobile_ap_error_code_e _disable_soft_ap(Softap *obj)
+{
+	int ret;
+	int state;
+	mobile_ap_type_e type;
+
+	type = MOBILE_AP_TYPE_WIFI_AP;
+	state = MOBILE_AP_STATE_WIFI_AP;
+
+	if (!_mobileap_is_enabled(state)) {
+		ERR("Wi-Fi ap tethering has not been activated\n");
+		ret = MOBILE_AP_ERROR_NOT_ENABLED;
+		return ret;
+	}
+
+	_block_device_sleep();
+	_del_routing_rule(WIFI_IF);
+	_del_interface_routing(WIFI_IF, IP_ADDRESS_SOFTAP);
+	_flush_ip_address(WIFI_IF);
+	_deinit_timeout_cb(type);
+
+	if (_remove_station_info_all(type) != MOBILE_AP_ERROR_NONE) {
+		ERR("_remove_station_info_all is failed. Ignore it.\n");
+	}
+
+	ret = _mh_core_disable_softap();
+	if (ret != MOBILE_AP_ERROR_NONE) {
+		ERR("_mh_core_disable_softap is failed : %d\n", ret);
+		goto DONE;
+	}
+
+	_deinit_tethering();
+	_mobileap_clear_state(state);
+
+	DBG("_disable_wifi_ap is done\n");
+
+DONE:
+	_unblock_device_sleep();
+	return ret;
+}
+
+
 gboolean tethering_enable_wifi_tethering(Tethering *obj,
 		GDBusMethodInvocation *context, gchar *ssid,
 		gchar *key, gchar *mode, gint channel, gint visibility, gint mac_filter, gint security_type)
@@ -1075,4 +1189,52 @@ gboolean tethering_set_wifi_tethering_passphrase(Tethering *obj,
     tethering_complete_set_wifi_tethering_passphrase(obj, context, ret);
 
     return true;
+}
+
+gboolean softap_enable(Softap *obj, GDBusMethodInvocation *context,
+		gchar *ssid, gchar *key, gint hide_mode, gint security_type)
+{
+	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
+	gboolean ret_val = FALSE;
+	
+	DBG("+");
+
+	g_assert(obj != NULL);
+	g_assert(context != NULL);
+
+	if (wifi_recovery_timeout_id) {
+		DBG("Wi-Fi recovery is cancelled\n");
+		g_source_remove(wifi_recovery_timeout_id);
+		wifi_recovery_timeout_id = 0;
+	}
+
+	ret = _enable_soft_ap(obj, ssid, key, !hide_mode,
+			(softap_security_type_e)security_type);
+	if (ret != MOBILE_AP_ERROR_NONE) {
+		ERR("_enable_wifi_tethering is failed\n");
+	} else {
+		softap_emit_soft_ap_on(obj);
+		ret_val = TRUE;
+	}
+	softap_complete_enable(obj, context, ret);
+	return ret_val;
+}
+
+gboolean softap_disable(Softap *obj,
+		GDBusMethodInvocation *context)
+{
+	int ret = MOBILE_AP_ERROR_NONE;
+
+	DBG("+");
+	g_assert(obj != NULL);
+	g_assert(context != NULL);
+
+	ret = _disable_soft_ap(obj);
+	softap_emit_soft_ap_off(obj, NULL);
+	softap_complete_disable(obj, context, ret);
+
+	if (ret != MOBILE_AP_ERROR_NONE)
+		return FALSE;
+
+	return TRUE;
 }

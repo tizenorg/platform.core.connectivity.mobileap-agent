@@ -91,4 +91,11 @@ gboolean tethering_enable_dhcp(Tethering *obj,
 gboolean tethering_dhcp_range(Tethering *obj,
 		GDBusMethodInvocation *context, gchar *rangestart, gchar *rangestop);
 
+/* Dbus method for softap APIs */
+gboolean softap_enable(Softap *obj, GDBusMethodInvocation *context,
+		gchar *ssid, gchar *key, gint hide_mode, gint security_type);
+
+gboolean softap_disable(Softap *obj,
+		GDBusMethodInvocation *context);
+
 #endif /* __MOBILEAP_WIFI_H__ */
