@@ -25,6 +25,9 @@
 #include <notification_internal.h>
 #include <bluetooth.h>
 #include <bundle_internal.h>
+#ifndef TIZEN_TV
+#include <appsvc.h>
+#endif
 
 #include "mobileap_softap.h"
 #include "mobileap_notification.h"

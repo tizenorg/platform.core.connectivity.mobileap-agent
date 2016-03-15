@@ -201,11 +201,13 @@ static gboolean __is_bt_adapter_on(void)
 		return FALSE;
 }
 
-gboolean __bt_adapter_timeout_cb(Tethering *obj)
+gboolean __bt_adapter_timeout_cb(gpointer data)
 {
 	DBG("+\n");
 
+	Tethering *obj = (Tethering *)data;
 	static int retry_count = 0;
+
 	if (__is_bt_adapter_on() == TRUE) {
 		DBG("BT Adapter is enabled by other process \n");
 		retry_count = 0;
@@ -241,7 +243,7 @@ static mobile_ap_error_code_e __turn_on_bt_adapter(gpointer data)
 			g_source_remove(__recheck_bt_adapter_timer);
 		}
 		__recheck_bt_adapter_timer = g_timeout_add(PS_RECHECK_INTERVAL,
-				__bt_adapter_timeout_cb, obj);
+				(GSourceFunc) __bt_adapter_timeout_cb, (gpointer) obj);
 		return MOBILE_AP_ERROR_NONE;
 	}
 

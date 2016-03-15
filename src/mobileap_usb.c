@@ -27,6 +27,7 @@
 #include "mobileap_softap.h"
 #include "mobileap_common.h"
 #include "mobileap_usb.h"
+#include "mobileap_notification.h"
 
 static GDBusMethodInvocation *g_context = NULL;
 static gboolean in_progress = FALSE;
@@ -254,7 +255,7 @@ static void __handle_usb_mode_change(keynode_t *key, void *data)
 				__handle_usb_mode_change);
 		tethering_emit_usb_off(obj, NULL);
 		if (g_context) {
-			tethering_complete_disable_usb_tethering(obj, g_context, MOBILE_AP_DISABLE_USB_TETHERING_CFM, NULL);
+			tethering_complete_disable_usb_tethering(obj, g_context, MOBILE_AP_DISABLE_USB_TETHERING_CFM, 0);
 			g_context = NULL;
 		}
 
