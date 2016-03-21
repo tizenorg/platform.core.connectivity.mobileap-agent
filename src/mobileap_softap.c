@@ -239,6 +239,7 @@ static int __terminate_hostapd()
 	DBG("+\n");
 
 	int ret;
+	char buf[MAX_BUF_SIZE] = {0, };
 
 	if (hostapd_pid == 0) {
 		ERR("There is no hostapd\n");
@@ -251,7 +252,8 @@ static int __terminate_hostapd()
 
 	ret = unlink(HOSTAPD_CONF_FILE);
 	if (ret < 0) {
-		ERR("unlink is failed : %s\n", strerror(errno));
+		strerror_r(errno, buf, sizeof(buf));
+		ERR("unlink is failed : %s\n", buf);
 	}
 
 	return MOBILE_AP_ERROR_NONE;
@@ -277,10 +279,12 @@ static int __send_hostapd_req(int fd, const char *req, const int req_len,
 	struct timeval tv = {10, 0};
 	fd_set fds;
 	int ret = 0;
+	char err_buf[MAX_BUF_SIZE] = {0, };
 
 	ret = send(fd, req, req_len, 0);
 	if (ret < 0) {
-		ERR("send is failed : %s\n", strerror(errno));
+		strerror_r(errno, err_buf, sizeof(err_buf));
+		ERR("send is failed : %s\n", err_buf);
 		return MOBILE_AP_ERROR_INTERNAL;
 	}
 
@@ -1142,6 +1146,7 @@ int _mh_core_execute_dhcp_server(void)
 int _mh_core_terminate_dhcp_server(void)
 {
 	int ret;
+	char buf[MAX_BUF_SIZE] = {0, };
 
 	if (dnsmasq_pid == 0) {
 		ERR("There is no dnsmasq\n");
@@ -1154,7 +1159,8 @@ int _mh_core_terminate_dhcp_server(void)
 
 	ret = unlink(DNSMASQ_CONF_FILE);
 	if (ret < 0) {
-		ERR("unlink is failed : %s\n", strerror(errno));
+		strerror_r(errno, buf, sizeof(buf));
+		ERR("unlink is failed : %s\n", buf);
 	}
 
 	return MOBILE_AP_ERROR_NONE;
