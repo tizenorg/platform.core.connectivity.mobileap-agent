@@ -169,7 +169,7 @@ int _create_timeout_noti(const char *icon_path)
 	ret = notification_free(noti);
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("Fail to notification_free [%d]\n", ret);
-		goto FAIL;
+		return MOBILE_AP_ERROR_INTERNAL;
 	}
 
 	DBG("-\n");
@@ -329,7 +329,10 @@ int _create_connected_noti(int count, const char *icon_path)
 	ret = notification_free(noti);
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("Fail to notification_free [%d]\n", ret);
-		goto FAIL;
+		if (b != NULL)
+			bundle_free(b);
+
+		return MOBILE_AP_ERROR_INTERNAL;
 	}
 
 	DBG("-\n");

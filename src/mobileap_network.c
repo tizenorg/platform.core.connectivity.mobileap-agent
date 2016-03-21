@@ -192,6 +192,7 @@ static gboolean __read_port_forward_info(const char *conf_file)
 
 	FILE *fp;
 	char buf[MH_MAX_PORT_FORWARD_RULE_LEN];
+	char err_buf[MAX_BUF_SIZE] = {0, };
 	port_forward_info_s *pf;
 	int no_of_rule = 0;
 
@@ -199,7 +200,8 @@ static gboolean __read_port_forward_info(const char *conf_file)
 
 	fp = fopen(conf_file, "r");
 	if (fp == NULL) {
-		ERR("fopen is failed : %s\n", strerror(errno));
+		strerror_r(errno, err_buf, sizeof(err_buf));
+		ERR("fopen is failed : %s\n", err_buf);
 		return FALSE;
 	}
 

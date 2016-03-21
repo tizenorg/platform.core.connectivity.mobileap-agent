@@ -254,6 +254,7 @@ int _iptables_delete_rule(iptables_rule_e rule_type, const char *table, const ch
 
 	if (_execute_command(cmd)) {
 		SERR("command [%s] failed\n", cmd);
+		va_end(ap);
 		return MOBILE_AP_ERROR_INTERNAL;
 	}
 	va_end(ap);
@@ -275,6 +276,7 @@ int _get_data_usage(const char *src, const char *dest, unsigned long long *tx,
 
 	char cmd[MAX_BUF_SIZE] = {0, };
 	char buf[MAX_BUF_SIZE] = {0, };
+	char err_buf[MAX_BUF_SIZE] = {0, };
 	FILE *fp = NULL;
 
 	/* Tx : Src. -> Dest. */
@@ -290,7 +292,8 @@ int _get_data_usage(const char *src, const char *dest, unsigned long long *tx,
 	fp = fopen(DATA_USAGE_FILE, "r");
 	if (fp == NULL) {
 		ERR("%s open failed\n", DATA_USAGE_FILE);
-		ERR("%s\n", strerror(errno));
+		strerror_r(errno, err_buf, sizeof(err_buf));
+		ERR("%s\n", err_buf);
 		return MOBILE_AP_ERROR_INTERNAL;
 	}
 
@@ -314,7 +317,8 @@ int _get_data_usage(const char *src, const char *dest, unsigned long long *tx,
 	fp = fopen(DATA_USAGE_FILE, "r");
 	if (fp == NULL) {
 		ERR("%s open failed\n", DATA_USAGE_FILE);
-		ERR("%s\n", strerror(errno));
+		strerror_r(errno, err_buf, sizeof(err_buf));
+		ERR("%s\n", err_buf);
 		return MOBILE_AP_ERROR_INTERNAL;
 	}
 

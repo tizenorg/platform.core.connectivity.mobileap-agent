@@ -1098,12 +1098,18 @@ static mobile_ap_error_code_e __set_passphrase(const char *passphrase, const uns
 	ret = ckmc_remove_data(alias);
 	if (ret != CKMC_ERROR_NONE && ret != CKMC_ERROR_DB_ALIAS_UNKNOWN) {
 		ERR("Fail to remove old data : %d", ret);
+		if (alias)
+			free(alias);
+
 		return MOBILE_AP_ERROR_INTERNAL;
 	}
 
 	ret = ckmc_save_data(alias, ckmc_buf, ckmc_policy);
 	if (ret != CKMC_ERROR_NONE) {
 		ERR("Fail to save the passphrase : %d", ret);
+		if (alias)
+			free(alias);
+
 		return MOBILE_AP_ERROR_INTERNAL;
 	}
 
@@ -1152,6 +1158,9 @@ static mobile_ap_error_code_e __get_passphrase(char *passphrase,
 
 		if (ret == 0) {
 			ERR("generate_initial_passphrase failed : %d\n", *passphrase_len);
+			if (alias)
+				free(alias);
+
 			return MOBILE_AP_ERROR_INTERNAL;
 		} else {
 			*passphrase_len = ret;
@@ -1159,6 +1168,9 @@ static mobile_ap_error_code_e __get_passphrase(char *passphrase,
 
 			if (__set_passphrase(passphrase, *passphrase_len) != MOBILE_AP_ERROR_NONE) {
 				DBG("set_passphrase is failed : %s, %d", passphrase, *passphrase_len);
+				if (alias)
+					free(alias);
+
 				return MOBILE_AP_ERROR_INTERNAL;
 			}
 		}
@@ -1223,7 +1235,7 @@ gboolean tethering_set_wifi_tethering_passphrase(Tethering *obj,
 {
     char old_passphrase[MOBILE_AP_WIFI_KEY_MAX_LEN + 1] = {0, };
     unsigned int old_len = 0;
-    unsigned int passphrase_len = sizeof(passphrase);
+    unsigned int passphrase_len = strlen(passphrase);
     mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
 
     ret = __get_passphrase(old_passphrase, sizeof(old_passphrase), &old_len);
