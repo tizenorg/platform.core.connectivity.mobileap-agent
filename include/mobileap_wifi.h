@@ -21,6 +21,7 @@
 #include "mobileap_softap.h"
 
 #define VCONFKEY_MOBILE_HOTSPOT_SSID		"memory/private/mobileap-agent/ssid"
+#define VCONFKEY_SOFTAP_SSID				"memory/private/softap/ssid"
 #define SOFTAP_SECURITY_TYPE_OPEN_STR		"open"
 #define SOFTAP_SECURITY_TYPE_WPA2_PSK_STR	"wpa2-psk"
 #define SOFTAP_PASSPHRASE_PATH			"wifi_tethering.txt"
@@ -97,5 +98,8 @@ gboolean softap_enable(Softap *obj, GDBusMethodInvocation *context,
 
 gboolean softap_disable(Softap *obj,
 		GDBusMethodInvocation *context);
+
+gboolean softap_reload_settings(Softap *obj, GDBusMethodInvocation *context,
+		gchar *ssid, char *key, gint visibility, gint security_type);
 
 #endif /* __MOBILEAP_WIFI_H__ */

@@ -65,14 +65,23 @@ void _send_dbus_station_info(const char *member, mobile_ap_station_info_t *info)
 		ERR("Invalid param\n");
 		return;
 	}
-	Tethering *obj = _get_tethering_obj();
-	if (obj == NULL) {
-		ERR("tethering object is null\n");
-		return;
-	}
 	DBG("signal is   %s", member);
-	tethering_emit_dhcp_status(obj, member, info->interface, info->ip, info->mac,
-			info->hostname, info->tm);
+	if (info->interface == MOBILE_AP_TYPE_WIFI_AP) {
+		 Softap *so = _get_softap_obj();
+		 if (so == NULL) {
+			 ERR("softap object is null");
+			 return;
+		 }
+		softap_emit_dhcp_status(so, member, info->ip, info->mac, info->hostname, info->tm);
+	} else {
+		Tethering *to = _get_tethering_obj();
+		if (to == NULL) {
+			ERR("tethering object is null\n");
+			return;
+		}
+		tethering_emit_dhcp_status(to, member, info->interface, info->ip, info->mac,
+				info->hostname, info->tm);
+	}
 	DBG("-\n");
 }
 

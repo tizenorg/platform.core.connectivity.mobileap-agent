@@ -46,4 +46,5 @@ int _flush_ip_address(const char *interface);
 int _execute_command(const char *cmd);
 int _get_tethering_type_from_ip(const char *ip, mobile_ap_type_e *type);
 Tethering *_get_tethering_obj(void);
+Softap *_get_softap_obj(void);
 #endif /* __MOBILEAP_COMMON_H__ */

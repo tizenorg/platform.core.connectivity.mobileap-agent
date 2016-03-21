@@ -56,10 +56,17 @@ gboolean tethering_get_station_info(Tethering *obj,
 		GDBusMethodInvocation *context);
 gboolean tethering_get_data_packet_usage(Tethering *obj,
 		GDBusMethodInvocation *context);
+gboolean softap_get_station_info(Softap *obj,
+		GDBusMethodInvocation *context);
 
 Tethering *_get_tethering_obj(void)
 {
 	return tethering_obj;
+}
+
+Softap *_get_softap_obj(void)
+{
+	return softap_obj;
 }
 
 gboolean _mobileap_set_state(int state)
@@ -330,6 +337,25 @@ gboolean tethering_get_data_packet_usage(Tethering *obj,
 	return TRUE;
 }
 
+gboolean softap_get_station_info(Softap *obj,
+		GDBusMethodInvocation *context)
+{
+	DBG("+");
+
+	GVariant *var = NULL;
+
+	g_assert(obj != NULL);
+	g_assert(context != NULL);
+
+	var = _station_info_foreach();
+
+	g_dbus_method_invocation_return_value(context, var);
+	g_variant_unref(var);
+
+	DBG("-");
+	return TRUE;
+}
+
 void static __handle_dnsmasq_dhcp_status_changed_cb(GDBusConnection *connection,
 			const gchar *sender_name, const gchar *object_path,
 			const gchar *interface_name, const gchar *signal_name,
@@ -486,6 +512,10 @@ static void on_bus_acquired_cb (GDBusConnection *connection, const gchar *name,
 			G_CALLBACK(softap_enable), NULL);
 	g_signal_connect(softap_obj, "handle-disable",
 			G_CALLBACK(softap_disable), NULL);
+	g_signal_connect(softap_obj, "handle-reload-settings",
+			G_CALLBACK(softap_reload_settings), NULL);
+	g_signal_connect(softap_obj, "handle-get-station-info",
+			G_CALLBACK(softap_get_station_info), NULL);
 
 	_init_network((void *)tethering_obj);
 	_register_vconf_cb((void *)tethering_obj);

@@ -57,7 +57,6 @@
 
 		<signal name="dhcp_status">
 			<arg type="s" name="signalName" direction="out"/>
-			<arg type="u" name="type" direction="out"/>
 			<arg type="s" name="ip" direction="out"/>
 			<arg type="s" name="mac" direction="out"/>
 			<arg type="s" name="hostName" direction="out"/>

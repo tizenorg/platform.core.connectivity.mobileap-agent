@@ -736,6 +736,9 @@ mobile_ap_error_code_e _enable_soft_ap(Softap *obj,
 		return ret;
 	}
 
+	if (vconf_set_str(VCONFKEY_SOFTAP_SSID, obj_softap_settings.ssid) < 0) {
+		ERR("vconf_set_str is failed");
+	}
 	_block_device_sleep();
 
 	if (_init_tethering() != MOBILE_AP_ERROR_NONE) {
@@ -811,6 +814,53 @@ DONE:
 	return ret;
 }
 
+mobile_ap_error_code_e _reload_softap_settings_for_softap(Softap *obj,
+		gchar *ssid, gchar *key, gint hide_mode, gint security_type)
+{
+	gboolean backup_prev_wifi_on = prev_wifi_on;
+	mobile_ap_error_code_e ret;
+	softap_settings_t *old_settings = _get_softap_settings();
+	softap_settings_t new_settings;
+
+	if (obj == NULL || ssid == NULL || !strlen(ssid)) {
+		ERR("invalid parameters\n");
+		return MOBILE_AP_ERROR_INVALID_PARAM;
+	}
+
+	if (!_mobileap_is_enabled(MOBILE_AP_STATE_WIFI_AP))
+		return MOBILE_AP_ERROR_NONE;
+
+	ret = __update_softap_settings(&new_settings, ssid, key, NULL, MOBILE_AP_WIFI_CHANNEL, hide_mode,
+			false, (softap_security_type_e)security_type);
+	if (ret != MOBILE_AP_ERROR_NONE) {
+		ERR("__update_softap_settings is failed\n");
+		return ret;
+	}
+
+	if (__is_equal_softap_settings(&new_settings, old_settings) == TRUE) {
+		DBG("No need to reload settings\n");
+		return MOBILE_AP_ERROR_NONE;
+	}
+
+	prev_wifi_on = FALSE;
+	ret = _disable_soft_ap(obj);
+
+	prev_wifi_on = backup_prev_wifi_on;
+	if (ret != MOBILE_AP_ERROR_NONE) {
+		ERR("_disable_softap is failed : %d\n", ret);
+		return ret;
+	}
+
+	ret = _enable_soft_ap(obj, ssid, key, !hide_mode,
+			(softap_security_type_e)security_type);
+	if (ret != MOBILE_AP_ERROR_NONE) {
+		ERR("_enable_softap is failed : %d\n", ret);
+		return ret;
+	}
+	softap_emit_soft_ap_on(obj);
+
+	return MOBILE_AP_ERROR_NONE;
+}
 
 gboolean tethering_enable_wifi_tethering(Tethering *obj,
 		GDBusMethodInvocation *context, gchar *ssid,
@@ -1237,4 +1287,26 @@ gboolean softap_disable(Softap *obj,
 		return FALSE;
 
 	return TRUE;
+}
+
+gboolean softap_reload_settings(Softap *obj,
+		GDBusMethodInvocation *context, gchar *ssid,
+		gchar *key, gint visibility, gint security_type)
+{
+	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
+	gboolean ret_val = TRUE;
+
+	DBG("+");
+	g_assert(obj != NULL);
+	g_assert(context != NULL);
+
+	ret = _reload_softap_settings_for_softap(obj, ssid, key, !visibility, security_type);
+	if (ret != MOBILE_AP_ERROR_NONE) {
+		ERR("_reload_softap_settings is failed\n");
+		ret_val = FALSE;
+	}
+
+	softap_complete_reload_settings(obj, context, ret);
+
+	return ret_val;
 }
