@@ -739,6 +739,11 @@ mobile_ap_error_code_e _enable_soft_ap(Softap *obj,
 	if (vconf_set_str(VCONFKEY_SOFTAP_SSID, obj_softap_settings.ssid) < 0) {
 		ERR("vconf_set_str is failed");
 	}
+
+	if (vconf_set_str(VCONFKEY_SOFTAP_KEY, obj_softap_settings.key) < 0) {
+		ERR("vconf_set_str is failed");
+	}
+
 	_block_device_sleep();
 
 	if (_init_tethering() != MOBILE_AP_ERROR_NONE) {
