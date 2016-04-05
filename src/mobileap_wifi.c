@@ -417,6 +417,25 @@ mobile_ap_error_code_e _reload_softap_settings_for_ap(Tethering *obj,
 	return MOBILE_AP_ERROR_NONE;
 }
 
+int _register_app_for_wifi_passphrase(const char *pkg_id)
+{
+	if (pkg_id == NULL) {
+		ERR("Invalid parameter");
+		return MOBILE_AP_ERROR_INVALID_PARAM;
+	}
+
+	char *alias = NULL;
+
+	alias = __get_key_manager_alias(MOBILE_AP_WIFI_PASSPHRASE_STORE_KEY);
+	if (ckmc_set_permission(alias, pkg_id, CKMC_PERMISSION_REMOVE) != CKMC_ERROR_NONE) {
+		ERR("Fail to set permission for Wi-Fi passphrase (%d)");
+		return MOBILE_AP_ERROR_NOT_PERMITTED;
+	}
+
+	return MOBILE_AP_ERROR_NONE;
+
+}
+
 int _get_wifi_name_from_lease_info(const char *mac, char **name_buf)
 {
 	if (mac == NULL || name_buf == NULL) {

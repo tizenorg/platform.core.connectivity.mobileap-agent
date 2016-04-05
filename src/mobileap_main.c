@@ -615,6 +615,8 @@ int main(int argc, char **argv)
 			ERR("alarmmgr_set_cb is failed : %d\n", ret);
 		}
 	}
+	
+	_register_app_for_wifi_passphrase(MOBILE_AP_UG_PKG_ID);
 
 	g_main_loop_run(mainloop);
 

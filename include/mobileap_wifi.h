@@ -43,6 +43,7 @@ typedef struct {
 	softap_security_type_e security_type;
 } wifi_saved_settings;
 
+int _register_app_for_wifi_passphrase(const char *pkg_id);
 int _get_wifi_name_from_lease_info(const char *mac, char **name_buf);
 mobile_ap_error_code_e _enable_wifi_tethering(Tethering *obj, gchar *ssid,
 	gchar *passphrase, gchar* mode, gint channel, int hide_mode, int mac_filter, softap_security_type_e security_type);
