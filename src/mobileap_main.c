@@ -616,6 +616,8 @@ int main(int argc, char **argv)
 		}
 	}
 
+	_register_app_for_wifi_passphrase(MOBILE_AP_UG_PKG_ID);
+
 	g_main_loop_run(mainloop);
 
 	alarmmgr_fini();

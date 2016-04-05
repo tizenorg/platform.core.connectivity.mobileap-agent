@@ -98,6 +98,12 @@ typedef enum {
 #define MOBILE_AP_STR_INFO_LEN		20	/**< length of the ip or mac address*/
 #define MOBILE_AP_STR_HOSTNAME_LEN	33	/**< length of the hostname */
 #define MOBILE_AP_NAME_UNKNOWN		"UNKNOWN"
+
+/**
+  * Package ID for Tethering UG
+  */
+#define MOBILE_AP_UG_PKG_ID	"ug-setting-mobileap-efl"
+
 /**
 * Mobile AP error code
 */
