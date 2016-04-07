@@ -1,6 +1,6 @@
 Name:		mobileap-agent
 Summary:	Mobile AP daemon for setting tethering environments
-Version:	1.0.50
+Version:	1.0.51
 Release:	1
 Group:		System/Network
 License:	Apache-2.0

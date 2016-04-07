@@ -429,8 +429,15 @@ int _register_app_for_wifi_passphrase(const char *pkg_id)
 	alias = __get_key_manager_alias(MOBILE_AP_WIFI_PASSPHRASE_STORE_KEY);
 	if (ckmc_set_permission(alias, pkg_id, CKMC_PERMISSION_REMOVE) != CKMC_ERROR_NONE) {
 		ERR("Fail to set permission for Wi-Fi passphrase (%d)");
+
+		if (alias)
+			free(alias);
+
 		return MOBILE_AP_ERROR_NOT_PERMITTED;
 	}
+
+	if (alias)
+		free(alias);
 
 	return MOBILE_AP_ERROR_NONE;
 
