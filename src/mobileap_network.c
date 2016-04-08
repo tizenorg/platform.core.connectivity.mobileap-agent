@@ -343,9 +343,8 @@ static void __handle_open_network_error(void)
 {
 	int ret = MOBILE_AP_ERROR_NONE;
 
-	if (_mobileap_is_disabled()) {
+	if (_mobileap_is_disabled())
 		return;
-	}
 
 	ret = _disable_wifi_tethering(obj);
 	DBG("_disable_wifi_tethering returns %d\n", ret);
@@ -401,9 +400,8 @@ static gboolean __is_connected_profile(connection_profile_h profile)
 		return FALSE;
 	}
 
-	if (pstat != CONNECTION_PROFILE_STATE_CONNECTED) {
+	if (pstat != CONNECTION_PROFILE_STATE_CONNECTED)
 		return FALSE;
-	}
 
 	DBG("Profile is connected\n");
 	return TRUE;
@@ -594,11 +592,10 @@ static void __profile_closed_cb(connection_error_e result, void *user_data)
 {
 	connection_profile_refresh(c_prof.handle);
 
-	if (result != CONNECTION_ERROR_NONE) {
+	if (result != CONNECTION_ERROR_NONE)
 		ERR("Unable to close profile [0x%X]", result);
-	} else {
+	else
 		DBG("Tethering profile is closed");
-	}
 
 	return;
 }
@@ -730,9 +727,8 @@ static gboolean __open_tethering_profile(void)
 
 	DBG("+\n");
 
-	if (c_prof.svc_type == __INTERNET) {
+	if (c_prof.svc_type == __INTERNET)
 		return TRUE;
-	}
 
 	if (__is_connected_profile(c_prof.handle)) {
 		DBG("Already connected profile\n");
@@ -782,9 +778,8 @@ gboolean _get_network_interface_name(char **if_name)
 		return FALSE;
 	}
 
-	if (tethered_prof == NULL) {
+	if (tethered_prof == NULL)
 		return FALSE;
-	}
 
 	int ret = 0;
 
@@ -812,9 +807,8 @@ gboolean _get_network_gateway_address(char **ip)
 		return FALSE;
 	}
 
-	if (tethered_prof == NULL) {
+	if (tethered_prof == NULL)
 		return FALSE;
-	}
 
 	int ret = 0;
 
@@ -878,9 +872,8 @@ gboolean _add_default_router(void)
 	char *ip = NULL;
 	char *interface = NULL;
 
-	if (_get_network_gateway_address(&ip) == FALSE) {
+	if (_get_network_gateway_address(&ip) == FALSE)
 		return FALSE;
-	}
 
 	if (_get_network_interface_name(&interface) == FALSE) {
 		free(ip);
@@ -911,9 +904,8 @@ gboolean _del_default_router(void)
 	char *ip = NULL;
 	char *interface = NULL;
 
-	if (_get_network_gateway_address(&ip) == FALSE) {
+	if (_get_network_gateway_address(&ip) == FALSE)
 		return FALSE;
-	}
 
 	if (_get_network_interface_name(&interface) == FALSE) {
 		free(ip);
@@ -940,9 +932,8 @@ void _add_port_forward_rule(void)
 	GSList *l;
 	port_forward_info_s *pf;
 
-	if (access(MH_PORT_FORWARD_CONF_FILEPATH, F_OK) < 0) {
+	if (access(MH_PORT_FORWARD_CONF_FILEPATH, F_OK) < 0)
 		return;
-	}
 
 	if (__read_port_forward_info(MH_PORT_FORWARD_CONF_FILEPATH) == FALSE) {
 		ERR("__read_port_forward_info() is failed\n");
@@ -980,7 +971,7 @@ void _del_port_forward_rule(void)
 		return;
 	}
 
-	for(l = port_forward_info; l;) {
+	for (l = port_forward_info; l;) {
 		pf = (port_forward_info_s *)l->data;
 		if (pf) {
 			g_free(pf->new_dest_ip);
@@ -1059,9 +1050,8 @@ int _open_network(void)
 		__print_cellular_profile();
 
 		if (!__is_connected_profile(c_prof.handle)) {
-			if (c_prof.svc_type != __TETHERING_ONLY) {
+			if (c_prof.svc_type != __TETHERING_ONLY)
 				return MOBILE_AP_ERROR_NONE;
-			}
 
 			if (net_timeout_id) {
 				g_source_remove(net_timeout_id);
@@ -1185,9 +1175,8 @@ gboolean _deinit_network(void)
 	}
 
 	ret = connection_unset_type_changed_cb(connection);
-	if (ret != CONNECTION_ERROR_NONE) {
+	if (ret != CONNECTION_ERROR_NONE)
 		ERR("connection_unset_type_changed_cb is failed : %d\n", ret);
-	}
 
 	connection_destroy(connection);
 	connection = NULL;

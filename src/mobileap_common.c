@@ -93,13 +93,11 @@ void _update_station_count(int count)
 	int bt_count = 0;
 	int usb_count = 0;
 
-	if (_mobileap_is_enabled(MOBILE_AP_STATE_WIFI_AP)) {
+	if (_mobileap_is_enabled(MOBILE_AP_STATE_WIFI_AP))
 		return;
-	}
 
-	if (prev_cnt == count) {
+	if (prev_cnt == count)
 		return;
-	}
 
 	if (vconf_set_int(VCONFKEY_MOBILE_HOTSPOT_CONNECTED_DEVICE,
 				count) < 0) {
@@ -117,23 +115,21 @@ void _update_station_count(int count)
 	_get_station_count((gconstpointer)MOBILE_AP_TYPE_BT, _slist_find_station_by_interface, &bt_count);
 	_get_station_count((gconstpointer)MOBILE_AP_TYPE_USB, _slist_find_station_by_interface, &usb_count);
 
-	if (wifi_count > 0 && bt_count == 0 && usb_count == 0) {
+	if (wifi_count > 0 && bt_count == 0 && usb_count == 0)
 		g_strlcpy(icon_path, MH_NOTI_ICON_WIFI, sizeof(icon_path));
-	} else if (wifi_count == 0 && bt_count > 0 && usb_count == 0) {
+	else if (wifi_count == 0 && bt_count > 0 && usb_count == 0)
 		g_strlcpy(icon_path, MH_NOTI_ICON_BT, sizeof(icon_path));
-	} else if (wifi_count == 0 && bt_count == 0 && usb_count > 0) {
+	else if (wifi_count == 0 && bt_count == 0 && usb_count > 0)
 		g_strlcpy(icon_path, MH_NOTI_ICON_USB, sizeof(icon_path));
-	} else if (wifi_count == 0 && bt_count == 0 && usb_count == 0) {
+	else if (wifi_count == 0 && bt_count == 0 && usb_count == 0)
 		return;
-	} else {
+	else
 		g_strlcpy(icon_path, MH_NOTI_ICON_GENERAL, sizeof(icon_path));
-	}
 
-	if (prev_cnt == 0) {
+	if (prev_cnt == 0)
 		_create_connected_noti(count, icon_path);
-	} else {
+	else
 		_update_connected_noti(count, icon_path);
-	}
 
 	prev_cnt = count;
 	return;
@@ -153,9 +149,8 @@ int _add_station_info(mobile_ap_station_info_t *info)
 
 	if (_get_station_info(info->mac, _slist_find_station_by_mac, &si) ==
 			MOBILE_AP_ERROR_NONE) {
-		if (!si) {
+		if (!si)
 			return MOBILE_AP_ERROR_INTERNAL;
-		}
 
 		if (g_strcmp0(si->hostname, info->hostname) == 0 &&
 				g_strcmp0(si->ip, info->ip) == 0) {
@@ -219,9 +214,8 @@ int _remove_station_info(gconstpointer data, GCompareFunc func)
 
 int _remove_station_info_all(mobile_ap_type_e type)
 {
-	if (station_list == NULL) {
+	if (station_list == NULL)
 		return MOBILE_AP_ERROR_NONE;
-	}
 
 	GSList *l = station_list;
 	GSList *temp_l = NULL;
@@ -311,12 +305,12 @@ GVariant * _station_info_foreach()
 	GVariantBuilder *outer_builder;
 	mobile_ap_station_info_t *st = NULL;
 
-	outer_builder = g_variant_builder_new(G_VARIANT_TYPE ("a(a{sv})"));
+	outer_builder = g_variant_builder_new(G_VARIANT_TYPE("a(a{sv})"));
 
 	for (l = station_list; l != NULL; l = g_slist_next(l)) {
 		st = (mobile_ap_station_info_t *)l->data;
 
-		inner_builder = g_variant_builder_new(G_VARIANT_TYPE ("a{sv}"));
+		inner_builder = g_variant_builder_new(G_VARIANT_TYPE("a{sv}"));
 		g_variant_builder_add(inner_builder, "{sv}", "Type",
 					g_variant_new_int32(st->interface));
 		g_variant_builder_add(inner_builder, "{sv}", "IP",
@@ -336,11 +330,11 @@ GVariant * _station_info_foreach()
 	}
 
 	params = g_variant_new("(@a(a{sv}))", g_variant_builder_end(outer_builder));
-	if (params == NULL) {
+	if (params == NULL)
 		ERR("params IS NULL\n");
-	} else {
+	else
 		SDBG("outer builder print  %s", g_variant_print(params, TRUE));
-	}
+
 	g_variant_builder_unref(outer_builder);
 	return params;
 }
@@ -484,9 +478,8 @@ int _execute_command(const char *cmd)
 	}
 
 	if (!pid) {
-		if (execv(args[0], args)) {
+		if (execv(args[0], args))
 			ERR("execl failed\n");
-		}
 
 		ERR("Should never get here!\n");
 		return EXIT_FAILURE;

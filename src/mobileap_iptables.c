@@ -283,9 +283,8 @@ int _get_data_usage(const char *src, const char *dest, unsigned long long *tx,
 	snprintf(cmd, sizeof(cmd),
 		"%s -t %s -L %s -vx | %s -v DROP | %s \"%s[ ]*%s\" | %s '{ print $2 }' > %s",
 		IPTABLES, TABLE_FILTER, TETH_FILTER_FW, GREP, GREP, src, dest, AWK, DATA_USAGE_FILE);
-	if (system(cmd) < 0) {
+	if (system(cmd) < 0)
 		ERR("cmd %s is failed\n", cmd);
-	}
 
 	*tx = 0;
 
@@ -297,9 +296,8 @@ int _get_data_usage(const char *src, const char *dest, unsigned long long *tx,
 		return MOBILE_AP_ERROR_INTERNAL;
 	}
 
-	while (fgets(buf, sizeof(buf), fp) != NULL) {
+	while (fgets(buf, sizeof(buf), fp) != NULL)
 		*tx += atoll(buf);
-	}
 
 	fclose(fp);
 	unlink(DATA_USAGE_FILE);
@@ -308,9 +306,8 @@ int _get_data_usage(const char *src, const char *dest, unsigned long long *tx,
 	snprintf(cmd, sizeof(cmd),
 		"%s -t %s -L %s -vx | %s -v DROP | %s \"%s[ ]*%s\" | %s '{ print $2 }' > %s",
 		IPTABLES, TABLE_FILTER, TETH_FILTER_FW, GREP, GREP, dest, src, AWK, DATA_USAGE_FILE);
-	if (system(cmd) < 0) {
+	if (system(cmd) < 0)
 		ERR("cmd %s is failed\n", cmd);
-	}
 
 	*rx = 0;
 
@@ -322,9 +319,8 @@ int _get_data_usage(const char *src, const char *dest, unsigned long long *tx,
 		return MOBILE_AP_ERROR_INTERNAL;
 	}
 
-	while (fgets(buf, sizeof(buf), fp) != NULL) {
+	while (fgets(buf, sizeof(buf), fp) != NULL)
 		*rx += atoll(buf);
-	}
 
 	fclose(fp);
 	unlink(DATA_USAGE_FILE);

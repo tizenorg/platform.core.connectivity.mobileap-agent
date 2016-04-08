@@ -142,9 +142,8 @@ gboolean _mobileap_clear_state(int state)
 
 gboolean _terminate_mobileap_agent(gpointer user_data)
 {
-	if (mainloop == NULL) {
+	if (mainloop == NULL)
 		return FALSE;
-	}
 
 	if (!_mobileap_is_disabled()) {
 		DBG("Tethering is enabled\n");
@@ -211,9 +210,9 @@ int _init_tethering(void)
 		return MOBILE_AP_ERROR_NONE;
 	}
 
-	if (!_mobileap_is_enabled(MOBILE_AP_STATE_WIFI_AP)) {
+	if (!_mobileap_is_enabled(MOBILE_AP_STATE_WIFI_AP))
 		ret = _open_network();
-	}
+
 	_mh_core_execute_dhcp_server();
 
 	init_count++;
@@ -240,14 +239,12 @@ gboolean _deinit_tethering(void)
 
 	_mh_core_terminate_dhcp_server();
 
-	if (!_mobileap_is_enabled(MOBILE_AP_STATE_WIFI_AP)) {
+	if (!_mobileap_is_enabled(MOBILE_AP_STATE_WIFI_AP))
 		_close_network();
-	}
 
 	idle_id = g_idle_add(_terminate_mobileap_agent, NULL);
-	if (idle_id == 0) {
+	if (idle_id == 0)
 		ERR("g_idle_add is failed\n");
-	}
 
 	return TRUE;
 }
@@ -356,7 +353,7 @@ gboolean softap_get_station_info(Softap *obj,
 	return TRUE;
 }
 
-void static __handle_dnsmasq_dhcp_status_changed_cb(GDBusConnection *connection,
+static void __handle_dnsmasq_dhcp_status_changed_cb(GDBusConnection *connection,
 			const gchar *sender_name, const gchar *object_path,
 			const gchar *interface_name, const gchar *signal_name,
 			GVariant *parameters, gpointer user_data)
@@ -381,17 +378,16 @@ void static __handle_dnsmasq_dhcp_status_changed_cb(GDBusConnection *connection,
 		/*
 		 * DHCP ACK received, destroy timeout if exists
 		 */
-		if (ip_addr == NULL || mac == NULL) {
+		if (ip_addr == NULL || mac == NULL)
 			goto EXIT;
-		}
+
 		_destroy_dhcp_ack_timer(mac);
 
 		if (_get_tethering_type_from_ip(ip_addr, &type) != MOBILE_AP_ERROR_NONE)
 			goto EXIT;
 
-		if (_mobileap_is_enabled_by_type(type) == FALSE) {
+		if (_mobileap_is_enabled_by_type(type) == FALSE)
 			goto EXIT;
-		}
 
 		info = (mobile_ap_station_info_t *)g_malloc(sizeof(mobile_ap_station_info_t));
 		if (info == NULL) {
@@ -436,14 +432,14 @@ void static __handle_dnsmasq_dhcp_status_changed_cb(GDBusConnection *connection,
 	} else {
 		SDBG("UNKNOWN member signal\n");
 	}
-EXIT :
+EXIT:
 	g_free(ip_addr);
 	g_free(mac);
 	g_free(name);
 	DBG("-\n");
 }
 
-static void on_bus_acquired_cb (GDBusConnection *connection, const gchar *name,
+static void on_bus_acquired_cb(GDBusConnection *connection, const gchar *name,
 				gpointer user_data)
 {
 	DBG("+\n");
@@ -452,7 +448,7 @@ static void on_bus_acquired_cb (GDBusConnection *connection, const gchar *name,
 	teth_gdbus_conn = connection;
 
 	manager_server = g_dbus_object_manager_server_new(TETHERING_SERVICE_OBJECT_PATH);
-	if(manager_server == NULL) {
+	if (manager_server == NULL) {
 		DBG("Manager server not created.");
 		return;
 	}
@@ -574,7 +570,7 @@ int main(int argc, char **argv)
 
 	DBG("+\n");
 
-#if !GLIB_CHECK_VERSION(2,36,0)
+#if !GLIB_CHECK_VERSION(2, 36, 0)
 	g_type_init();
 #endif
 
@@ -590,9 +586,8 @@ int main(int argc, char **argv)
 		return 0;
 	}
 	/* Platform modules */
-	if (appcore_set_i18n(MOBILEAP_LOCALE_COMMON_PKG, MOBILEAP_LOCALE_COMMON_RES) < 0) {
+	if (appcore_set_i18n(MOBILEAP_LOCALE_COMMON_PKG, MOBILEAP_LOCALE_COMMON_RES) < 0)
 		ERR("appcore_set_i18n is failed\n");
-	}
 
 	if (vconf_get_int(VCONFKEY_MOBILE_HOTSPOT_MODE, &mobileap_state) < 0) {
 		ERR("vconf_get_int is failed\n");
@@ -602,18 +597,16 @@ int main(int argc, char **argv)
 	_register_wifi_station_handler();
 
 	ret = wifi_initialize();
-	if (ret != WIFI_ERROR_NONE) {
+	if (ret != WIFI_ERROR_NONE)
 		ERR("wifi_initialize() is failed : %d\n", ret);
-	}
 
 	ret = alarmmgr_init(APPNAME);
 	if (ret != ALARMMGR_RESULT_SUCCESS) {
 		ERR("alarmmgr_init(%s) is failed : %d\n", APPNAME, ret);
 	} else {
 		ret = alarmmgr_set_cb(_sp_timeout_handler, NULL);
-		if (ret != ALARMMGR_RESULT_SUCCESS) {
+		if (ret != ALARMMGR_RESULT_SUCCESS)
 			ERR("alarmmgr_set_cb is failed : %d\n", ret);
-		}
 	}
 
 	_register_app_for_wifi_passphrase(MOBILE_AP_UG_PKG_ID);
@@ -623,9 +616,8 @@ int main(int argc, char **argv)
 	alarmmgr_fini();
 
 	ret = wifi_deinitialize();
-	if (ret != WIFI_ERROR_NONE) {
+	if (ret != WIFI_ERROR_NONE)
 		ERR("wifi_deinitialize() is failed : %d\n", ret);
-	}
 
 	_unregister_vconf_cb();
 	_unregister_wifi_station_handler();

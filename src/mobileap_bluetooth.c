@@ -39,7 +39,7 @@ static __bt_remote_device_s __bt_remote_devices[MOBILE_AP_MAX_BT_STA] = {
 	{NULL, NULL, IP_ADDRESS_BT_1},
 	{NULL, NULL, IP_ADDRESS_BT_2},
 	{NULL, NULL, IP_ADDRESS_BT_3},
-	{NULL, NULL, IP_ADDRESS_BT_4}};
+	{NULL, NULL, IP_ADDRESS_BT_4} };
 
 static GDBusMethodInvocation *g_context = NULL;
 
@@ -239,9 +239,9 @@ static mobile_ap_error_code_e __turn_on_bt_adapter(gpointer data)
 
 	ret = bt_adapter_enable();
 	if (ret == BT_ERROR_NOW_IN_PROGRESS) {
-		if (__recheck_bt_adapter_timer) {
+		if (__recheck_bt_adapter_timer)
 			g_source_remove(__recheck_bt_adapter_timer);
-		}
+
 		__recheck_bt_adapter_timer = g_timeout_add(PS_RECHECK_INTERVAL,
 				(GSourceFunc) __bt_adapter_timeout_cb, (gpointer) obj);
 		return MOBILE_AP_ERROR_NONE;
@@ -318,9 +318,8 @@ mobile_ap_error_code_e _enable_bt_tethering(Tethering *obj)
 	}
 
 	ret = _init_tethering();
-	if (ret != MOBILE_AP_ERROR_NONE) {
+	if (ret != MOBILE_AP_ERROR_NONE)
 		return ret;
-	}
 
 	ret = __turn_on_bt_nap(obj);
 	if (ret != MOBILE_AP_ERROR_NONE) {
@@ -395,14 +394,12 @@ static void __bt_nap_connection_changed(bool connected, const char *remote_addre
 		}
 
 		ret = _mh_core_set_ip_address(interface_name, remote->intf_ip);
-		if (ret != MOBILE_AP_ERROR_NONE) {
+		if (ret != MOBILE_AP_ERROR_NONE)
 			ERR("Setting ip address error : %d\n", ret);
-		}
 	} else {
 		_remove_station_info(remote_address, _slist_find_station_by_mac);
-		if (__del_bt_remote(remote_address) == FALSE) {
+		if (__del_bt_remote(remote_address) == FALSE)
 			ERR("__del_bt_remote is failed\n");
-		}
 
 		_get_station_count((gconstpointer)MOBILE_AP_TYPE_BT,
 				_slist_find_station_by_interface, &n_station);
@@ -498,13 +495,11 @@ static void __bt_adapter_visibility_changed_cb(int result,
 	bt_adapter_visibility_mode_e mode = BT_ADAPTER_VISIBILITY_MODE_NON_DISCOVERABLE;
 
 	ret = bt_adapter_get_visibility(&mode, &duration);
-	if (ret != BT_ERROR_NONE) {
+	if (ret != BT_ERROR_NONE)
 		ERR("bt_adapter_get_visibility is failed 0x[%X]\n", ret);
-	}
 
-	if (mode == BT_ADAPTER_VISIBILITY_MODE_NON_DISCOVERABLE) {
+	if (mode == BT_ADAPTER_VISIBILITY_MODE_NON_DISCOVERABLE)
 			ERR("_launch_toast_popup() is failed\n");
-	}
 
 	DBG("-\n");
 }
@@ -518,15 +513,13 @@ static void __handle_bt_adapter_visibility()
 	bt_adapter_visibility_mode_e mode = BT_ADAPTER_VISIBILITY_MODE_NON_DISCOVERABLE;
 
 	ret = bt_adapter_get_visibility(&mode, &duration);
-	if (ret != BT_ERROR_NONE) {
+	if (ret != BT_ERROR_NONE)
 		ERR("bt_adapter_get_visibility is failed 0x[%X]\n", ret);
-	}
 
 	if (mode == BT_ADAPTER_VISIBILITY_MODE_NON_DISCOVERABLE) {
 		ret = bt_adapter_set_visibility(BT_ADAPTER_VISIBILITY_MODE_LIMITED_DISCOVERABLE, 120);
-		if (ret != BT_ERROR_NONE) {
+		if (ret != BT_ERROR_NONE)
 			ERR("bt_adapter_set_visibility is failed 0x[%X]\n", ret);
-		}
 	}
 	bt_adapter_set_visibility_mode_changed_cb(__bt_adapter_visibility_changed_cb, NULL);
 	DBG("-\n");

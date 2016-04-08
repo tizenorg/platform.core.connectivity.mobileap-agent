@@ -65,10 +65,9 @@ static char *__find_first_caps_char(char *str)
 		return NULL;
 	}
 
-	while(*str) {
-		if (isupper(*str)) {
+	while (*str) {
+		if (isupper(*str))
 			return str;
-		}
 		str++;
 	}
 	return NULL;
@@ -146,11 +145,10 @@ static int __execute_hostapd(const mobile_ap_type_e type, const char *ssid,
 	char key[MOBILE_AP_WIFI_KEY_MAX_LEN + 1];
 	char *hw_mode = NULL;
 
-	if (mode == NULL) {
+	if (mode == NULL)
 		hw_mode = g_strdup("g");
-	} else {
+	else
 		hw_mode = g_strdup(mode);
-	}
 
 	/* Default conf. */
 	snprintf(buf, sizeof(buf), HOSTAPD_CONF,
@@ -315,9 +313,8 @@ static int __send_hostapd_req(int fd, const char *req, const int req_len,
 
 		*buf_len = ret;
 		buf[ret] = '\0';
-		if (ret == 0) {
+		if (ret == 0)
 			ERR("socket is closed\n");
-		}
 
 		break;
 	}
@@ -349,9 +346,8 @@ static int __open_hostapd_intf(int *fd, const char *intf)
 	src.sun_family = AF_UNIX;
 	g_strlcpy(src.sun_path, intf, sizeof(src.sun_path));
 
-	if (stat(src.sun_path, &stat_buf) == 0) {
+	if (stat(src.sun_path, &stat_buf) == 0)
 		unlink(src.sun_path);
-	}
 
 	if (bind(*fd, (struct sockaddr *)&src, sizeof(src)) < 0) {
 		ERR("bind is failed\n");
@@ -450,9 +446,8 @@ static gboolean __hostapd_monitor_cb(GIOChannel *source)
 	/* concatenated string, containing multiple events can arrive */
 	while (pbuf && *pbuf) {
 		pbuf = __find_first_caps_char(pbuf);
-		if (!pbuf || !*pbuf) {
+		if (!pbuf || !*pbuf)
 			break;
-		}
 
 		if (!strncmp(pbuf, HOSTAPD_STA_CONN, HOSTAPD_STA_CONN_LEN)) {
 			pbuf = pbuf + HOSTAPD_STA_CONN_LEN;
@@ -477,9 +472,8 @@ static gboolean __hostapd_monitor_cb(GIOChannel *source)
 
 			for (l = sta_timer_list; l != NULL; l = g_slist_next(l)) {
 				ptr = (sta_timer_t *)l->data;
-				if (ptr == NULL) {
+				if (ptr == NULL)
 					continue;
-				}
 
 				if (g_strcmp0(ptr->mac_addr, mac) == 0) {
 					g_free(mac);
@@ -489,9 +483,8 @@ static gboolean __hostapd_monitor_cb(GIOChannel *source)
 			}
 
 			/* Matched station found, so skip */
-			if (l != NULL) {
+			if (l != NULL)
 				continue;
-			}
 
 			SDBG("%s%s\n", HOSTAPD_STA_CONN, mac);
 			ptr = (sta_timer_t *)g_malloc(sizeof(sta_timer_t));
@@ -508,9 +501,8 @@ static gboolean __hostapd_monitor_cb(GIOChannel *source)
 
 		} else if (!strncmp(pbuf, HOSTAPD_STA_DISCONN, HOSTAPD_STA_DISCONN_LEN)) {
 			pbuf = pbuf + HOSTAPD_STA_DISCONN_LEN;
-			if (!pbuf || !*pbuf) {
+			if (!pbuf || !*pbuf)
 				break;
-			}
 
 			end = strchr(pbuf, '<');
 			if (end && *end) {
@@ -548,13 +540,12 @@ static gboolean __hostapd_monitor_cb(GIOChannel *source)
 	if (discon_event == FALSE)
 		goto DONE;
 
-	if (_mobileap_is_enabled(MOBILE_AP_STATE_WIFI)) {
+	if (_mobileap_is_enabled(MOBILE_AP_STATE_WIFI))
 		type = MOBILE_AP_TYPE_WIFI;
-	} else if (_mobileap_is_enabled(MOBILE_AP_STATE_WIFI_AP)) {
+	else if (_mobileap_is_enabled(MOBILE_AP_STATE_WIFI_AP))
 		type = MOBILE_AP_TYPE_WIFI_AP;
-	} else {
+	else
 		goto DONE;
-	}
 
 	_get_station_count((gconstpointer)type,
 			_slist_find_station_by_interface, &n_station);
@@ -636,9 +627,8 @@ static mobile_ap_drv_interface_e __get_drv_interface(void)
 {
 	static mobile_ap_drv_interface_e drv_interface = MOBILE_AP_DRV_INTERFACE_NONE;
 
-	if (drv_interface != MOBILE_AP_DRV_INTERFACE_NONE) {
+	if (drv_interface != MOBILE_AP_DRV_INTERFACE_NONE)
 		return drv_interface;
-	}
 
 	const char *drv_rfkill_path = "/sys/devices/platform";
 	const char *wext_drv[] = {
@@ -705,7 +695,7 @@ static int __mh_core_softap_firmware_start(void)
 			NETCONFIG_DBUS_REPLY_TIMEOUT, &error);
 	if (dbus_error_is_set(&error) == TRUE) {
 		if (NULL != strstr(error.message, ".AlreadyExists")) {
-			// softap already enabled
+			/* softap already enabled */
 		} else {
 			ERR("dbus_connection_send_with_reply_and_block() failed. "
 					"DBus error [%s: %s]", error.name, error.message);
@@ -760,7 +750,7 @@ static int __mh_core_softap_firmware_stop(void)
 			NETCONFIG_DBUS_REPLY_TIMEOUT, &error);
 	if (dbus_error_is_set(&error) == TRUE) {
 		if (NULL != strstr(error.message, ".AlreadyExists")) {
-			// softap already disabled
+			/* softap already disabled */
 		} else {
 			ERR("dbus_connection_send_with_reply_and_block() failed. "
 					"DBus error [%s: %s]", error.name, error.message);
@@ -948,9 +938,8 @@ int _mh_core_disable_softap(void)
 			ERR("hostapd termination is failed\n");
 
 		ret_status = __terminate_hostapd();
-		if (ret_status != MOBILE_AP_ERROR_NONE) {
+		if (ret_status != MOBILE_AP_ERROR_NONE)
 			ERR("hostapd termination is failed\n");
-		}
 		break;
 
 	default:
@@ -1397,9 +1386,8 @@ static void __handle_station_signal(int sig)
 {
 	int idle_id = 0;
 	idle_id = g_idle_add(__send_station_event_cb, GINT_TO_POINTER(sig));
-	if (idle_id == 0) {
+	if (idle_id == 0)
 		ERR("g_idle_add is failed\n");
-	}
 }
 
 void _register_wifi_station_handler(void)
@@ -1492,7 +1480,7 @@ static gboolean __hostapd_connect_timer_cb(gpointer user_data)
 
 	return FALSE;
 
-SUCCESS :
+SUCCESS:
 	if (_add_station_info(info) != MOBILE_AP_ERROR_NONE) {
 		g_free(info->hostname);
 		g_free(info);

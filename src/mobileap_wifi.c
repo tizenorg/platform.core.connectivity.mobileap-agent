@@ -187,14 +187,12 @@ static gboolean __turn_on_wifi_timeout_cb(gpointer user_data)
 	wifi_recovery_timeout_id = 0;
 
 	ret = wifi_activate(__wifi_activated_cb, NULL);
-	if (ret != WIFI_ERROR_NONE) {
+	if (ret != WIFI_ERROR_NONE)
 		ERR("wifi_activate() is failed : %d\n", ret);
-	}
 
 	idle_id = g_idle_add(_terminate_mobileap_agent, NULL);
-	if (idle_id == 0) {
+	if (idle_id == 0)
 		ERR("g_idle_add is failed\n");
-	}
 
 	return FALSE;
 }
@@ -284,9 +282,8 @@ static mobile_ap_error_code_e __update_softap_settings(softap_settings_t *st,
 		return MOBILE_AP_ERROR_INTERNAL;
 	}
 
-	if (mode != NULL) {
+	if (mode != NULL)
 		g_strlcpy(st->mode, mode, sizeof(st->mode));
-	}
 
 	st->channel = channel;
 	st->hide_mode = hide_mode;
@@ -445,9 +442,8 @@ int _register_app_for_wifi_passphrase(const char *pkg_id)
 
 int _get_wifi_name_from_lease_info(const char *mac, char **name_buf)
 {
-	if (mac == NULL || name_buf == NULL) {
+	if (mac == NULL || name_buf == NULL)
 		return MOBILE_AP_ERROR_INVALID_PARAM;
-	}
 
 	GIOChannel *io = NULL;
 	char *line = NULL;
@@ -459,9 +455,8 @@ int _get_wifi_name_from_lease_info(const char *mac, char **name_buf)
 	char extra[MOBILE_AP_STR_INFO_LEN] = {0, };
 
 	io = g_io_channel_new_file(DNSMASQ_LEASES_FILE, "r", NULL);
-	if (io == NULL) {
+	if (io == NULL)
 		return MOBILE_AP_ERROR_RESOURCE;
-	}
 
 	while (g_io_channel_read_line(io, &line, NULL, NULL, NULL) ==
 			G_IO_STATUS_NORMAL) {
@@ -591,9 +586,9 @@ mobile_ap_error_code_e _enable_wifi_ap(Tethering *obj,
 		return MOBILE_AP_ERROR_ALREADY_ENABLED;
 	}
 
-	if (!_mobileap_set_state(MOBILE_AP_STATE_WIFI_AP)) {
+	if (!_mobileap_set_state(MOBILE_AP_STATE_WIFI_AP))
 		return MOBILE_AP_ERROR_RESOURCE;
-	}
+
 	ret = __update_softap_settings(&obj_softap_settings, ssid, passphrase,
 			NULL, MOBILE_AP_WIFI_CHANNEL, hide_mode, false, security_type);
 	if (ret != MOBILE_AP_ERROR_NONE) {
@@ -656,9 +651,8 @@ mobile_ap_error_code_e _disable_wifi_tethering(Tethering *obj)
 	_flush_ip_address(WIFI_IF);
 	_deinit_timeout_cb(type);
 
-	if (_remove_station_info_all(type) != MOBILE_AP_ERROR_NONE) {
+	if (_remove_station_info_all(type) != MOBILE_AP_ERROR_NONE)
 		ERR("_remove_station_info_all is failed. Ignore it.\n");
-	}
 
 	ret = _mh_core_disable_softap();
 	if (ret != MOBILE_AP_ERROR_NONE) {
@@ -671,9 +665,8 @@ mobile_ap_error_code_e _disable_wifi_tethering(Tethering *obj)
 
 	if (prev_wifi_on == TRUE) {
 		DBG("Previous Wi-Fi was turned on. Recover it\n");
-		if (__turn_on_wifi() != MOBILE_AP_ERROR_NONE) {
+		if (__turn_on_wifi() != MOBILE_AP_ERROR_NONE)
 			ERR("__turn_on_wifi() is failed\n");
-		}
 		prev_wifi_on = FALSE;
 	}
 	DBG("_disable_wifi_tethering is done\n");
@@ -704,9 +697,8 @@ mobile_ap_error_code_e _disable_wifi_ap(Tethering *obj)
 	_flush_ip_address(WIFI_IF);
 	_deinit_timeout_cb(type);
 
-	if (_remove_station_info_all(type) != MOBILE_AP_ERROR_NONE) {
+	if (_remove_station_info_all(type) != MOBILE_AP_ERROR_NONE)
 		ERR("_remove_station_info_all is failed. Ignore it.\n");
-	}
 
 	ret = _mh_core_disable_softap();
 	if (ret != MOBILE_AP_ERROR_NONE) {
@@ -752,9 +744,9 @@ mobile_ap_error_code_e _enable_soft_ap(Softap *obj,
 		return MOBILE_AP_ERROR_ALREADY_ENABLED;
 	}
 
-	if (!_mobileap_set_state(MOBILE_AP_STATE_WIFI_AP)) {
+	if (!_mobileap_set_state(MOBILE_AP_STATE_WIFI_AP))
 		return MOBILE_AP_ERROR_RESOURCE;
-	}
+
 	ret = __update_softap_settings(&obj_softap_settings, ssid, passphrase,
 			NULL, MOBILE_AP_WIFI_CHANNEL, hide_mode, false, security_type);
 	if (ret != MOBILE_AP_ERROR_NONE) {
@@ -762,13 +754,11 @@ mobile_ap_error_code_e _enable_soft_ap(Softap *obj,
 		return ret;
 	}
 
-	if (vconf_set_str(VCONFKEY_SOFTAP_SSID, obj_softap_settings.ssid) < 0) {
+	if (vconf_set_str(VCONFKEY_SOFTAP_SSID, obj_softap_settings.ssid) < 0)
 		ERR("vconf_set_str is failed");
-	}
 
-	if (vconf_set_str(VCONFKEY_SOFTAP_KEY, obj_softap_settings.key) < 0) {
+	if (vconf_set_str(VCONFKEY_SOFTAP_KEY, obj_softap_settings.key) < 0)
 		ERR("vconf_set_str is failed");
-	}
 
 	_block_device_sleep();
 
@@ -825,9 +815,8 @@ mobile_ap_error_code_e _disable_soft_ap(Softap *obj)
 	_flush_ip_address(WIFI_IF);
 	_deinit_timeout_cb(type);
 
-	if (_remove_station_info_all(type) != MOBILE_AP_ERROR_NONE) {
+	if (_remove_station_info_all(type) != MOBILE_AP_ERROR_NONE)
 		ERR("_remove_station_info_all is failed. Ignore it.\n");
-	}
 
 	ret = _mh_core_disable_softap();
 	if (ret != MOBILE_AP_ERROR_NONE) {
@@ -1010,8 +999,7 @@ gboolean tethering_enable_wifi_ap(Tethering *obj, GDBusMethodInvocation *context
 		wifi_recovery_timeout_id = 0;
 	}
 
-	ret = _enable_wifi_ap(obj, ssid, key, !visibility,
-	                (softap_security_type_e)security_type);
+	ret = _enable_wifi_ap(obj, ssid, key, !visibility, (softap_security_type_e)security_type);
 	if (ret != MOBILE_AP_ERROR_NONE) {
 		ERR("_enable_wifi_tethering is failed\n");
 	} else {
@@ -1210,7 +1198,7 @@ static mobile_ap_error_code_e __get_passphrase(char *passphrase,
 		g_strlcpy(passphrase, (char *)ckmc_buf->data, (*passphrase_len) + 1);
 	}
 
-    if (alias)
+	if (alias)
 		free(alias);
 
 	return MOBILE_AP_ERROR_NONE;
@@ -1221,14 +1209,13 @@ gboolean tethering_enable_dhcp(Tethering *obj,
 {
 	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
 
-	if (enable) {
+	if (enable)
 		ret = _mh_core_execute_dhcp_server();
-	}
-	else {
+	else
 		ret = _mh_core_terminate_dhcp_server();
-	}
 
 	tethering_complete_enable_dhcp(obj, context, ret);
+
 	return TRUE;
 }
 
@@ -1264,24 +1251,21 @@ gboolean tethering_get_wifi_tethering_passphrase(Tethering *obj,
 gboolean tethering_set_wifi_tethering_passphrase(Tethering *obj,
 		GDBusMethodInvocation *context, gchar *passphrase)
 {
-    char old_passphrase[MOBILE_AP_WIFI_KEY_MAX_LEN + 1] = {0, };
-    unsigned int old_len = 0;
-    unsigned int passphrase_len = strlen(passphrase);
-    mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
+	char old_passphrase[MOBILE_AP_WIFI_KEY_MAX_LEN + 1] = {0, };
+	unsigned int old_len = 0;
+	unsigned int passphrase_len = strlen(passphrase);
+	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
 
-    ret = __get_passphrase(old_passphrase, sizeof(old_passphrase), &old_len);
-    if (ret == MOBILE_AP_ERROR_NONE && old_len == passphrase_len &&
-        !g_strcmp0(old_passphrase, passphrase)) {
-        ret =  MOBILE_AP_ERROR_NONE;
-        tethering_complete_set_wifi_tethering_passphrase(obj, context, ret);
-        return true;
-    }
+	ret = __get_passphrase(old_passphrase, sizeof(old_passphrase), &old_len);
+	if (ret == MOBILE_AP_ERROR_NONE && old_len == passphrase_len && !g_strcmp0(old_passphrase, passphrase)) {
+		ret =  MOBILE_AP_ERROR_NONE;
+		tethering_complete_set_wifi_tethering_passphrase(obj, context, ret);
+		return true;
+	}
+	ret = __set_passphrase(passphrase, passphrase_len);
+	tethering_complete_set_wifi_tethering_passphrase(obj, context, ret);
 
-    ret = __set_passphrase(passphrase, passphrase_len);
-
-    tethering_complete_set_wifi_tethering_passphrase(obj, context, ret);
-
-    return true;
+	return true;
 }
 
 gboolean softap_enable(Softap *obj, GDBusMethodInvocation *context,
@@ -1289,7 +1273,7 @@ gboolean softap_enable(Softap *obj, GDBusMethodInvocation *context,
 {
 	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
 	gboolean ret_val = FALSE;
-	
+
 	DBG("+");
 
 	g_assert(obj != NULL);

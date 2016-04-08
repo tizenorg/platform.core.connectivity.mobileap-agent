@@ -89,9 +89,8 @@ int _create_timeout_noti(const char *icon_path)
 			}
 
 			ret = notification_free(noti);
-			if (ret != NOTIFICATION_ERROR_NONE) {
+			if (ret != NOTIFICATION_ERROR_NONE)
 				ERR("Fail to notification_free [%d]\n", ret);
-			}
 		}
 
 		timeout_noti_id = 0;
@@ -203,9 +202,8 @@ int _delete_timeout_noti(void)
 		return MOBILE_AP_ERROR_INTERNAL;
 	}
 
-	if (noti_list == NULL) {
+	if (noti_list == NULL)
 		return MOBILE_AP_ERROR_NONE;
-	}
 
 	for (l = noti_list; l; l = notification_list_get_next(l)) {
 		noti = notification_list_get_data(l);
@@ -394,9 +392,8 @@ int _update_connected_noti(int count, const char *icon_path)
 
 FAIL:
 	ret = notification_free(noti);
-	if (ret != NOTIFICATION_ERROR_NONE) {
+	if (ret != NOTIFICATION_ERROR_NONE)
 		ERR("Fail to notification_free [%d]\n", ret);
-	}
 
 	return MOBILE_AP_ERROR_INTERNAL;
 }
@@ -469,9 +466,8 @@ void _create_bt_tethering_active_noti(void)
 	}
 
 	ret = bt_adapter_get_visibility(&mode, &duration);
-	if (ret != BT_ERROR_NONE) {
+	if (ret != BT_ERROR_NONE)
 		ERR("bt_adapter_get_visibility is failed 0x[%X]\n", ret);
-	}
 
 	if (mode == BT_ADAPTER_VISIBILITY_MODE_NON_DISCOVERABLE) {
 		str2 = MH_STR_BT_VISIBILITY;

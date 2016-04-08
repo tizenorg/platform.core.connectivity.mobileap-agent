@@ -43,7 +43,7 @@ static sp_timeout_handler_t sp_timeout_handler[MOBILE_AP_TYPE_MAX] = {
 	{0, 0, __wifi_timeout_cb, NULL},
 	{0, 0, NULL, NULL},
 	{0, 0, __bt_timeout_cb, NULL},
-	{0, 0, NULL, NULL}};
+	{0, 0, NULL, NULL} };
 
 static void __handle_network_cellular_state_changed_cb(keynode_t *key, void *data)
 {
@@ -55,9 +55,8 @@ static void __handle_network_cellular_state_changed_cb(keynode_t *key, void *dat
 	Tethering *obj = (Tethering *)data;
 	int vconf_key = 0;
 
-	if (!_mobileap_is_enabled(MOBILE_AP_STATE_WIFI | MOBILE_AP_STATE_WIFI_AP)) {
+	if (!_mobileap_is_enabled(MOBILE_AP_STATE_WIFI | MOBILE_AP_STATE_WIFI_AP))
 		return;
-	}
 
 	if (vconf_keynode_get_type(key) != VCONF_TYPE_INT) {
 		ERR("Invalid vconf key type\n");
@@ -95,9 +94,8 @@ static void __handle_device_name_changed_cb(keynode_t *key, void *data)
 	softap_settings_t *new_settings = _get_softap_settings();
 	softap_security_type_e sec_type;
 
-	if (!_mobileap_is_enabled(MOBILE_AP_STATE_WIFI | MOBILE_AP_STATE_WIFI_AP)) {
+	if (!_mobileap_is_enabled(MOBILE_AP_STATE_WIFI | MOBILE_AP_STATE_WIFI_AP))
 		return;
-	}
 
 	if (vconf_keynode_get_type(key) != VCONF_TYPE_STRING) {
 		ERR("Invalid vconf key type\n");
@@ -107,11 +105,11 @@ static void __handle_device_name_changed_cb(keynode_t *key, void *data)
 
 	if (g_strcmp0(vconf_key, new_settings->ssid) != 0) {
 		DBG("Device name is changed\n");
-		if (!g_strcmp0(new_settings->security_type, SOFTAP_SECURITY_TYPE_WPA2_PSK_STR)) {
+		if (!g_strcmp0(new_settings->security_type, SOFTAP_SECURITY_TYPE_WPA2_PSK_STR))
 			sec_type = SOFTAP_SECURITY_TYPE_WPA2_PSK;
-		} else {
+		else
 			sec_type = SOFTAP_SECURITY_TYPE_OPEN;
-		}
+
 		if (_mobileap_is_enabled(MOBILE_AP_STATE_WIFI)) {
 			_reload_softap_settings(obj, vconf_key, new_settings->key,
 					new_settings->mode, new_settings->channel, new_settings->hide_mode, new_settings->mac_filter, sec_type);
@@ -171,16 +169,14 @@ void _register_vconf_cb(void *user_data)
 	while (vconf_reg[i].key != NULL && vconf_reg[i].cb != NULL) {
 		ret = vconf_notify_key_changed(vconf_reg[i].key,
 					vconf_reg[i].cb, user_data);
-		if (ret != 0) {
+		if (ret != 0)
 			ERR("vconf_notify_key_changed is failed : %d\n", ret);
-		}
 
 		if (vconf_reg[i].value) {
 			ret = vconf_get_int(vconf_reg[i].key,
 					vconf_reg[i].value);
-			if (ret != 0) {
+			if (ret != 0)
 				ERR("vconf_get_int is failed : %d\n", ret);
-			}
 		}
 
 		i++;
@@ -207,9 +203,8 @@ void _unregister_vconf_cb(void)
 	while (vconf_reg[i].key != NULL && vconf_reg[i].cb != NULL) {
 		ret = vconf_ignore_key_changed(vconf_reg[i].key,
 				vconf_reg[i].cb);
-		if (ret != 0) {
+		if (ret != 0)
 			ERR("vconf_notify_key_changed is failed : %d\n", ret);
-		}
 
 		i++;
 	}
@@ -234,7 +229,9 @@ static gboolean __wifi_timeout_cb(gpointer data)
 
 	_disable_wifi_tethering(obj);
 	tethering_emit_wifi_off(obj, SIGNAL_MSG_TIMEOUT);
-	//_launch_toast_popup(MOBILE_AP_TETHERING_TIMEOUT_TOAST_POPUP);
+#if 0
+	_launch_toast_popup(MOBILE_AP_TETHERING_TIMEOUT_TOAST_POPUP);
+#endif
 	_create_timeout_noti(MH_NOTI_ICON_WIFI);
 	DBG("-\n");
 	return FALSE;
@@ -257,7 +254,9 @@ static gboolean __bt_timeout_cb(gpointer data)
 
 	_disable_bt_tethering(obj);
 	tethering_emit_bluetooth_off(obj, SIGNAL_MSG_TIMEOUT);
-	//_launch_toast_popup(MOBILE_AP_TETHERING_TIMEOUT_TOAST_POPUP);
+#if 0
+	_launch_toast_popup(MOBILE_AP_TETHERING_TIMEOUT_TOAST_POPUP);
+#endif
 	_create_timeout_noti(MH_NOTI_ICON_BT);
 	DBG("-\n");
 	return FALSE;
@@ -352,9 +351,8 @@ void _init_timeout_cb(mobile_ap_type_e type, void *user_data)
 {
 	DBG("+\n");
 
-	if (sp_timeout_handler[type].func == NULL) {
+	if (sp_timeout_handler[type].func == NULL)
 		return;
-	}
 
 	if (user_data == NULL) {
 		ERR("Invalid param\n");
@@ -376,17 +374,15 @@ void _start_timeout_cb(mobile_ap_type_e type, time_t end_time)
 	mobile_ap_type_e i;
 	sp_timeout_handler_t *next_timeout;
 
-	if (sp_timeout_handler[type].func == NULL) {
+	if (sp_timeout_handler[type].func == NULL)
 		return;
-	}
 
 	__reset_timeout(&sp_timeout_handler[type]);
 	sp_timeout_handler[type].end_time = end_time;
 
 	next_timeout = __find_next_timeout();
-	if (next_timeout->alarm_id > 0) {
+	if (next_timeout->alarm_id > 0)
 		return;
-	}
 
 	for (i = MOBILE_AP_TYPE_WIFI; i < MOBILE_AP_TYPE_MAX; i++) {
 		if (sp_timeout_handler[i].alarm_id == 0)
@@ -421,9 +417,8 @@ void _stop_timeout_cb(mobile_ap_type_e type)
 	mobile_ap_type_e i;
 	sp_timeout_handler_t *next_timeout;
 
-	if (sp_timeout_handler[type].func == NULL) {
+	if (sp_timeout_handler[type].func == NULL)
 		return;
-	}
 
 	if (sp_timeout_handler[type].alarm_id == 0) {
 		sp_timeout_handler[type].end_time = 0;
@@ -463,16 +458,15 @@ void _stop_timeout_cb(mobile_ap_type_e type)
 	return;
 }
 
-void _deinit_timeout_cb(mobile_ap_type_e type) {
+void _deinit_timeout_cb(mobile_ap_type_e type)
+{
 	DBG("+\n");
 
-	if (sp_timeout_handler[type].func == NULL) {
+	if (sp_timeout_handler[type].func == NULL)
 		return;
-	}
 
-	if (sp_timeout_handler[type].alarm_id > 0) {
+	if (sp_timeout_handler[type].alarm_id > 0)
 		_stop_timeout_cb(type);
-	}
 
 	sp_timeout_handler[type].user_data = NULL;
 	sp_timeout_handler[type].end_time = 0;

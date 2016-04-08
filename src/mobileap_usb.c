@@ -68,8 +68,8 @@ static void __usb_device_state_change_cb(GDBusConnection *connection,
 	}
 	g_variant_get(parameters, "(u)", &value);
 	DBG("Received signal(%s), value: (%u)", signal_name, value);
-	DBG("USB connected ? (%s)", value & USBCLIENT_STATE_CONNECTED? "Yes":"No");
-	DBG("USB available ? (%s)", value & USBCLIENT_STATE_AVAILABLE? "Yes":"No");
+	DBG("USB connected ? (%s)", value & USBCLIENT_STATE_CONNECTED ? "Yes" : "No");
+	DBG("USB available ? (%s)", value & USBCLIENT_STATE_AVAILABLE ? "Yes" : "No");
 
 	if (USBCLIENT_STATE_DISCONNECTED == value) {
 		_disable_usb_tethering(obj);
@@ -90,7 +90,7 @@ int _dbus_register_usb_state_change_signal(void *data)
 	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
 	GError *error = NULL;
 
-#if !GLIB_CHECK_VERSION(2,36,0)
+#if !GLIB_CHECK_VERSION(2, 36, 0)
 	g_type_init();
 #endif
 
@@ -223,9 +223,8 @@ static void __handle_usb_mode_change(keynode_t *key, void *data)
 		vconf_notify_key_changed(VCONFKEY_SETAPPL_USB_MODE_INT,
 				__handle_usb_disconnect_cb, (void *)obj);
 		ret = vconf_get_int(VCONFKEY_SETAPPL_USB_MODE_INT, &vconf_key);
-		if (ret != 0) {
+		if (ret != 0)
 			ERR("vconf_get_int is failed. but ignored [%d]\n", ret);
-		}
 
 		if (vconf_key != SETTING_USB_TETHERING_MODE) {
 			ERR("USB Mode is changed suddenly\n");
@@ -297,9 +296,8 @@ mobile_ap_error_code_e _enable_usb_tethering(Tethering *obj)
 	}
 
 	ret = _init_tethering();
-	if (ret != MOBILE_AP_ERROR_NONE) {
+	if (ret != MOBILE_AP_ERROR_NONE)
 		goto FAIL;
-	}
 
 	vconf_notify_key_changed(VCONFKEY_SETAPPL_USB_MODE_INT,
 			__handle_usb_mode_change, (void *)obj);
@@ -351,9 +349,8 @@ mobile_ap_error_code_e _disable_usb_tethering(Tethering *obj)
 
 	_deinit_tethering();
 
-	if (_remove_station_info_all(MOBILE_AP_TYPE_USB) != MOBILE_AP_ERROR_NONE) {
+	if (_remove_station_info_all(MOBILE_AP_TYPE_USB) != MOBILE_AP_ERROR_NONE)
 		ERR("_remove_station_info_all is failed. Ignore it\n");
-	}
 
 	/* Clear DBus Signal Handler for USB Client State */
 	if (conn) {
