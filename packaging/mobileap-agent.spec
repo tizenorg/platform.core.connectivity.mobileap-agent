@@ -1,15 +1,11 @@
 Name:		mobileap-agent
 Summary:	Mobile AP daemon for setting tethering environments
-Version:	1.0.52
+Version:	1.0.53
 Release:	1
 Group:		System/Network
 License:	Apache-2.0
 Source0:	%{name}-%{version}.tar.gz
 Source1:	org.tizen.MobileapAgent.service
-
-%if "%{?profile}" == "tv"
-ExcludeArch: %{arm} %ix86 x86_64
-%endif
 
 BuildRequires:	pkgconfig(dlog)
 BuildRequires:	pkgconfig(gio-2.0)
