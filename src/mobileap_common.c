@@ -25,13 +25,22 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <dpm/restriction.h>
 
 #include <dbus/dbus.h>
 
-#include "mobileap_notification.h"
 #include "mobileap_common.h"
+#include "mobileap_wifi.h"
+#include "mobileap_notification.h"
 
 static GSList *station_list = NULL;
+
+static dpm_context_h context = NULL;
+static dpm_restriction_policy_h policy = NULL;
+static int dpm_id = 0;
+static bool allow_wifi_tethering = false;
+static bool allow_bt_tethering = false;
+static bool allow_usb_tethering = false;
 
 gint _slist_find_station_by_interface(gconstpointer a, gconstpointer b)
 {
@@ -556,4 +565,155 @@ int _get_tethering_type_from_ip(const char *ip, mobile_ap_type_e *type)
 	SERR("Tethering type cannot be decided from %s\n", ip);
 
 	return MOBILE_AP_ERROR_INVALID_PARAM;
+}
+
+static void __policy_changed_cb(const char *name, const char *state, void *user_data)
+{
+	Tethering *obj = _get_tethering_obj();
+	bool allowed = false;
+	int mobileap_state = VCONFKEY_MOBILE_HOTSPOT_MODE_NONE;
+
+	DBG("%s dpm policy is %s", name, state);
+	if (!strcmp(state, "allowed"))
+		allowed = true;
+
+	if (!strcmp(name, DPM_POLICY_WIFI_TETHERING)) {
+			vconf_get_int(VCONFKEY_MOBILE_HOTSPOT_MODE, &mobileap_state);
+		if (!allowed && (mobileap_state & VCONFKEY_MOBILE_HOTSPOT_MODE_WIFI)) {
+			_create_security_restriction_noti(MOBILE_AP_TYPE_WIFI);
+			_disable_wifi_tethering(obj);
+			tethering_emit_wifi_off(obj, NULL);
+		}
+		allow_wifi_tethering = allowed;
+	} else if (!strcmp(name, DPM_POLICY_USB_TETHERING)) {
+			vconf_get_int(VCONFKEY_MOBILE_HOTSPOT_MODE, &mobileap_state);
+		if (!allowed && (mobileap_state & VCONFKEY_MOBILE_HOTSPOT_MODE_USB)) {
+			_create_security_restriction_noti(MOBILE_AP_TYPE_USB);
+			_disable_usb_tethering(obj);
+			tethering_emit_usb_off(obj, NULL);
+		}
+		allow_usb_tethering = allowed;
+	} else if (!strcmp(name, DPM_POLICY_BT_TETHERING)) {
+			vconf_get_int(VCONFKEY_MOBILE_HOTSPOT_MODE, &mobileap_state);
+		if (!allowed && (mobileap_state & VCONFKEY_MOBILE_HOTSPOT_MODE_BT)) {
+			_create_security_restriction_noti(MOBILE_AP_TYPE_BT);
+			_disable_bt_tethering(obj);
+			tethering_emit_bluetooth_off(obj, NULL);
+		}
+		allow_bt_tethering = allowed;
+	}
+
+	return;
+}
+
+void _init_dpm(void)
+{
+	int ret;
+
+	context = dpm_context_create();
+	policy = dpm_context_acquire_restriction_policy(context);
+	if (policy == NULL) {
+		ERR("Fail to get restriction policy handle\n");
+		dpm_context_destroy(context);
+		return;
+	}
+
+	ret = dpm_context_add_policy_changed_cb(context, DPM_POLICY_WIFI_TETHERING, __policy_changed_cb, NULL, &dpm_id);
+	if (ret != DPM_ERROR_NONE)
+		ERR("Fail to register dpm callback");
+
+	ret = dpm_context_add_policy_changed_cb(context, DPM_POLICY_USB_TETHERING, __policy_changed_cb, NULL, &dpm_id);
+	if (ret != DPM_ERROR_NONE)
+		ERR("Fail to register dpm callback");
+
+	ret = dpm_context_add_policy_changed_cb(context, DPM_POLICY_BT_TETHERING, __policy_changed_cb, NULL, &dpm_id);
+	if (ret != DPM_ERROR_NONE)
+		ERR("Fail to register dpm callback");
+
+	_get_restriction_policy();
+
+	return;
+}
+
+void _deinit_dpm(void)
+{
+	if (context) {
+		dpm_context_remove_policy_changed_cb(context, dpm_id);
+
+		if (policy)
+			dpm_context_release_restriction_policy(context, policy);
+
+		dpm_context_destroy(context);
+
+		policy = NULL;
+		context = NULL;
+	}
+
+	return;
+}
+
+void _get_restriction_policy(void)
+{
+	int enable;
+	int ret;
+
+	/* Get Wi-Fi tethering policy */
+	ret = dpm_restriction_get_wifi_hotspot_state(policy, &enable);
+	if (ret != DPM_ERROR_NONE) {
+		SERR("Fail to get restriction policy[%d]\n", ret);
+		return;
+	}
+
+	if (enable)
+		allow_wifi_tethering = true;
+	else
+		allow_wifi_tethering = false;
+
+	/* Get USB tethering policy */
+	ret = dpm_restriction_get_usb_tethering_state(policy, &enable);
+	if (ret != DPM_ERROR_NONE) {
+		SERR("Fail to get restriction policy[%d]\n", ret);
+		return;
+	}
+
+	if (enable)
+		allow_usb_tethering = true;
+	else
+		allow_usb_tethering = false;
+
+
+	/* Get BT tethering policy */
+	ret = dpm_restriction_get_bluetooth_tethering_state(policy, &enable);
+	if (ret != DPM_ERROR_NONE) {
+		SERR("Fail to get restriction policy[%d]\n", ret);
+		return;
+	}
+
+	if (enable)
+		allow_bt_tethering = true;
+	else
+		allow_bt_tethering = false;
+
+	return;
+}
+
+int _is_allowed(mobile_ap_type_e type)
+{
+	bool allowed = false;
+
+	switch (type) {
+	case MOBILE_AP_TYPE_WIFI:
+		allowed = allow_wifi_tethering;
+		break;
+	case MOBILE_AP_TYPE_USB:
+		allowed = allow_usb_tethering;
+		break;
+	case MOBILE_AP_TYPE_BT:
+		allowed = allow_bt_tethering;
+		break;
+	default:
+		break;
+	}
+
+	return allowed;
 }

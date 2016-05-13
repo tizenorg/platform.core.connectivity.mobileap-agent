@@ -24,9 +24,9 @@
 
 #include "mobileap.h"
 
+#define NETPOPUP				"net-popup"
 #define MH_NOTI_STR_MAX			50
 #define MH_NOTI_PATH_MAX		256
-
 #define MH_NOTI_ICON_PATH		tzplatform_mkpath(TZ_SYS_RO_UG, "/res/images/ug-setting-mobileap-efl")
 #define MH_NOTI_ICON_BT			"noti_tethering_bluetooth.png"
 #define MH_NOTI_ICON_GENERAL	"noti_tethering_general.png"
@@ -55,4 +55,5 @@ int _update_connected_noti(mobile_ap_type_e type, int count);
 int _delete_connected_noti(void);
 void _create_tethering_active_noti(void);
 void _create_bt_tethering_active_noti(void);
+void _create_security_restriction_noti(mobile_ap_type_e type);
 #endif

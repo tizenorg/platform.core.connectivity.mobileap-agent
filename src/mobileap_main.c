@@ -564,6 +564,7 @@ static int __tethering_setup_gdbus(void)
 	}
 	return 0;
 }
+
 int main(int argc, char **argv)
 {
 	int ret = 0;
@@ -609,6 +610,7 @@ int main(int argc, char **argv)
 			ERR("alarmmgr_set_cb is failed : %d\n", ret);
 	}
 
+	_init_dpm();
 	_register_app_for_wifi_passphrase(MOBILE_AP_UG_PKG_ID);
 
 	g_main_loop_run(mainloop);
@@ -622,6 +624,7 @@ int main(int argc, char **argv)
 	_unregister_vconf_cb();
 	_unregister_wifi_station_handler();
 	_deinit_network();
+	_deinit_dpm();
 
 	g_dbus_connection_signal_unsubscribe(teth_gdbus_conn, conn_sig_id);
 	g_dbus_connection_signal_unsubscribe(teth_gdbus_conn, deleted_sig_id);
