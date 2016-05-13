@@ -21,6 +21,7 @@
 #include <glib.h>
 #include <gio/gio.h>
 
+#include "mobileap.h"
 #include "mobileap_softap.h"
 #include <mobileap-agent-server-stub.h>
 
@@ -45,6 +46,11 @@ int _del_routing_rule(const char *interface);
 int _flush_ip_address(const char *interface);
 int _execute_command(const char *cmd);
 int _get_tethering_type_from_ip(const char *ip, mobile_ap_type_e *type);
+
+/* For DPM policy */
+void _get_restriction_policy(void);
+int _is_allowed(mobile_ap_type_e type);
+
 Tethering *_get_tethering_obj(void);
 Softap *_get_softap_obj(void);
 #endif /* __MOBILEAP_COMMON_H__ */

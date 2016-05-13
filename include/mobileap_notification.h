@@ -21,8 +21,12 @@
 #include <appcore-common.h>
 #include <notification.h>
 
+#include "mobileap.h"
+
 #define MH_NOTI_STR_MAX			50
 #define MH_NOTI_PATH_MAX		256
+
+#define NETPOPUP				"net-popup"
 
 #define MH_NOTI_ICON_PATH		"/usr/ug/res/images/ug-setting-mobileap-efl"
 #define MH_NOTI_ICON_BT			MH_NOTI_ICON_PATH"/noti_tethering_bluetooth.png"
@@ -53,4 +57,5 @@ int _update_connected_noti(int count, const char *icon_path);
 int _delete_connected_noti(void);
 void _create_tethering_active_noti(void);
 void _create_bt_tethering_active_noti(void);
+void _create_security_restriction_noti(mobile_ap_type_e type);
 #endif
