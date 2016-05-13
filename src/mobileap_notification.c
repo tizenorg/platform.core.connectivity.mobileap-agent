@@ -24,7 +24,9 @@
 #include <notification_text_domain.h>
 #include <notification_internal.h>
 #include <bluetooth.h>
+#include <bundle.h>
 #include <bundle_internal.h>
+#include <syspopup_caller.h>
 #ifndef TIZEN_TV
 #include <appsvc.h>
 #endif
@@ -473,6 +475,44 @@ void _create_bt_tethering_active_noti(void)
 		str2 = MH_STR_BT_VISIBILITY;
 		__create_status_noti(str2);
 	}
+
+	return;
+}
+
+void _create_security_restriction_noti(mobile_ap_type_e type)
+{
+	bundle *b = NULL;
+	char restricted_type[MAX_BUF_SIZE] = {0, };
+	int ret;
+
+	switch (type) {
+	case MOBILE_AP_TYPE_WIFI:
+		g_strlcpy(restricted_type, "using Wi-Fi tethering", MAX_BUF_SIZE - 1);
+		break;
+	case MOBILE_AP_TYPE_USB:
+		g_strlcpy(restricted_type, "using USB tethering", MAX_BUF_SIZE - 1);
+		break;
+	case MOBILE_AP_TYPE_BT:
+		g_strlcpy(restricted_type, "using Bluetooth tethering", MAX_BUF_SIZE - 1);
+		break;
+	default:
+		ERR("Invalid type.\n");
+		return;
+	}
+
+	b = bundle_create();
+
+	bundle_add(b, "_SYSPOPUP_TITLE_", "Network connection popup");
+	bundle_add(b, "_SYSPOPUP_TYPE_", "toast_popup");
+	bundle_add(b, "_SYSPOPUP_CONTENT_", "security restriction");
+	bundle_add(b, "_RESTRICTED_TYPE_", restricted_type);
+
+	DBG("Launch security restriction alert network popup");
+	ret = syspopup_launch(NETPOPUP, b);
+	if (ret < 0)
+		ERR("Fail to launch syspopup");
+
+	bundle_free(b);
 
 	return;
 }
