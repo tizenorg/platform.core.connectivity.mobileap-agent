@@ -901,6 +901,12 @@ gboolean tethering_enable_wifi_tethering(Tethering *obj,
 	}
 	g_context = context;
 
+	if (!_is_allowed(MOBILE_AP_TYPE_WIFI)) {
+		DBG("DPM policy restricts Wi-Fi tethering\n");
+		ret = MOBILE_AP_ERROR_NOT_PERMITTED;
+		goto DONE;
+	}
+
 	wifi_settings.ssid = g_strdup(ssid);
 	if (security_type == SOFTAP_SECURITY_TYPE_WPA2_PSK) {
 		wifi_settings.key = g_strdup(key);

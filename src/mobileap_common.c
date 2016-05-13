@@ -25,6 +25,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <dpm/restriction.h>
 
 #include <dbus/dbus.h>
 
@@ -32,6 +33,9 @@
 #include "mobileap_common.h"
 
 static GSList *station_list = NULL;
+static bool allow_wifi_tethering = false;
+static bool allow_bt_tethering = false;
+static bool allow_usb_tethering = false;
 
 gint _slist_find_station_by_interface(gconstpointer a, gconstpointer b)
 {
@@ -556,4 +560,66 @@ int _get_tethering_type_from_ip(const char *ip, mobile_ap_type_e *type)
 	SERR("Tethering type cannot be decided from %s\n", ip);
 
 	return MOBILE_AP_ERROR_INVALID_PARAM;
+}
+
+void _get_restriction_policy(void)
+{
+	dpm_context_h context;
+	dpm_restriction_policy_h policy;
+	int enable;
+	int ret;
+
+	context = dpm_context_create();
+	policy = dpm_context_acquire_restriction_policy(context);
+	if (policy == NULL) {
+		SERR("Fail to get restriction policy handle\n");
+		dpm_context_destroy(context);
+		return;
+	}
+
+	ret = dpm_restriction_get_wifi_hotspot_state(policy, &enable);
+	if (ret != DPM_ERROR_NONE) {
+		SERR("Fail to get restriction policy[%d]\n", ret);
+		goto DONE;
+	}
+
+	DBG("Restriction policy is [%d]", enable);
+
+	if (enable)
+		allow_wifi_tethering = true;
+	else
+		allow_wifi_tethering = false;
+
+	/* APIs for getting state except Wi-Fi tethering are not supported yet. */
+	allow_bt_tethering = true;
+	allow_usb_tethering = true;
+DONE:
+	dpm_context_release_restriction_policy(context, policy);
+	dpm_context_destroy(context);
+	return;
+}
+
+int _is_allowed(mobile_ap_type_e type)
+{
+	int allowed = 0;
+
+	/* Invoking _get_restiriction_policy() is removed as soon as practicable.
+	 * We can get policy from callback function which is supported by DPM.
+	 * Otherwise we can use dbus to receive notification from DPM.*/
+	_get_restriction_policy();
+	switch (type) {
+	case MOBILE_AP_TYPE_WIFI:
+		allowed = allow_wifi_tethering;
+		break;
+	case MOBILE_AP_TYPE_USB:
+		allowed = allow_usb_tethering;
+		break;
+	case MOBILE_AP_TYPE_BT:
+		allowed = allow_bt_tethering;
+		break;
+	default:
+		break;
+	}
+
+	return allowed;
 }

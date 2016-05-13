@@ -545,6 +545,12 @@ gboolean tethering_enable_bt_tethering(Tethering *obj,
 
 	g_context = context;
 
+	if (!_is_allowed(MOBILE_AP_TYPE_BT)) {
+		DBG("DPM policy restricts BT tethering\n");
+		ret = MOBILE_AP_ERROR_NOT_PERMITTED;
+		goto DONE;
+	}
+
 	_block_device_sleep();
 
 	ret = __init_bt(obj);
