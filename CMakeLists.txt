@@ -29,7 +29,7 @@ MESSAGE("Build type: ${CMAKE_BUILD_TYPE}")
 INCLUDE_DIRECTORIES(${INCLUDE_DIR} ${CMAKE_SOURCE_DIR})
 
 INCLUDE(FindPkgConfig)
-pkg_check_modules(pkgs REQUIRED gio-2.0 gio-unix-2.0 dbus-1 dlog  deviced vconf notification capi-network-connection capi-network-bluetooth appcore-common capi-network-wifi capi-network-wifi-direct alarm-service appsvc libcrypto key-manager)
+pkg_check_modules(pkgs REQUIRED gio-2.0 gio-unix-2.0 dbus-1 dlog  deviced vconf notification capi-network-connection capi-network-bluetooth appcore-common capi-network-wifi capi-network-wifi-direct alarm-service appsvc libcrypto key-manager dpm)
 
 FOREACH(flag ${pkgs_CFLAGS})
 	SET(EXTRA_CFLAGS "${EXTRA_CFLAGS} ${flag}")
