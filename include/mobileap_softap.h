@@ -24,6 +24,7 @@
 #include <dlog.h>
 #include <vconf.h>
 #include <netinet/in.h>
+#include <tzplatform_config.h>
 
 #include "mobileap.h"
 
@@ -94,9 +95,11 @@
 #define MH_MONITOR_INTF		"/tmp/mh_wpa_monitor"
 
 #define HOSTAPD_BIN		"/usr/sbin/hostapd"
-#define HOSTAPD_ENTROPY_FILE	"/opt/var/lib/misc/hostapd.bin"
-#define HOSTAPD_CONF_FILE	"/opt/var/lib/misc/hostapd.conf"
-#define HOSTAPD_CTRL_INTF_DIR	"/opt/var/lib/misc/hostapd"
+#define HOSTAPD_ENTROPY_FILE	tzplatform_mkpath(TZ_SYS_VAR, "/lib/misc/hostapd.bin")
+#define HOSTAPD_CONF_FILE	tzplatform_mkpath(TZ_SYS_VAR, "/lib/misc/hostapd.conf")
+#define HOSTAPD_CTRL_INTF_DIR	tzplatform_mkpath(TZ_SYS_VAR, "/lib/misc/hostapd")
+#define HOSTAPD_ALLOWED_LIST	tzplatform_mkpath(TZ_SYS_VAR, "/lib/hostapd/hostapd.accept")
+#define HOSTAPD_BLOCKED_LIST	tzplatform_mkpath(TZ_SYS_VAR, "/lib/hostapd/hostapd.deny")
 #define HOSTAPD_CONF_LEN	1024
 #define HOSTAPD_DEFAULT_HW_MODE	"g"
 
@@ -110,8 +113,8 @@
 				"hw_mode=%s\n" \
 				"max_num_sta=%d\n" \
 				"macaddr_acl=%d\n" \
-				"accept_mac_file=/etc/hostapd.accept\n" \
-				"deny_mac_file=/etc/hostapd.deny\n" \
+				"accept_mac_file=%s\n" \
+				"deny_mac_file=%s\n" \
 				"ieee80211n=1\n"
 #else
 #define HOSTAPD_CONF		"interface=%s\n" \
@@ -123,8 +126,8 @@
 				"hw_mode=%s\n" \
 				"max_num_sta=%d\n" \
 				"macaddr_acl=%d\n" \
-				"accept_mac_file=/etc/hostapd.accept\n" \
-				"deny_mac_file=/etc/hostapd.deny\n" \
+				"accept_mac_file=%s\n" \
+				"deny_mac_file=%s\n" \
 				"ieee80211n=1\n" \
 				"wowlan_triggers=any\n"
 #endif

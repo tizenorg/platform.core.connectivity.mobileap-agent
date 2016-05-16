@@ -159,7 +159,9 @@ static int __execute_hostapd(const mobile_ap_type_e type, const char *ssid,
 			hide_mode ? 2 : 0,
 			hw_mode,
 			MOBILE_AP_MAX_WIFI_STA,
-			mac_filter);
+			mac_filter,
+			HOSTAPD_ALLOWED_LIST,
+			HOSTAPD_BLOCKED_LIST);
 	conf = g_strdup(buf);
 
 	free(hw_mode);
