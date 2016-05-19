@@ -88,10 +88,10 @@ void _send_dbus_station_info(const char *member, mobile_ap_station_info_t *info)
 void _update_station_count(int count)
 {
 	static int prev_cnt = 0;
-	char icon_path[MH_NOTI_PATH_MAX] = {0, };
 	int wifi_count = 0;
 	int bt_count = 0;
 	int usb_count = 0;
+	mobile_ap_type_e type;
 
 	if (_mobileap_is_enabled(MOBILE_AP_STATE_WIFI_AP))
 		return;
@@ -116,20 +116,20 @@ void _update_station_count(int count)
 	_get_station_count((gconstpointer)MOBILE_AP_TYPE_USB, _slist_find_station_by_interface, &usb_count);
 
 	if (wifi_count > 0 && bt_count == 0 && usb_count == 0)
-		g_strlcpy(icon_path, MH_NOTI_ICON_WIFI, sizeof(icon_path));
+		type = MOBILE_AP_TYPE_WIFI;
 	else if (wifi_count == 0 && bt_count > 0 && usb_count == 0)
-		g_strlcpy(icon_path, MH_NOTI_ICON_BT, sizeof(icon_path));
+		type = MOBILE_AP_TYPE_BT;
 	else if (wifi_count == 0 && bt_count == 0 && usb_count > 0)
-		g_strlcpy(icon_path, MH_NOTI_ICON_USB, sizeof(icon_path));
+		type = MOBILE_AP_TYPE_USB;
 	else if (wifi_count == 0 && bt_count == 0 && usb_count == 0)
 		return;
 	else
-		g_strlcpy(icon_path, MH_NOTI_ICON_GENERAL, sizeof(icon_path));
+		type = MOBILE_AP_TYPE_MAX;
 
 	if (prev_cnt == 0)
-		_create_connected_noti(count, icon_path);
+		_create_connected_noti(type, count);
 	else
-		_update_connected_noti(count, icon_path);
+		_update_connected_noti(type, count);
 
 	prev_cnt = count;
 	return;
