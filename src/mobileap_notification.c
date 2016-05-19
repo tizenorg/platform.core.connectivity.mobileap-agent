@@ -29,6 +29,7 @@
 #include <appsvc.h>
 #endif
 
+#include "mobileap.h"
 #include "mobileap_softap.h"
 #include "mobileap_notification.h"
 
@@ -41,6 +42,27 @@
 static int connected_noti_id = 0;
 static int timeout_noti_id = 0;
 
+static char *__get_icon_path(mobile_ap_type_e type)
+{
+	char icon_path[MH_NOTI_PATH_MAX] = {0, };
+
+	switch (type) {
+	case MOBILE_AP_TYPE_WIFI:
+		snprintf(icon_path, MH_NOTI_PATH_MAX, "%s/%s", MH_NOTI_ICON_PATH, MH_NOTI_ICON_WIFI);
+		break;
+	case MOBILE_AP_TYPE_USB:
+		snprintf(icon_path, MH_NOTI_PATH_MAX, "%s/%s", MH_NOTI_ICON_PATH, MH_NOTI_ICON_USB);
+		break;
+	case MOBILE_AP_TYPE_BT:
+		snprintf(icon_path, MH_NOTI_PATH_MAX, "%s/%s", MH_NOTI_ICON_PATH, MH_NOTI_ICON_BT);
+		break;
+	default:
+		snprintf(icon_path, MH_NOTI_PATH_MAX, "%s/%s", MH_NOTI_ICON_PATH, MH_NOTI_ICON_GENERAL);
+		break;
+	}
+
+	return g_strdup(icon_path);
+}
 static int __create_status_noti(const char *content)
 {
 	if (content == NULL)
@@ -57,7 +79,7 @@ static int __create_status_noti(const char *content)
 	return MOBILE_AP_ERROR_NONE;
 }
 
-int _create_timeout_noti(const char *icon_path)
+int _create_timeout_noti(mobile_ap_type_e type)
 {
 	DBG("+\n");
 
@@ -65,6 +87,12 @@ int _create_timeout_noti(const char *icon_path)
 	notification_error_e ret = NOTIFICATION_ERROR_NONE;
 	char *old_icon_path = NULL;
 	char *general_icon_path = NULL;
+	char *icon_path = __get_icon_path(type);
+
+	if (icon_path == NULL) {
+		ERR("icon_path is NULL\n");
+		return MOBILE_AP_ERROR_INTERNAL;
+	}
 
 	if (timeout_noti_id) {
 		noti = notification_load(MH_NOTI_CALLER_PKGNAME, timeout_noti_id);
@@ -75,7 +103,7 @@ int _create_timeout_noti(const char *icon_path)
 					NOTIFICATION_IMAGE_TYPE_ICON, &old_icon_path);
 			if (ret == NOTIFICATION_ERROR_NONE) {
 				if (g_strcmp0(icon_path, old_icon_path))
-					general_icon_path = MH_NOTI_ICON_GENERAL;
+					general_icon_path = __get_icon_path(MOBILE_AP_TYPE_MAX);
 			}
 
 			ret = notification_delete(noti);
@@ -85,6 +113,11 @@ int _create_timeout_noti(const char *icon_path)
 				ret = notification_free(noti);
 				if (ret != NOTIFICATION_ERROR_NONE)
 					ERR("Fail to notification_free [%d]\n", ret);
+
+				if (general_icon_path)
+					free(general_icon_path);
+				free(icon_path);
+
 				return MOBILE_AP_ERROR_INTERNAL;
 			}
 
@@ -99,6 +132,10 @@ int _create_timeout_noti(const char *icon_path)
 	noti = notification_create(NOTIFICATION_TYPE_NOTI);
 	if (!noti) {
 		ERR("Fail to notification_create\n");
+		if (general_icon_path)
+			free(general_icon_path);
+
+		free(icon_path);
 		return MOBILE_AP_ERROR_INTERNAL;
 	}
 
@@ -168,8 +205,15 @@ int _create_timeout_noti(const char *icon_path)
 	ret = notification_free(noti);
 	if (ret != NOTIFICATION_ERROR_NONE) {
 		ERR("Fail to notification_free [%d]\n", ret);
+		if (general_icon_path)
+			free(general_icon_path);
+		free(icon_path);
 		return MOBILE_AP_ERROR_INTERNAL;
 	}
+
+	if (general_icon_path)
+		free(general_icon_path);
+	free(icon_path);
 
 	DBG("-\n");
 	return MOBILE_AP_ERROR_NONE;
@@ -178,6 +222,10 @@ FAIL:
 	ret = notification_free(noti);
 	if (ret != NOTIFICATION_ERROR_NONE)
 		ERR("Fail to notification_free [%d]\n", ret);
+
+	if (general_icon_path)
+		free(general_icon_path);
+	free(icon_path);
 
 	return MOBILE_AP_ERROR_INTERNAL;
 }
@@ -225,16 +273,23 @@ int _delete_timeout_noti(void)
 	return MOBILE_AP_ERROR_NONE;
 }
 
-int _create_connected_noti(int count, const char *icon_path)
+int _create_connected_noti(mobile_ap_type_e type, int count)
 {
 	DBG("+\n");
 	notification_h noti = NULL;
 	notification_error_e ret = NOTIFICATION_ERROR_NONE;
 	bundle *b = NULL;
+	char *icon_path = __get_icon_path(type);
+
+	if (icon_path == NULL) {
+		ERR("icon_path is NULL\n");
+		return MOBILE_AP_ERROR_INTERNAL;
+	}
 
 	noti = notification_create(NOTIFICATION_TYPE_ONGOING);
 	if (!noti) {
 		ERR("Fail to notification_create\n");
+		free(icon_path);
 		return MOBILE_AP_ERROR_INTERNAL;
 	}
 
@@ -329,10 +384,11 @@ int _create_connected_noti(int count, const char *icon_path)
 		ERR("Fail to notification_free [%d]\n", ret);
 		if (b != NULL)
 			bundle_free(b);
-
+		free(icon_path);
 		return MOBILE_AP_ERROR_INTERNAL;
 	}
 
+	free(icon_path);
 	DBG("-\n");
 	return MOBILE_AP_ERROR_NONE;
 
@@ -342,19 +398,27 @@ FAIL:
 	ret = notification_free(noti);
 	if (ret != NOTIFICATION_ERROR_NONE)
 		ERR("Fail to notification_free [%d]\n", ret);
+	free(icon_path);
 	return MOBILE_AP_ERROR_INTERNAL;
 }
 
-int _update_connected_noti(int count, const char *icon_path)
+int _update_connected_noti(mobile_ap_type_e type, int count)
 {
 	DBG("+\n");
 
 	notification_h noti = NULL;
 	notification_error_e ret = NOTIFICATION_ERROR_NONE;
+	char *icon_path = __get_icon_path(type);
+
+	if (icon_path == NULL) {
+		ERR("icon_path is NULL\n");
+		return MOBILE_AP_ERROR_INTERNAL;
+	}
 
 	noti = notification_load(MH_NOTI_CALLER_PKGNAME, connected_noti_id);
 	if (noti == NULL) {
 		ERR("notification_load is failed\n");
+		free(icon_path);
 		return MOBILE_AP_ERROR_INTERNAL;
 	}
 
@@ -394,6 +458,7 @@ FAIL:
 	ret = notification_free(noti);
 	if (ret != NOTIFICATION_ERROR_NONE)
 		ERR("Fail to notification_free [%d]\n", ret);
+	free(icon_path);
 
 	return MOBILE_AP_ERROR_INTERNAL;
 }

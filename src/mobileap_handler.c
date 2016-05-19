@@ -232,7 +232,7 @@ static gboolean __wifi_timeout_cb(gpointer data)
 #if 0
 	_launch_toast_popup(MOBILE_AP_TETHERING_TIMEOUT_TOAST_POPUP);
 #endif
-	_create_timeout_noti(MH_NOTI_ICON_WIFI);
+	_create_timeout_noti(MOBILE_AP_TYPE_WIFI);
 	DBG("-\n");
 	return FALSE;
 }
@@ -257,7 +257,7 @@ static gboolean __bt_timeout_cb(gpointer data)
 #if 0
 	_launch_toast_popup(MOBILE_AP_TETHERING_TIMEOUT_TOAST_POPUP);
 #endif
-	_create_timeout_noti(MH_NOTI_ICON_BT);
+	_create_timeout_noti(MOBILE_AP_TYPE_BT);
 	DBG("-\n");
 	return FALSE;
 }
