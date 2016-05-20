@@ -19,9 +19,7 @@
 #include <glib.h>
 #include <dbus/dbus.h>
 #include <bluetooth.h>
-#ifndef TIZEN_TV
 #include <bluetooth_internal.h>
-#endif
 
 #include "mobileap_softap.h"
 #include "mobileap_common.h"
@@ -249,11 +247,9 @@ static mobile_ap_error_code_e __turn_on_bt_adapter(gpointer data)
 
 	if (ret != BT_ERROR_NONE && ret != BT_ERROR_ALREADY_DONE) {
 		ERR("bt_adapter_enable is failed : %d\n", ret);
-#ifndef TIZEN_TV
 		if (ret == BT_ERROR_PERMISSION_DENIED)
 			return MOBILE_AP_ERROR_PERMISSION_DENIED;
 		else
-#endif
 			return MOBILE_AP_ERROR_RESOURCE;
 	}
 
@@ -274,11 +270,9 @@ static mobile_ap_error_code_e __turn_on_bt_nap(Tethering *obj)
 	if (bt_ret != BT_ERROR_NONE && bt_ret != BT_ERROR_ALREADY_DONE) {
 		bt_nap_unset_connection_state_changed_cb();
 		ERR("bt_nap_activate is failed : %d\n", bt_ret);
-#ifndef TIZEN_TV
 		if (bt_ret == BT_ERROR_PERMISSION_DENIED)
 			return MOBILE_AP_ERROR_PERMISSION_DENIED;
 		else
-#endif
 			return MOBILE_AP_ERROR_RESOURCE;
 	}
 
