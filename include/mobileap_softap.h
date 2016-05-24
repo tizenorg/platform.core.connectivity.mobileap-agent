@@ -246,4 +246,6 @@ gboolean _mobileap_set_state(int state);
 void _flush_dhcp_ack_timer(void);
 void _destroy_dhcp_ack_timer(char *mac_addr);
 
+int _set_hostapd_tx_power(unsigned int txpower);
+unsigned int _get_hostapd_tx_power(void);
 #endif
