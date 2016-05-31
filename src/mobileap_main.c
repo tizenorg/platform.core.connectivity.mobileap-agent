@@ -415,8 +415,6 @@ static void __handle_dnsmasq_dhcp_status_changed_cb(GDBusConnection *connection,
 		info->tm = tm;
 		if (_add_station_info(info) != MOBILE_AP_ERROR_NONE) {
 			ERR("_add_station_info is failed\n");
-			g_free(info->hostname);
-			g_free(info);
 			goto EXIT;
 		}
 
@@ -436,6 +434,8 @@ EXIT:
 	g_free(ip_addr);
 	g_free(mac);
 	g_free(name);
+	g_free(info->hostname);
+	g_free(info);
 	DBG("-\n");
 }
 
