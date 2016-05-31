@@ -436,6 +436,7 @@ EXIT:
 	g_free(ip_addr);
 	g_free(mac);
 	g_free(name);
+	g_free(info->hostname);
 	DBG("-\n");
 }
 
