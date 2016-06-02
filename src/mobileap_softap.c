@@ -1564,3 +1564,42 @@ void _destroy_dhcp_ack_timer(char *mac_addr)
 	DBG("-\n");
 	return;
 }
+int _set_hostapd_tx_power(unsigned int txpower)
+{
+	int ret = 0;
+	char req[HOSTAPD_REQ_MAX_LEN] = {0, };
+	int buf_len = 0;
+	char buf[MOBILE_AP_STR_INFO_LEN] = {0, };
+	buf_len = sizeof(buf);
+	snprintf(req, sizeof(req), "%s%u","SET txpower ",txpower);
+	ret = __send_hostapd_req(hostapd_ctrl_fd, req, strlen(req), buf, &buf_len);
+	if (ret != MOBILE_AP_ERROR_NONE) {
+		ERR("__send_to_hostapd is failed : %d\n", ret);
+		return ret;
+	}
+	return MOBILE_AP_ERROR_NONE;
+}
+
+unsigned int _get_hostapd_tx_power(void)
+{
+	int ret = 0;
+	int buf_len = 0;
+	char req[HOSTAPD_REQ_MAX_LEN] = {0, };
+	char buf[MOBILE_AP_STR_INFO_LEN] = {0, };
+	buf_len = sizeof(buf);
+	snprintf(req, sizeof(req), "%s","GET txpower");
+	ret = __send_hostapd_req(hostapd_ctrl_fd,
+			req, strlen(req), buf, &buf_len);
+	if (ret != MOBILE_AP_ERROR_NONE) {
+		ERR("__send_hostapd_req is failed : %d\n", ret);
+		return ret;
+	}
+	if (!strncmp(buf, "FAIL", 4)) {
+		ERR("FAIL is returned\n");
+	}
+	if (buf[0] == '\0') {
+		ERR("NULL string\n");
+	}
+	return (atoi (buf));
+}
+

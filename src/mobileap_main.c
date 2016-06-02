@@ -353,6 +353,45 @@ gboolean softap_get_station_info(Softap *obj,
 	return TRUE;
 }
 
+gboolean tethering_set_hostapd_tx_power(Tethering *obj,
+			GDBusMethodInvocation *context, gint txpower)
+{
+	DBG("+\n");
+
+	GVariant *var = NULL;
+	int result = 0;
+
+	g_assert(obj != NULL);
+	g_assert(context != NULL);
+	result = _set_hostapd_tx_power(txpower);
+	var = g_variant_new("(u)", result);
+
+	g_dbus_method_invocation_return_value(context, var);
+	g_variant_unref(var);
+
+	DBG("-\n");
+	return TRUE;
+}
+
+gboolean tethering_get_hostapd_tx_power(Tethering *obj,
+			GDBusMethodInvocation *context)
+{
+	DBG("+\n");
+
+	GVariant *var = NULL;
+	unsigned int txpower = 0;
+
+	g_assert(obj != NULL);
+	g_assert(context != NULL);
+	txpower = _get_hostapd_tx_power();
+	var = g_variant_new("(u)", txpower);
+	g_dbus_method_invocation_return_value(context, var);
+	g_variant_unref(var);
+
+	DBG("-\n");
+	return TRUE;
+}
+
 static void __handle_dnsmasq_dhcp_status_changed_cb(GDBusConnection *connection,
 			const gchar *sender_name, const gchar *object_path,
 			const gchar *interface_name, const gchar *signal_name,
@@ -512,6 +551,10 @@ static void on_bus_acquired_cb(GDBusConnection *connection, const gchar *name,
 			G_CALLBACK(softap_reload_settings), NULL);
 	g_signal_connect(softap_obj, "handle-get-station-info",
 			G_CALLBACK(softap_get_station_info), NULL);
+	g_signal_connect(tethering_obj, "handle-hostapd-get-txpower",
+			G_CALLBACK(tethering_get_hostapd_tx_power), NULL);
+	g_signal_connect(tethering_obj, "handle-hostapd-set-txpower",
+			G_CALLBACK(tethering_set_hostapd_tx_power), NULL);
 
 	_init_network((void *)tethering_obj);
 	_register_vconf_cb((void *)tethering_obj);
