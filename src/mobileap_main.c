@@ -50,6 +50,8 @@ Tethering *tethering_obj = NULL;
 Softap *softap_obj = NULL;
 static int init_count = 0;
 guint conn_sig_id = 0;
+guint Added_sig_id = 0;
+guint Updated_sig_id = 0;
 guint deleted_sig_id = 0;
 gboolean tethering_disable(Tethering *obj, GDBusMethodInvocation *context);
 gboolean tethering_get_station_info(Tethering *obj,
@@ -412,7 +414,7 @@ static void __handle_dnsmasq_dhcp_status_changed_cb(GDBusConnection *connection,
 		return;
 	}
 	g_variant_get(parameters, "(sss)",  &ip_addr, &mac, &name);
-	if (!g_strcmp0(signal_name, "DhcpConnected")) {
+	if (!g_strcmp0(signal_name, "DhcpConnected") || !g_strcmp0(signal_name, "DhcpLeaseAdded") || !g_strcmp0(signal_name, "DhcpLeaseUpdated")) {
 		SDBG("DhcpConnected signal : %s  %s %s\n", ip_addr, mac, name);
 		/*
 		 * DHCP ACK received, destroy timeout if exists
@@ -562,6 +564,12 @@ static void on_bus_acquired_cb(GDBusConnection *connection, const gchar *name,
 	conn_sig_id = g_dbus_connection_signal_subscribe(connection, NULL, DNSMASQ_DBUS_INTERFACE,
 			"DhcpConnected", NULL, NULL, G_DBUS_SIGNAL_FLAGS_NONE,
 			__handle_dnsmasq_dhcp_status_changed_cb, NULL, NULL);
+	Added_sig_id = g_dbus_connection_signal_subscribe(connection, NULL, DNSMASQ_DBUS_INTERFACE,
+			"DhcpLeaseAdded", NULL, NULL, G_DBUS_SIGNAL_FLAGS_NONE,
+			__handle_dnsmasq_dhcp_status_changed_cb, NULL, NULL);
+	Updated_sig_id = g_dbus_connection_signal_subscribe(connection, NULL, DNSMASQ_DBUS_INTERFACE,
+			"DhcpLeaseUpdated", NULL, NULL, G_DBUS_SIGNAL_FLAGS_NONE,
+			__handle_dnsmasq_dhcp_status_changed_cb, NULL, NULL);
 	deleted_sig_id = g_dbus_connection_signal_subscribe(connection, NULL, DNSMASQ_DBUS_INTERFACE,
 			"DhcpLeaseDeleted", NULL, NULL, G_DBUS_SIGNAL_FLAGS_NONE,
 			__handle_dnsmasq_dhcp_status_changed_cb, NULL, NULL);
@@ -667,6 +675,8 @@ int main(int argc, char **argv)
 	_deinit_network();
 
 	g_dbus_connection_signal_unsubscribe(teth_gdbus_conn, conn_sig_id);
+	g_dbus_connection_signal_unsubscribe(teth_gdbus_conn, Added_sig_id);
+	g_dbus_connection_signal_unsubscribe(teth_gdbus_conn, Updated_sig_id);
 	g_dbus_connection_signal_unsubscribe(teth_gdbus_conn, deleted_sig_id);
 
 	g_object_unref(tethering_obj);
