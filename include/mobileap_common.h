@@ -21,8 +21,13 @@
 #include <glib.h>
 #include <gio/gio.h>
 
+#include "mobileap.h"
 #include "mobileap_softap.h"
 #include <mobileap-agent-server-stub.h>
+
+#define DPM_POLICY_WIFI_TETHERING	"wifi-hotspot"
+#define DPM_POLICY_USB_TETHERING	"usb-tethering"
+#define DPM_POLICY_BT_TETHERING		"bluetooth-tethering"
 
 gint _slist_find_station_by_interface(gconstpointer a, gconstpointer b);
 gint _slist_find_station_by_mac(gconstpointer a, gconstpointer b);
@@ -45,6 +50,12 @@ int _del_routing_rule(const char *interface);
 int _flush_ip_address(const char *interface);
 int _execute_command(const char *cmd);
 int _get_tethering_type_from_ip(const char *ip, mobile_ap_type_e *type);
+
+/* DPM */
+gboolean tethering_change_policy(Tethering *obj, GDBusMethodInvocation *context, gchar *name, gboolean state, void *user_data);
+int _is_allowed(mobile_ap_type_e type);
+
 Tethering *_get_tethering_obj(void);
 Softap *_get_softap_obj(void);
+
 #endif /* __MOBILEAP_COMMON_H__ */

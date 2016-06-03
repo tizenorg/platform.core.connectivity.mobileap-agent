@@ -28,10 +28,16 @@
 
 #include <dbus/dbus.h>
 
-#include "mobileap_notification.h"
 #include "mobileap_common.h"
+#include "mobileap_wifi.h"
+#include "mobileap_bluetooth.h"
+#include "mobileap_usb.h"
+#include "mobileap_notification.h"
 
 static GSList *station_list = NULL;
+static bool allow_wifi_tethering = true;
+static bool allow_bt_tethering = true;
+static bool allow_usb_tethering = true;
 
 gint _slist_find_station_by_interface(gconstpointer a, gconstpointer b)
 {
@@ -556,4 +562,65 @@ int _get_tethering_type_from_ip(const char *ip, mobile_ap_type_e *type)
 	SERR("Tethering type cannot be decided from %s\n", ip);
 
 	return MOBILE_AP_ERROR_INVALID_PARAM;
+}
+
+gboolean tethering_change_policy(Tethering *obj, GDBusMethodInvocation *context, gchar *name, gboolean state, void *user_data)
+{
+	bool allowed = false;
+	int mobileap_state = VCONFKEY_MOBILE_HOTSPOT_MODE_NONE;
+
+	DBG("%s dpm policy is %d", name, state);
+	if (state)
+		allowed = true;
+
+	if (!strcmp(name, DPM_POLICY_WIFI_TETHERING)) {
+			vconf_get_int(VCONFKEY_MOBILE_HOTSPOT_MODE, &mobileap_state);
+		if (!allowed && (mobileap_state & VCONFKEY_MOBILE_HOTSPOT_MODE_WIFI)) {
+			_create_security_restriction_noti(MOBILE_AP_TYPE_WIFI);
+			_disable_wifi_tethering(obj);
+			tethering_emit_wifi_off(obj, NULL);
+		}
+		allow_wifi_tethering = allowed;
+	} else if (!strcmp(name, DPM_POLICY_USB_TETHERING)) {
+			vconf_get_int(VCONFKEY_MOBILE_HOTSPOT_MODE, &mobileap_state);
+		if (!allowed && (mobileap_state & VCONFKEY_MOBILE_HOTSPOT_MODE_USB)) {
+			_create_security_restriction_noti(MOBILE_AP_TYPE_USB);
+			_disable_usb_tethering(obj);
+			tethering_emit_usb_off(obj, NULL);
+		}
+		allow_usb_tethering = allowed;
+	} else if (!strcmp(name, DPM_POLICY_BT_TETHERING)) {
+			vconf_get_int(VCONFKEY_MOBILE_HOTSPOT_MODE, &mobileap_state);
+		if (!allowed && (mobileap_state & VCONFKEY_MOBILE_HOTSPOT_MODE_BT)) {
+			_create_security_restriction_noti(MOBILE_AP_TYPE_BT);
+			_disable_bt_tethering(obj);
+			tethering_emit_bluetooth_off(obj, NULL);
+		}
+		allow_bt_tethering = allowed;
+	}
+
+	tethering_complete_change_policy(obj, context, MOBILE_AP_ERROR_NONE);
+
+	return TRUE;
+}
+
+int _is_allowed(mobile_ap_type_e type)
+{
+	bool allowed = false;
+
+	switch (type) {
+	case MOBILE_AP_TYPE_WIFI:
+		allowed = allow_wifi_tethering;
+		break;
+	case MOBILE_AP_TYPE_USB:
+		allowed = allow_usb_tethering;
+		break;
+	case MOBILE_AP_TYPE_BT:
+		allowed = allow_bt_tethering;
+		break;
+	default:
+		break;
+	}
+
+	return allowed;
 }
