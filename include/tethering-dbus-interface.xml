@@ -137,6 +137,12 @@
 		<method name="hostapd_get_txpower">
 			<arg type="u" name="result" direction="out"/>
 		</method>
+
+		<method name="change_policy">
+			<arg type="s" name="name" direction="in"/>
+			<arg type="b" name="state" direction="in"/>
+			<arg type="u" name="result" direction="out"/>
+		</method>
 		<!-- Signal (D-Bus) definitions -->
 		<signal name="net_closed">
 		</signal>

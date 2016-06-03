@@ -392,6 +392,13 @@ gboolean tethering_enable_usb_tethering(Tethering *obj, GDBusMethodInvocation *c
 
 	g_context = context;
 
+	if (!_is_allowed(MOBILE_AP_TYPE_USB)) {
+		DBG("DPM policy restricts USB tethering\n");
+		ret = MOBILE_AP_ERROR_NOT_PERMITTED;
+		_create_security_restriction_noti(MOBILE_AP_TYPE_USB);
+		goto DONE;
+	}
+
 	ret = _enable_usb_tethering(obj);
 	if (ret != MOBILE_AP_ERROR_NONE) {
 		ERR("_enable_usb_tethering() is failed : %d\n", ret);

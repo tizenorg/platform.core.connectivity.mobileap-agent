@@ -543,6 +543,10 @@ static void on_bus_acquired_cb(GDBusConnection *connection, const gchar *name,
 	g_signal_connect(tethering_obj, "handle-dhcp-range",
 			G_CALLBACK(tethering_dhcp_range), NULL);
 
+	/* DPM */
+	g_signal_connect(tethering_obj, "handle-change-policy",
+			G_CALLBACK(tethering_change_policy), NULL);
+
 	g_signal_connect(softap_obj, "handle-enable",
 			G_CALLBACK(softap_enable), NULL);
 	g_signal_connect(softap_obj, "handle-disable",
@@ -607,6 +611,7 @@ static int __tethering_setup_gdbus(void)
 	}
 	return 0;
 }
+
 int main(int argc, char **argv)
 {
 	int ret = 0;
