@@ -899,7 +899,7 @@ gboolean tethering_enable_wifi_tethering(Tethering *obj,
 				MOBILE_AP_ERROR_IN_PROGRESS);
 		return FALSE;
 	}
-	g_context = context;
+	g_context = g_object_ref(context);
 
 	if (!_is_allowed(MOBILE_AP_TYPE_WIFI)) {
 		DBG("DPM policy restricts Wi-Fi tethering\n");
@@ -959,6 +959,8 @@ gboolean tethering_enable_wifi_tethering(Tethering *obj,
 
 DONE:
 	tethering_complete_enable_wifi_tethering(obj, g_context, ret);
+	if(g_context)
+		g_object_unref(g_context);
 	g_context = NULL;
 
 	g_free(wifi_settings.ssid);

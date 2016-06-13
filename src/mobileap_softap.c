@@ -243,12 +243,15 @@ static int __terminate_hostapd()
 
 	if (hostapd_pid == 0) {
 		ERR("There is no hostapd\n");
+		ret = system("/usr/bin/killall hostapd");
+		if(ret < 0)
+			ERR("fail to kill hostapd, ret : %d",ret);
 		return MOBILE_AP_ERROR_NONE;
+	} else {
+		kill(hostapd_pid, SIGTERM);
+		waitpid(hostapd_pid, NULL, 0);
+		hostapd_pid = 0;
 	}
-
-	kill(hostapd_pid, SIGTERM);
-	waitpid(hostapd_pid, NULL, 0);
-	hostapd_pid = 0;
 
 	ret = unlink(HOSTAPD_CONF_FILE);
 	if (ret < 0) {

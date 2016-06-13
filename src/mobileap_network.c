@@ -834,6 +834,9 @@ gboolean _set_masquerade(void)
 	}
 	SDBG("Network interface : %s\n", if_name);
 
+	if (remove(DNSMASQ_LEASES_FILE) < 0) {
+		ERR("Failed to remove %s", DNSMASQ_LEASES_FILE);
+	}
 	_mh_core_enable_masquerade(if_name);
 	free(if_name);
 
