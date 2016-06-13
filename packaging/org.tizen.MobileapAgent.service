@@ -1,4 +1,5 @@
 [D-BUS Service]
 Name=org.tizen.MobileapAgent
-Exec=/usr/bin/mobileap-agent
+Exec=/bin/false
 User=root
+SystemdService=mobileap-agent.service

@@ -1,11 +1,12 @@
 Name:		mobileap-agent
 Summary:	Mobile AP daemon for setting tethering environments
-Version:	1.0.57
+Version:	1.0.58
 Release:	1
 Group:		System/Network
 License:	Apache-2.0
 Source0:	%{name}-%{version}.tar.gz
-Source1:	org.tizen.MobileapAgent.service
+Source1:	mobileap-agent.service
+Source2:	org.tizen.MobileapAgent.service
 
 BuildRequires:	pkgconfig(dlog)
 BuildRequires:	pkgconfig(gio-2.0)
@@ -62,8 +63,10 @@ make %{?jobs:-j%jobs}
 %make_install
 mkdir -p %{buildroot}%{_sysconfdir}/dbus-1/system.d
 cp mobileap-agent.conf %{buildroot}%{_sysconfdir}/dbus-1/system.d/mobileap-agent.conf
+mkdir -p %{buildroot}%{_libdir}/systemd/system
+cp %{SOURCE1} %{buildroot}%{_libdir}/systemd/system/mobileap-agent.service
 mkdir -p %{buildroot}%{_datadir}/dbus-1/system-services/
-cp %{SOURCE1} %{buildroot}%{_datadir}/dbus-1/system-services/org.tizen.MobileapAgent.service
+cp %{SOURCE2} %{buildroot}%{_datadir}/dbus-1/system-services/org.tizen.MobileapAgent.service
 
 %post
 /bin/chmod +x /opt/etc/dump.d/module.d/tethering_dump.sh
@@ -71,6 +74,7 @@ cp %{SOURCE1} %{buildroot}%{_datadir}/dbus-1/system-services/org.tizen.MobileapA
 %files
 %manifest mobileap-agent.manifest
 %defattr(-,root,root,-)
+%{_libdir}/systemd/system/mobileap-agent.service
 %{_datadir}/dbus-1/system-services/org.tizen.MobileapAgent.service
 %attr(644,root,root) %{_sysconfdir}/dbus-1/system.d/mobileap-agent.conf
 

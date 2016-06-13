@@ -1,0 +1,9 @@
+[Unit]
+Description=Start mobileap-agent for tethering and softap
+
+[Service]
+User=root
+Type=dbus
+BusName=org.tizen.MobileapAgent
+ExecStart=/usr/bin/mobileap-agent
+CapabilityBoundingSet=~CAP_MAC_ADMIN

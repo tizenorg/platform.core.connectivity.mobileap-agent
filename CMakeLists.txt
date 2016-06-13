@@ -75,6 +75,7 @@ ADD_EXECUTABLE(${PROJECT_NAME} ${SRCS} ${CMAKE_BINARY_DIR}/mobileap-agent-server
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${pkgs_LDFLAGS})
 
 INSTALL(TARGETS ${PROJECT_NAME} DESTINATION bin)
+INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/packaging/mobileap-agent.service DESTINATION lib/systemd/system)
 INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/packaging/org.tizen.MobileapAgent.service DESTINATION share/dbus-1/system-services)
 INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/tethering_dump.sh DESTINATION /opt/etc/dump.d/module.d/)
 

@@ -96,8 +96,8 @@
 
 #define HOSTAPD_BIN		"/usr/sbin/hostapd"
 #define HOSTAPD_ENTROPY_FILE	tzplatform_mkpath(TZ_SYS_VAR, "/lib/misc/hostapd.bin")
-#define HOSTAPD_CONF_FILE	tzplatform_mkpath(TZ_SYS_VAR, "/lib/misc/hostapd.conf")
-#define HOSTAPD_CTRL_INTF_DIR	tzplatform_mkpath(TZ_SYS_VAR, "/lib/misc/hostapd")
+#define HOSTAPD_CONF_FILE		tzplatform_mkpath(TZ_SYS_RUN, "/hostapd.conf")
+#define HOSTAPD_CTRL_INTF_DIR	tzplatform_mkpath(TZ_SYS_RUN, "/hostapd")
 #define HOSTAPD_ALLOWED_LIST	tzplatform_mkpath(TZ_SYS_VAR, "/lib/hostapd/hostapd.accept")
 #define HOSTAPD_BLOCKED_LIST	tzplatform_mkpath(TZ_SYS_VAR, "/lib/hostapd/hostapd.deny")
 #define HOSTAPD_CONF_LEN	1024
