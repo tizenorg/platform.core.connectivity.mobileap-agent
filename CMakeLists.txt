@@ -42,6 +42,7 @@ SET(CMAKE_C_FLAGS_RELEASE "-O2 -fPIE")
 
 FIND_PROGRAM(UNAME NAMES uname)
 EXEC_PROGRAM("${UNAME}" ARGS "-m" OUTPUT_VARIABLE "ARCH")
+
 IF("${ARCH}" STREQUAL "arm")
 	ADD_DEFINITIONS("-DTARGET")
 	MESSAGE("add -DTARGET")
@@ -75,7 +76,11 @@ ADD_EXECUTABLE(${PROJECT_NAME} ${SRCS} ${CMAKE_BINARY_DIR}/mobileap-agent-server
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${pkgs_LDFLAGS})
 
 INSTALL(TARGETS ${PROJECT_NAME} DESTINATION bin)
-INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/packaging/mobileap-agent.service DESTINATION lib/systemd/system)
+IF("${ARCH}" MATCHES "^aarch64.*|.*86_64.*")
+	INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/packaging/mobileap-agent.service DESTINATION lib64/systemd/system)
+ELSE()
+	INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/packaging/mobileap-agent.service DESTINATION lib/systemd/system)
+ENDIF()
 INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/packaging/org.tizen.MobileapAgent.service DESTINATION share/dbus-1/system-services)
 INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/tethering_dump.sh DESTINATION /opt/etc/dump.d/module.d/)
 
