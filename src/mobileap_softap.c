@@ -1095,6 +1095,10 @@ int _mh_core_execute_dhcp_server(void)
 	FILE *fp = NULL;
 	pid_t pid;
 
+	if (remove(DNSMASQ_LEASES_FILE) < 0) {
+		ERR("Failed to remove %s", DNSMASQ_LEASES_FILE);
+	}
+
 	if (dnsmasq_pid == 0) {
 		fp = fopen(DNSMASQ_CONF_FILE, "w");
 		if (NULL == fp) {
@@ -1163,6 +1167,11 @@ int _mh_core_execute_dhcp_server_range(gchar *rangestart, gchar *rangestop)
 	char buf[DNSMASQ_RANGE_LEN];
 
 	DBG("+\n");
+
+	if (remove(DNSMASQ_LEASES_FILE) < 0) {
+		ERR("Failed to remove %s", DNSMASQ_LEASES_FILE);
+	}
+
 	if (dnsmasq_pid == 0) {
 		pid = fork();
 		if (pid < 0) {

@@ -415,7 +415,7 @@ static void __handle_dnsmasq_dhcp_status_changed_cb(GDBusConnection *connection,
 	}
 	g_variant_get(parameters, "(sss)",  &ip_addr, &mac, &name);
 	if (!g_strcmp0(signal_name, "DhcpConnected") || !g_strcmp0(signal_name, "DhcpLeaseAdded") || !g_strcmp0(signal_name, "DhcpLeaseUpdated")) {
-		SDBG("DhcpConnected signal : %s  %s %s\n", ip_addr, mac, name);
+		SDBG("%s signal: '%s' '%s' '%s'\n", signal_name, ip_addr, mac, name);
 		/*
 		 * DHCP ACK received, destroy timeout if exists
 		 */
@@ -475,8 +475,6 @@ EXIT:
 	g_free(ip_addr);
 	g_free(mac);
 	g_free(name);
-	g_free(info->hostname);
-	g_free(info);
 	DBG("-\n");
 }
 
