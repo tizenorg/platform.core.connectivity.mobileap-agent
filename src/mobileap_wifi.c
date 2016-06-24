@@ -1059,6 +1059,107 @@ gboolean tethering_reload_wifi_settings(Tethering *obj,
 	return ret_val;
 }
 
+gboolean tethering_set_mtu(Tethering *obj,
+		GDBusMethodInvocation *context, gint mtu)
+{
+	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
+
+	ret = _mh_core_set_mtu(mtu);
+
+	tethering_complete_set_mtu(obj, context, ret);
+
+	return TRUE;
+}
+
+gboolean tethering_change_mac(Tethering *obj,
+		GDBusMethodInvocation *context, gchar *mac)
+{
+	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
+
+	ret = _mh_core_change_mac(mac);
+
+	tethering_complete_change_mac(obj, context, ret);
+
+	return TRUE;
+}
+
+gboolean tethering_enable_port_forwarding(Tethering *obj,
+		GDBusMethodInvocation *context, gboolean enable)
+{
+	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
+
+	ret = _mh_core_enable_port_forwarding(enable);
+
+	tethering_complete_enable_port_forwarding(obj, context, ret);
+	return TRUE;
+}
+
+gboolean tethering_add_port_forwarding_rule(Tethering *obj, GDBusMethodInvocation *context,
+		gchar *ifname, gchar *protocol, gchar *org_ip, gint org_port, gchar *final_ip, gint final_port)
+{
+	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
+
+	ret = _mh_core_add_port_forwarding_rule(ifname, protocol, org_ip, org_port, final_ip, final_port);
+
+	tethering_complete_add_port_forwarding_rule(obj, context, ret);
+	return TRUE;
+}
+
+gboolean tethering_reset_port_forwarding_rule(Tethering *obj,
+		GDBusMethodInvocation *context)
+{
+	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
+
+	ret = _mh_core_reset_port_forwarding_rule();
+
+	tethering_complete_reset_port_forwarding_rule(obj, context, ret);
+	return TRUE;
+}
+
+gboolean tethering_enable_port_filtering(Tethering *obj,
+		GDBusMethodInvocation *context, gboolean enable)
+{
+	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
+
+	ret = _mh_core_enable_port_filtering(enable);
+
+	tethering_complete_enable_port_filtering(obj, context, ret);
+	return TRUE;
+}
+
+gboolean tethering_add_port_filtering_rule(Tethering *obj,
+		GDBusMethodInvocation *context, gint port, gchar *protocol, gboolean allow)
+{
+	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
+
+	ret = _mh_core_add_port_filtering_rule(port, protocol, allow);
+
+	tethering_complete_add_port_filtering_rule(obj, context, ret);
+	return TRUE;
+}
+
+gboolean tethering_add_custom_port_filtering_rule(Tethering *obj,
+		GDBusMethodInvocation *context, gint port1, gint port2, gchar *protocol, gboolean allow)
+{
+	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
+
+	ret = _mh_core_add_custom_port_filtering_rule(port1, port2, protocol, allow);
+
+	tethering_complete_add_custom_port_filtering_rule(obj, context, ret);
+	return TRUE;
+}
+
+gboolean tethering_set_vpn_passthrough_rule(Tethering *obj,
+		GDBusMethodInvocation *context, gint vpn_type, gboolean enable)
+{
+	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
+
+	ret = _mh_core_set_vpn_passthrough_rule(vpn_type, enable);
+
+	tethering_complete_set_vpn_passthrough_rule(obj, context, ret);
+	return TRUE;
+}
+
 gboolean tethering_reload_wifi_ap_settings(Tethering *obj,
 		GDBusMethodInvocation *context, gchar *ssid,
 	gchar *key, gint visibility, gint security)

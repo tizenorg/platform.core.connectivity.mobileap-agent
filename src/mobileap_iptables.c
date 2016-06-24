@@ -36,6 +36,8 @@
 #define PORT_FORWARD_RULE_STR	"-t %s -A %s -i %s -p %s -d %s --dport %d -j DNAT --to %s:%d"
 #define CLAMP_MSS_RULE_STR	"-t %s -A %s -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu"
 #define DEFAULT_RULE_STR	"-t %s -A %s -j %s"
+#define FILTERING_MULTIPORT_RULE_STR	"-t %s -A %s -p %s -m multiport --dport %d,%d -j %s"
+#define FILTERING_RULE_STR	"-t %s -A %s -p %s --dport %d -j %s"
 
 
 int _iptables_create_chain(const char *table_name, const char *chain_name)
@@ -214,6 +216,34 @@ int _iptables_add_rule(iptables_rule_e rule_type, const char *table, const char 
 		break;
 	}
 
+	case PORT_FILTER_RULE: {
+
+		char *proto = NULL;
+		char *action = NULL;
+		unsigned short port1 = 0;
+		unsigned short port2 = 0;
+
+		proto = va_arg(ap, char *);
+		port1 = va_arg(ap, int);
+		port2 = va_arg(ap, int);
+		action = va_arg(ap, char *);
+
+		if (chain == NULL || proto == NULL || action == NULL) {
+			ERR("invalid parameters\n");
+			goto ERROR_EXIT;
+		}
+
+		if (port1 && (port2 == 0)) {
+			snprintf(cmd, sizeof(cmd), "%s "FILTERING_RULE_STR,
+				IPTABLES, table, chain, proto, port1, action);
+
+		} else if (port1 && port2) {
+			snprintf(cmd, sizeof(cmd), "%s "FILTERING_MULTIPORT_RULE_STR,
+				IPTABLES, table, chain, proto, port1, port2, action);
+		}
+		break;
+	}
+
 	default:
 		ERR("case not supported\n");
 		goto ERROR_EXIT;
@@ -324,6 +354,85 @@ int _get_data_usage(const char *src, const char *dest, unsigned long long *tx,
 
 	fclose(fp);
 	unlink(DATA_USAGE_FILE);
+
+	return MOBILE_AP_ERROR_NONE;
+}
+
+int _iptables_set_vpn_passthrough_rule(iptables_vpn_passthorugh_e vpn_type, int enable)
+{
+	char cmd[MAX_BUF_SIZE] = { 0, };
+
+	switch (vpn_type) {
+	case IPSEC_PASSTHROUGH_RULE: {
+		/* Allowing IPSec Traffic */
+		/* 	Protocol		Port				Description
+			ESP(50)			N/A					ESP(Encrypted Secure Payload)
+			AH(51)			N/A					AH(Authentication Header)
+			UDP(17)			500					IKE
+			UDP(17)			4500/high port		IKE, ESPinUDP encapsulation */
+		snprintf(cmd, sizeof(cmd), "%s -A FORWARD -p udp --dport 500 --sport 500 -j %s", IPTABLES, (enable ? "ACCEPT":"REJECT"));
+		if (_execute_command(cmd)) {
+			SERR("command [%s] failed\n", cmd);
+			return MOBILE_AP_ERROR_INTERNAL;
+		}
+		memset(cmd, '0', sizeof(cmd));
+		snprintf(cmd, sizeof(cmd), "%s -A FORWARD -p udp --dport 10000 --sport 10000 -j %s", IPTABLES, (enable ? "ACCEPT":"REJECT"));
+		if (_execute_command(cmd)) {
+			SERR("command [%s] failed\n", cmd);
+			return MOBILE_AP_ERROR_INTERNAL;
+		}
+		memset(cmd, '0', sizeof(cmd));
+		snprintf(cmd, sizeof(cmd), "%s -A FORWARD -p tcp --dport 10000 --sport 10000 -j %s", IPTABLES, (enable ? "ACCEPT":"REJECT"));
+		if (_execute_command(cmd)) {
+			SERR("command [%s] failed\n", cmd);
+			return MOBILE_AP_ERROR_INTERNAL;
+		}
+		memset(cmd, '0', sizeof(cmd));
+		snprintf(cmd, sizeof(cmd), "%s -A FORWARD -p udp --dport 4500 --sport 4500 -j %s", IPTABLES, (enable ? "ACCEPT":"REJECT"));
+		if (_execute_command(cmd)) {
+			SERR("command [%s] failed\n", cmd);
+			return MOBILE_AP_ERROR_INTERNAL;
+		}
+		memset(cmd, '0', sizeof(cmd));
+		snprintf(cmd, sizeof(cmd), "%s -A FORWARD -p 50 -j %s", IPTABLES, (enable ? "ACCEPT":"REJECT"));
+		if (_execute_command(cmd)) {
+			SERR("command [%s] failed\n", cmd);
+			return MOBILE_AP_ERROR_INTERNAL;
+		}
+		memset(cmd, '0', sizeof(cmd));
+		snprintf(cmd, sizeof(cmd), "%s -A FORWARD -p 51 -j %s", IPTABLES, (enable ? "ACCEPT":"REJECT"));
+		if (_execute_command(cmd)) {
+			SERR("command [%s] failed\n", cmd);
+			return MOBILE_AP_ERROR_INTERNAL;
+		}
+		break;
+	}
+	case PPTP_PASSTHROUGH_RULE: {
+		/* Allowing PPTP Traffic */
+		/* 	Protocol		Port				Description
+			UDP(17)			1723				  --  		*/
+		snprintf(cmd, sizeof(cmd), "%s -A FORWARD -p tcp --dport 1723 --sport 1723 -j %s", IPTABLES, (enable ? "ACCEPT":"REJECT"));
+		if (_execute_command(cmd)) {
+			SERR("command [%s] failed\n", cmd);
+			return MOBILE_AP_ERROR_INTERNAL;
+		}
+		break;
+	}
+	case L2TP_PASSTHROUGH_RULE: {
+		/* Allowing L2TP Traffic */
+		/* 	Protocol		Port				Description
+			UDP(17)			1701				  --  		*/
+		snprintf(cmd, sizeof(cmd), "%s -A FORWARD -p udp --dport 1701 --sport 1701 -j %s", IPTABLES, (enable ? "ACCEPT":"REJECT"));
+		if (_execute_command(cmd)) {
+			SERR("command [%s] failed\n", cmd);
+			return MOBILE_AP_ERROR_INTERNAL;
+		}
+		break;
+	}
+	default:
+		ERR("case not supported\n");
+		return MOBILE_AP_ERROR_INTERNAL;
+	}
 
 	return MOBILE_AP_ERROR_NONE;
 }

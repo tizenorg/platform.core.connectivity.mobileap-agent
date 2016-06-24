@@ -94,6 +94,33 @@ gboolean tethering_enable_dhcp(Tethering *obj,
 gboolean tethering_dhcp_range(Tethering *obj,
 		GDBusMethodInvocation *context, gchar *rangestart, gchar *rangestop);
 
+gboolean tethering_set_mtu(Tethering *obj,
+		GDBusMethodInvocation *context, gint mtu);
+
+gboolean tethering_change_mac(Tethering *obj,
+		GDBusMethodInvocation *context, gchar *mac);
+
+gboolean tethering_enable_port_forwarding(Tethering *obj,
+		GDBusMethodInvocation *context, gboolean enable);
+
+gboolean tethering_add_port_forwarding_rule(Tethering *obj, GDBusMethodInvocation *context,
+		gchar *ifname, gchar *protocol, gchar *org_ip, gint org_port, gchar *final_ip, gint final_port);
+
+gboolean tethering_reset_port_forwarding_rule(Tethering *obj,
+		GDBusMethodInvocation *context);
+
+gboolean tethering_enable_port_filtering(Tethering *obj,
+		GDBusMethodInvocation *context, gboolean enable);
+
+gboolean tethering_add_port_filtering_rule(Tethering *obj,
+		GDBusMethodInvocation *context, gint port, gchar *protocol, gboolean allow);
+
+gboolean tethering_add_custom_port_filtering_rule(Tethering *obj,
+		GDBusMethodInvocation *context, gint port1, gint port2, gchar *protocol, gboolean allow);
+
+gboolean tethering_set_vpn_passthrough_rule(Tethering *obj,
+		GDBusMethodInvocation *context, gint vpn_type, gboolean enable);
+
 /* Dbus method for softap APIs */
 gboolean softap_enable(Softap *obj, GDBusMethodInvocation *context,
 		gchar *ssid, gchar *key, gint hide_mode, gint security_type);

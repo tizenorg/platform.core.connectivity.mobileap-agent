@@ -129,12 +129,68 @@
 			<arg type="s" name="rangestop" direction="in"/>
 			<arg type="u" name="result" direction="out"/>
 		</method>
+
 		<method name="hostapd_set_txpower">
 			<arg type="u" name="txpower" direction="in"/>
 			<arg type="u" name="result" direction="out"/>
 		</method>
 
 		<method name="hostapd_get_txpower">
+			<arg type="u" name="result" direction="out"/>
+		</method>
+
+		<method name="set_mtu">
+			<arg type="u" name="mtu" direction="in"/>
+			<arg type="u" name="result" direction="out"/>
+		</method>
+
+		<method name="change_mac">
+			<arg type="s" name="mac" direction="in"/>
+			<arg type="u" name="result" direction="out"/>
+		</method>
+
+		<method name="enable_port_forwarding">
+			<arg type="b" name="enable" direction="in"/>
+			<arg type="u" name="result" direction="out"/>
+		</method>
+
+		<method name="add_port_forwarding_rule">
+			<arg type="s" name="ifname" direction="in"/>
+			<arg type="s" name="protocol" direction="in"/>
+			<arg type="s" name="org_ip" direction="in"/>
+			<arg type="i" name="org_port" direction="in"/>
+			<arg type="s" name="final_ip" direction="in"/>
+			<arg type="i" name="final_port" direction="in"/>
+			<arg type="u" name="result" direction="out"/>
+		</method>
+
+		<method name="reset_port_forwarding_rule">
+			<arg type="u" name="result" direction="out"/>
+		</method>
+
+		<method name="enable_port_filtering">
+			<arg type="b" name="enable" direction="in"/>
+			<arg type="u" name="result" direction="out"/>
+		</method>
+
+		<method name="add_port_filtering_rule">
+			<arg type="i" name="port" direction="in"/>
+			<arg type="s" name="protocol" direction="in"/>
+			<arg type="b" name="allow" direction="in"/>
+			<arg type="u" name="result" direction="out"/>
+		</method>
+
+		<method name="add_custom_port_filtering_rule">
+			<arg type="i" name="port1" direction="in"/>
+			<arg type="i" name="port2" direction="in"/>
+			<arg type="s" name="protocol" direction="in"/>
+			<arg type="b" name="allow" direction="in"/>
+			<arg type="u" name="result" direction="out"/>
+		</method>
+
+		<method name="set_vpn_passthrough_rule">
+			<arg type="i" name="vpn_type" direction="in"/>
+			<arg type="b" name="enable" direction="in"/>
 			<arg type="u" name="result" direction="out"/>
 		</method>
 

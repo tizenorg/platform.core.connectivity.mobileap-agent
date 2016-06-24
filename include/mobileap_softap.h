@@ -46,6 +46,9 @@
 #define SECURITY_TYPE_LEN	32
 #define DNSMASQ_RANGE_LEN	32
 
+/* MAC information */
+#define MOBILE_AP_INTF_HWADDR_FILE      "/csa/.mac.info"
+
 /* Network Interface */
 #define IP_SUBNET_MASK		"255.255.255.0"
 
@@ -227,9 +230,20 @@ int _mh_core_enable_masquerade(const char *ext_if);
 int _mh_core_disable_masquerade(const char *ext_if);
 void _mh_core_add_data_to_array(GPtrArray *array, guint type, gchar *dev_name);
 int _mh_core_set_ip_address(const char *if_name, const in_addr_t ip);
+
+int _mh_core_set_mtu(int mtu);
+int _mh_core_change_mac(const char *mac);
+int _mh_core_enable_port_forwarding(int enable);
+int _mh_core_add_port_forwarding_rule(const char* ifname, const char* proto,
+		const char* org_ip, int org_port, const char* final_ip, int final_port);
+int _mh_core_reset_port_forwarding_rule();
+int _mh_core_enable_port_filtering(int enable);
+int _mh_core_add_port_filtering_rule(int port, const char *protocol, int allow);
+int _mh_core_add_custom_port_filtering_rule(int port1, int port2, const char *protocol, int allow);
+int _mh_core_set_vpn_passthrough_rule(int vpn_type, int enable);
+
 void _register_wifi_station_handler(void);
 void _unregister_wifi_station_handler(void);
-
 
 void _block_device_sleep(void);
 void _unblock_device_sleep(void);

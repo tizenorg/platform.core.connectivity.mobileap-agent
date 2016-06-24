@@ -18,19 +18,21 @@
 #ifndef __MOBILEAP_IPTABLES_H__
 #define __MOBILEAP_IPTABLES_H__
 
-#define IPTABLES		"/usr/sbin/iptables"
+#define IPTABLES			"/usr/sbin/iptables"
 #define TABLE_FILTER		"filter"
-#define TABLE_NAT		"nat"
+#define TABLE_NAT			"nat"
 #define TABLE_MANGLE		"mangle"
-#define CHAIN_FW		"FORWARD"
-#define CHAIN_POST		"POSTROUTING"
-#define CHAIN_PRE		"PREROUTING"
+#define CHAIN_FW			"FORWARD"
+#define CHAIN_POST			"POSTROUTING"
+#define CHAIN_PRE			"PREROUTING"
+#define CHAIN_OUTPUT		"OUTPUT"
 #define TETH_FILTER_FW		"teth_filter_fw"
 #define TETH_NAT_POST		"teth_nat_post"
 #define TETH_NAT_PRE		"teth_nat_pre"
 #define STATE_RELATED_ESTAB	"RELATED,ESTABLISHED"
 #define STATE_INVALID		"INVALID"
-#define ACTION_DROP		"DROP"
+#define ACTION_DROP			"DROP"
+#define ACTION_ACCEPT       "ACCEPT"
 #define ACTION_RETURN		"RETURN"
 
 typedef enum {
@@ -41,7 +43,14 @@ typedef enum {
 	PORT_FW_RULE,
 	MASQ_RULE,
 	CLAMP_MSS_RULE,
+	PORT_FILTER_RULE,
 } iptables_rule_e;
+
+typedef enum {
+	IPSEC_PASSTHROUGH_RULE,
+	PPTP_PASSTHROUGH_RULE,
+	L2TP_PASSTHROUGH_RULE,
+} iptables_vpn_passthorugh_e;
 
 int _iptables_create_chain(const char *table_name, const char *chain_name);
 int _iptables_flush_rules(const char *table_name, const char *chain_name);
@@ -50,6 +59,7 @@ int _iptables_add_rule(iptables_rule_e rule_type, const char *table,
 	const char *chain, ...);
 int _iptables_delete_rule(iptables_rule_e rule_type, const char *table,
 	const char *chain, ...);
+int _iptables_set_vpn_passthrough_rule(iptables_vpn_passthorugh_e vpn_type, int enable);
 int _get_data_usage(const char *src, const char *dest, unsigned long long *tx,
 	unsigned long long *rx);
 #endif
