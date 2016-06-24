@@ -132,7 +132,7 @@ static int __get_psk_hexascii(const char *pass, const unsigned char *salt,
 }
 
 static int __execute_hostapd(const mobile_ap_type_e type, const char *ssid,
-		const char *security, const char *passphrase, const char* mode, int channel, int hide_mode, int mac_filter)
+		const char *security, const char *passphrase, const char* mode, int channel, int hide_mode, int mac_filter, int max_sta)
 {
 	DBG("+\n");
 
@@ -158,7 +158,7 @@ static int __execute_hostapd(const mobile_ap_type_e type, const char *ssid,
 			channel,
 			hide_mode ? 2 : 0,
 			hw_mode,
-			MOBILE_AP_MAX_WIFI_STA,
+			max_sta,
 			mac_filter,
 			HOSTAPD_ALLOWED_LIST,
 			HOSTAPD_BLOCKED_LIST);
@@ -775,7 +775,7 @@ static int __mh_core_softap_firmware_stop(void)
 }
 
 int _mh_core_enable_softap(const mobile_ap_type_e type, const char *ssid,
-		const char *security, const char *key, const char *mode, int channel, int hide_mode, int mac_filter)
+		const char *security, const char *key, const char *mode, int channel, int hide_mode, int mac_filter, int max_sta)
 {
 	if (ssid == NULL || security == NULL || key == NULL) {
 		ERR("Invalid param\n");
@@ -864,7 +864,7 @@ int _mh_core_enable_softap(const mobile_ap_type_e type, const char *ssid,
 			break;
 		}
 
-		ret_status = __execute_hostapd(type, ssid, security, key, mode, channel, hide_mode, mac_filter);
+		ret_status = __execute_hostapd(type, ssid, security, key, mode, channel, hide_mode, mac_filter, max_sta);
 		if (ret_status != MOBILE_AP_ERROR_NONE) {
 			ERR("__execute_hostapd is failed\n");
 			break;
@@ -1061,6 +1061,46 @@ static int __get_device_info_by_nl80211(softap_device_info_t *di)
 	di->number = no_of_sta;
 
 	return ret;
+}
+
+static int __enable_port_forwarding(void)
+{
+	int fd = -1;
+
+	fd = open(IP_FORWARD, O_WRONLY);
+	if (fd < 0) {
+		ERR("open failed\n");
+		return MOBILE_AP_ERROR_RESOURCE;
+	}
+
+	if (write(fd, "1", 1) != 1) {
+		ERR("write failed\n");
+		close(fd);
+		return MOBILE_AP_ERROR_INTERNAL;
+	}
+	close(fd);
+
+	return MOBILE_AP_ERROR_NONE;
+}
+
+static int __disable_port_forwarding(void)
+{
+	int fd = -1;
+
+	fd = open(IP_FORWARD, O_WRONLY);
+	if (fd < 0) {
+		ERR("open failed\n");
+		return MOBILE_AP_ERROR_RESOURCE;
+	}
+
+	if (write(fd, "0", 1) != 1) {
+		ERR("write failed\n");
+		close(fd);
+		return MOBILE_AP_ERROR_INTERNAL;
+	}
+	close(fd);
+
+	return MOBILE_AP_ERROR_NONE;
 }
 
 int _mh_core_get_device_info(softap_device_info_t *di)
@@ -1349,6 +1389,147 @@ int _mh_core_set_ip_address(const char *if_name, const in_addr_t ip)
 	return MOBILE_AP_ERROR_NONE;
 }
 
+int _mh_core_set_mtu(int mtu)
+{
+	struct ifreq ifr;
+	int sock = -1;
+
+	sock = socket(AF_INET, SOCK_DGRAM | SOCK_CLOEXEC, 0);
+	if (sock < 0) {
+		ERR("socket creation failed\n");
+		return MOBILE_AP_ERROR_INTERNAL;
+	}
+
+	memset(&ifr, 0, sizeof(struct ifreq));
+	strncpy(ifr.ifr_name, "wlan0", IFNAMSIZ);
+
+	ifr.ifr_mtu = mtu;
+
+	if (ioctl(sock, SIOCSIFMTU, &ifr, sizeof(ifr)) != 0) {
+		ERR("Failed to set mtu errno:%d\n", errno);
+		close(sock);
+		return MOBILE_AP_ERROR_INTERNAL;
+	}
+
+	close(sock);
+
+	return MOBILE_AP_ERROR_NONE;
+}
+
+int _mh_core_change_mac(const char *mac)
+{
+	FILE *fp = NULL;
+
+	fp = fopen(MOBILE_AP_INTF_HWADDR_FILE, "w+");
+
+	if (fp == NULL) {
+		ERR("Failed to open .mac.info file");
+		return MOBILE_AP_ERROR_INTERNAL;
+	}
+
+	fprintf(fp, "%s\n", mac);
+	fclose(fp);
+
+	return MOBILE_AP_ERROR_NONE;
+}
+
+int _mh_core_enable_port_forwarding(int enable)
+{
+	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
+
+	if (enable) {
+		ret = __enable_port_forwarding();
+		if (ret != MOBILE_AP_ERROR_NONE) {
+			ERR("__enable_port_forwarding is failed\n");
+			return MOBILE_AP_ERROR_INTERNAL;
+		}
+
+		_iptables_create_chain(TABLE_NAT, TETH_NAT_PRE);
+		_iptables_add_rule(PKT_REDIRECTION_RULE, TABLE_NAT, CHAIN_PRE,
+				TETH_NAT_PRE);
+
+	} else {
+		ret = __disable_port_forwarding();
+		if (ret != MOBILE_AP_ERROR_NONE) {
+			ERR("__enable_port_forwarding is failed\n");
+			return MOBILE_AP_ERROR_INTERNAL;
+		}
+
+		_iptables_flush_rules(TABLE_NAT, TETH_NAT_PRE);
+		_iptables_delete_chain(TABLE_NAT, TETH_NAT_PRE);
+	}
+
+	return MOBILE_AP_ERROR_NONE;
+}
+
+int _mh_core_add_port_forwarding_rule(const char* ifname, const char* proto,
+		const char* org_ip, int org_port, const char* final_ip, int final_port)
+{
+
+	_iptables_add_rule(PORT_FW_RULE, TABLE_NAT, TETH_NAT_PRE, ifname, proto, org_ip,
+			final_ip, (int)org_port, (int)final_port);
+
+	return MOBILE_AP_ERROR_NONE;
+}
+
+int _mh_core_reset_port_forwarding_rule()
+{
+	_iptables_flush_rules(TABLE_NAT, TETH_NAT_PRE);
+
+	return MOBILE_AP_ERROR_NONE;
+}
+
+int _mh_core_enable_port_filtering(int enable)
+{
+	if (enable) {
+		_iptables_create_chain(TABLE_FILTER, TETH_FILTER_FW);
+		_iptables_add_rule(PKT_REDIRECTION_RULE, TABLE_FILTER, CHAIN_OUTPUT,
+				TETH_FILTER_FW);
+	} else {
+		_iptables_flush_rules(TABLE_FILTER, TETH_FILTER_FW);
+		_iptables_delete_chain(TABLE_FILTER, TETH_FILTER_FW);
+	}
+
+	return MOBILE_AP_ERROR_NONE;
+}
+
+int _mh_core_add_port_filtering_rule(int port, const char *protocol, int allow)
+{
+	if (protocol == NULL) {
+		ERR("protocol is invalid\n");
+		return MOBILE_AP_ERROR_INVALID_PARAM;
+	}
+
+	if (allow)
+		_iptables_add_rule(PORT_FILTER_RULE, TABLE_FILTER, TETH_FILTER_FW, protocol, port, NULL, ACTION_ACCEPT);
+	else
+		_iptables_add_rule(PORT_FILTER_RULE, TABLE_FILTER, TETH_FILTER_FW, protocol, port, NULL, ACTION_DROP);
+
+	return MOBILE_AP_ERROR_NONE;
+}
+
+int _mh_core_add_custom_port_filtering_rule(int port1, int port2, const char *protocol, int allow)
+{
+	if (protocol == NULL) {
+		ERR("protocol is invalid\n");
+		return MOBILE_AP_ERROR_INVALID_PARAM;
+	}
+
+	if (allow)
+		_iptables_add_rule(PORT_FILTER_RULE, TABLE_FILTER, TETH_FILTER_FW, protocol, port1, port2, ACTION_ACCEPT);
+	else
+		_iptables_add_rule(PORT_FILTER_RULE, TABLE_FILTER, TETH_FILTER_FW, protocol, port1, port2, ACTION_DROP);
+
+	return MOBILE_AP_ERROR_NONE;
+}
+
+int _mh_core_set_vpn_passthrough_rule(int vpn_type, int enable)
+{
+	_iptables_set_vpn_passthrough_rule(vpn_type, enable);
+
+	return MOBILE_AP_ERROR_NONE;
+}
+
 static gboolean __send_station_event_cb(gpointer data)
 {
 	int sig = GPOINTER_TO_INT(data);
@@ -1578,7 +1759,7 @@ int _set_hostapd_tx_power(unsigned int txpower)
 	int buf_len = 0;
 	char buf[MOBILE_AP_STR_INFO_LEN] = {0, };
 	buf_len = sizeof(buf);
-	snprintf(req, sizeof(req), "%s%u","SET txpower ",txpower);
+	snprintf(req, sizeof(req), "%s%u", "SET txpower ", txpower);
 	ret = __send_hostapd_req(hostapd_ctrl_fd, req, strlen(req), buf, &buf_len);
 	if (ret != MOBILE_AP_ERROR_NONE) {
 		ERR("__send_to_hostapd is failed : %d\n", ret);
@@ -1594,19 +1775,19 @@ unsigned int _get_hostapd_tx_power(void)
 	char req[HOSTAPD_REQ_MAX_LEN] = {0, };
 	char buf[MOBILE_AP_STR_INFO_LEN] = {0, };
 	buf_len = sizeof(buf);
-	snprintf(req, sizeof(req), "%s","GET txpower");
+	snprintf(req, sizeof(req), "%s", "GET txpower");
 	ret = __send_hostapd_req(hostapd_ctrl_fd,
 			req, strlen(req), buf, &buf_len);
 	if (ret != MOBILE_AP_ERROR_NONE) {
 		ERR("__send_hostapd_req is failed : %d\n", ret);
 		return ret;
 	}
-	if (!strncmp(buf, "FAIL", 4)) {
+	if (!strncmp(buf, "FAIL", 4))
 		ERR("FAIL is returned\n");
-	}
-	if (buf[0] == '\0') {
+
+	if (buf[0] == '\0')
 		ERR("NULL string\n");
-	}
-	return (atoi (buf));
+
+	return (atoi(buf));
 }
 

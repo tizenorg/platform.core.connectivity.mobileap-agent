@@ -112,7 +112,8 @@ static void __handle_device_name_changed_cb(keynode_t *key, void *data)
 
 		if (_mobileap_is_enabled(MOBILE_AP_STATE_WIFI)) {
 			_reload_softap_settings(obj, vconf_key, new_settings->key,
-					new_settings->mode, new_settings->channel, new_settings->hide_mode, new_settings->mac_filter, sec_type);
+					new_settings->mode, new_settings->channel, new_settings->hide_mode,
+					new_settings->mac_filter, new_settings->max_sta, sec_type);
 		} else if (_mobileap_is_enabled(MOBILE_AP_STATE_WIFI_AP)) {
 			_reload_softap_settings_for_ap(obj, vconf_key, new_settings->key,
 					new_settings->hide_mode, sec_type);

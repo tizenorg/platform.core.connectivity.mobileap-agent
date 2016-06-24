@@ -543,6 +543,27 @@ static void on_bus_acquired_cb(GDBusConnection *connection, const gchar *name,
 	g_signal_connect(tethering_obj, "handle-dhcp-range",
 			G_CALLBACK(tethering_dhcp_range), NULL);
 
+	/* For Wi-Fi tethering */
+	g_signal_connect(tethering_obj, "handle-set-mtu",
+			G_CALLBACK(tethering_set_mtu), NULL);
+	g_signal_connect(tethering_obj, "handle-change-mac",
+			G_CALLBACK(tethering_change_mac), NULL);
+	g_signal_connect(tethering_obj, "handle-enable-port-forwarding",
+			G_CALLBACK(tethering_enable_port_forwarding), NULL);
+	g_signal_connect(tethering_obj, "handle-add-port-forwarding-rule",
+			G_CALLBACK(tethering_add_port_forwarding_rule), NULL);
+	g_signal_connect(tethering_obj, "handle-reset-port-forwarding-rule",
+			G_CALLBACK(tethering_reset_port_forwarding_rule), NULL);
+
+	g_signal_connect(tethering_obj, "handle-enable-port-filtering",
+			G_CALLBACK(tethering_enable_port_filtering), NULL);
+	g_signal_connect(tethering_obj, "handle-add-port-filtering-rule",
+			G_CALLBACK(tethering_add_port_filtering_rule), NULL);
+	g_signal_connect(tethering_obj, "handle-add-custom-port-filtering-rule",
+			G_CALLBACK(tethering_add_custom_port_filtering_rule), NULL);
+	g_signal_connect(tethering_obj, "handle-set-vpn-passthrough-rule",
+			G_CALLBACK(tethering_set_vpn_passthrough_rule), NULL);
+
 	/* DPM */
 	g_signal_connect(tethering_obj, "handle-change-policy",
 			G_CALLBACK(tethering_change_policy), NULL);

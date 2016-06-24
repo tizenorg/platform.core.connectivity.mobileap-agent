@@ -36,6 +36,7 @@ typedef enum {
 typedef struct {
 	int hide_mode;
 	int mac_filter;
+	int max_sta;
 	char *ssid;
 	char *key;
 	char *mode;
@@ -46,11 +47,11 @@ typedef struct {
 int _register_app_for_wifi_passphrase(const char *pkg_id);
 int _get_wifi_name_from_lease_info(const char *mac, char **name_buf);
 mobile_ap_error_code_e _enable_wifi_tethering(Tethering *obj, gchar *ssid,
-	gchar *passphrase, gchar* mode, gint channel, int hide_mode, int mac_filter, softap_security_type_e security_type);
+	gchar *passphrase, gchar* mode, gint channel, int hide_mode, int mac_filter, int max_sta, softap_security_type_e security_type);
 mobile_ap_error_code_e _disable_wifi_tethering(Tethering *obj);
 gboolean _is_trying_wifi_operation(void);
 mobile_ap_error_code_e _reload_softap_settings(Tethering *obj,
-		gchar *ssid, gchar *key, gchar* mode, gint channel, gint hide_mode, gint mac_filter, gint security_type);
+		gchar *ssid, gchar *key, gchar* mode, gint channel, gint hide_mode, gint mac_filter, gint max_sta, gint security_type);
 mobile_ap_error_code_e _reload_softap_settings_for_ap(Tethering *obj,
 	gchar *ssid, gchar *key, gint hide_mode, gint security_type);
 
@@ -61,7 +62,7 @@ mobile_ap_error_code_e _enable_wifi_ap(Tethering *obj, gchar *ssid,
 mobile_ap_error_code_e _disable_wifi_ap(Tethering *obj);
 gboolean tethering_enable_wifi_tethering(Tethering *obj,
 		GDBusMethodInvocation *context, gchar *ssid,
-		gchar *key, gchar* mode, gint channel, gint visibility, gint mac_filter, gint security_type);
+		gchar *key, gchar* mode, gint channel, gint visibility, gint mac_filter, gint max_sta, gint security_type);
 
 softap_settings_t  *_get_softap_settings();
 
@@ -70,7 +71,7 @@ gboolean tethering_disable_wifi_tethering(Tethering *obj,
 
 gboolean tethering_reload_wifi_settings(Tethering *obj,
 		GDBusMethodInvocation *context,
-		gchar *ssid, gchar *key, gchar* mode, gint channel, gint visibility, gint mac_filter, gint security_type);
+		gchar *ssid, gchar *key, gchar* mode, gint channel, gint visibility, gint mac_filter, gint max_sta, gint security_type);
 
 gboolean tethering_reload_wifi_ap_settings(Tethering *obj,
 				GDBusMethodInvocation *context, gchar *ssid, gchar *key,
@@ -93,6 +94,33 @@ gboolean tethering_enable_dhcp(Tethering *obj,
 
 gboolean tethering_dhcp_range(Tethering *obj,
 		GDBusMethodInvocation *context, gchar *rangestart, gchar *rangestop);
+
+gboolean tethering_set_mtu(Tethering *obj,
+		GDBusMethodInvocation *context, gint mtu);
+
+gboolean tethering_change_mac(Tethering *obj,
+		GDBusMethodInvocation *context, gchar *mac);
+
+gboolean tethering_enable_port_forwarding(Tethering *obj,
+		GDBusMethodInvocation *context, gboolean enable);
+
+gboolean tethering_add_port_forwarding_rule(Tethering *obj, GDBusMethodInvocation *context,
+		gchar *ifname, gchar *protocol, gchar *org_ip, gint org_port, gchar *final_ip, gint final_port);
+
+gboolean tethering_reset_port_forwarding_rule(Tethering *obj,
+		GDBusMethodInvocation *context);
+
+gboolean tethering_enable_port_filtering(Tethering *obj,
+		GDBusMethodInvocation *context, gboolean enable);
+
+gboolean tethering_add_port_filtering_rule(Tethering *obj,
+		GDBusMethodInvocation *context, gint port, gchar *protocol, gboolean allow);
+
+gboolean tethering_add_custom_port_filtering_rule(Tethering *obj,
+		GDBusMethodInvocation *context, gint port1, gint port2, gchar *protocol, gboolean allow);
+
+gboolean tethering_set_vpn_passthrough_rule(Tethering *obj,
+		GDBusMethodInvocation *context, gint vpn_type, gboolean enable);
 
 /* Dbus method for softap APIs */
 gboolean softap_enable(Softap *obj, GDBusMethodInvocation *context,
