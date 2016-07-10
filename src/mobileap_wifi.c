@@ -48,8 +48,8 @@ static unsigned int __generate_initial_passphrase(char *passphrase, unsigned int
 static GDBusMethodInvocation *g_context = NULL;
 static guint wifi_recovery_timeout_id = 0;
 static gboolean prev_wifi_on = FALSE;
-static wifi_saved_settings wifi_settings = {0, NULL, NULL, 0};
-static softap_settings_t obj_softap_settings = {0, "", "", ""};
+static wifi_saved_settings wifi_settings = {0, 0, 0,  NULL, NULL, NULL, 0};
+static softap_settings_t obj_softap_settings = {0, "", "", "", "", 0, 0, 0};
 
 softap_settings_t *_get_softap_settings()
 {
@@ -110,6 +110,7 @@ DONE:
 
 	g_free(wifi_settings.ssid);
 	g_free(wifi_settings.key);
+	g_free(wifi_settings.mode);
 	memset(&wifi_settings, 0, sizeof(wifi_settings));
 
 	DBG("-\n");
@@ -160,6 +161,7 @@ DONE:
 
 	g_free(wifi_settings.ssid);
 	g_free(wifi_settings.key);
+	g_free(wifi_settings.mode);
 	memset(&wifi_settings, 0, sizeof(wifi_settings));
 
 	DBG("-\n");
@@ -924,6 +926,12 @@ gboolean tethering_enable_wifi_tethering(Tethering *obj,
 	}
 	wifi_settings.hide_mode = (!visibility);
 
+	if (mode != NULL)
+		wifi_settings.mode = g_strdup(mode);
+
+	wifi_settings.channel = channel;
+	wifi_settings.max_sta = max_sta;
+
 	if (wifi_recovery_timeout_id) {
 		DBG("Wi-Fi recovery is cancelled\n");
 		g_source_remove(wifi_recovery_timeout_id);
@@ -970,6 +978,7 @@ DONE:
 
 	g_free(wifi_settings.ssid);
 	g_free(wifi_settings.key);
+	g_free(wifi_settings.mode);
 	memset(&wifi_settings, 0, sizeof(wifi_settings));
 
 	return ret_val;
