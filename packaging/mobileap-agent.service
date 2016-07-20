@@ -5,6 +5,7 @@ Description=Start mobileap-agent for tethering and softap
 User=root
 Type=dbus
 BusName=org.tizen.MobileapAgent
+SmackProcessLabel=System
 ExecStart=/usr/bin/mobileap-agent
 CapabilityBoundingSet=~CAP_MAC_ADMIN
 CapabilityBoundingSet=~CAP_MAC_OVERRIDE
