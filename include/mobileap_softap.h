@@ -90,7 +90,9 @@
 			"enable-dbus\n" \
 			"group=system\n" \
 			"user=system\n" \
-			"dhcp-option=tag:blue,option:router,192.168.129.3\n"
+			"dhcp-option=tag:blue,option:router,192.168.129.3\n" \
+			"dhcp-option=6,8.8.8.8\n"
+
 #define DNSMASQ_CONF_FILE	"/tmp/dnsmasq.conf"
 
 /* Start of hostapd configuration */
