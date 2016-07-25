@@ -541,6 +541,7 @@ static void __update_tethering_cellular_profile(void)
 	int ret;
 	connection_profile_h profile;
 	tethering_cellular_service_type_e svc_type;
+	char *dns;
 
 	ret = connection_get_default_cellular_service_profile(connection,
 			CONNECTION_CELLULAR_SERVICE_TYPE_TETHERING, &profile);
@@ -580,13 +581,35 @@ DONE:
 		c_prof.svc_type = svc_type;
 		connection_profile_set_state_changed_cb(c_prof.handle,
 				__profile_state_changed_cb, NULL);
+		connection_profile_get_dns_address(c_prof.handle, 1, CONNECTION_ADDRESS_FAMILY_IPV4, &dns);
 	} else {
 		connection_profile_destroy(profile);
 		connection_profile_refresh(c_prof.handle);
+
+		connection_profile_get_dns_address(c_prof.handle, 1, CONNECTION_ADDRESS_FAMILY_IPV4, &dns);
 	}
 
 	return;
 }
+
+static void __update_dns_address(connection_profile_h handle)
+{
+	int ret;
+	char *dns_addr = NULL;
+
+	ret = connection_profile_get_dns_address(handle, 1, CONNECTION_ADDRESS_FAMILY_IPV4, &dns_addr);
+	if (ret != CONNECTION_ERROR_NONE) {
+		ERR("Fail to get dns address");
+		return;
+	}
+	_set_dns_address(dns_addr);
+
+	if (dns_addr)
+		g_free(dns_addr);
+
+	return;
+}
+
 
 static void __profile_closed_cb(connection_error_e result, void *user_data)
 {
@@ -1002,6 +1025,7 @@ int _open_network(void)
 	int ret;
 	int con_ret;
 	int cellular_state;
+	char *dns;
 	connection_type_e net_type;
 
 	ret = connection_get_type(connection, &net_type);
@@ -1049,6 +1073,10 @@ int _open_network(void)
 		}
 		__print_cellular_profile();
 
+		if (tethered_prof) {
+			connection_profile_get_dns_address(tethered_prof, 1, CONNECTION_ADDRESS_FAMILY_IPV4, *dns);
+			DBG("tetherpro(%s)", dns);
+		}
 		if (!__is_connected_profile(c_prof.handle)) {
 			if (c_prof.svc_type != __TETHERING_ONLY)
 				return MOBILE_AP_ERROR_NONE;
@@ -1080,7 +1108,8 @@ int _open_network(void)
 		ERR("Unknown connection type : %d\n", net_type);
 		return MOBILE_AP_ERROR_INTERNAL;
 	}
-
+	if (tethered_prof)
+		__update_dns_address(tethered_prof);
 	_set_masquerade();
 	_add_default_router();
 	_add_port_forward_rule();

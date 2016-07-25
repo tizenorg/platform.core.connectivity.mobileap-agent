@@ -91,7 +91,7 @@
 			"group=system\n" \
 			"user=system\n" \
 			"dhcp-option=tag:blue,option:router,192.168.129.3\n" \
-			"dhcp-option=6,8.8.8.8\n"
+			"dhcp-option=6,%s\n"
 
 #define DNSMASQ_CONF_FILE	"/tmp/dnsmasq.conf"
 
@@ -265,4 +265,6 @@ void _destroy_dhcp_ack_timer(char *mac_addr);
 
 int _set_hostapd_tx_power(unsigned int txpower);
 unsigned int _get_hostapd_tx_power(void);
+
+void _set_dns_address(char *_dns_addr);
 #endif

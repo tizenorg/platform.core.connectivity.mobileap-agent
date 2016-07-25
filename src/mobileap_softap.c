@@ -54,6 +54,7 @@ static int hostapd_ctrl_fd = 0;
 static int hostapd_monitor_fd = 0;
 static GIOChannel *hostapd_io_channel = NULL;
 static guint hostapd_io_source = 0;
+static char dns_addr[INET_ADDRSTRLEN] = "0.0.0.0";
 GSList *sta_timer_list = NULL;
 
 static gboolean __hostapd_connect_timer_cb(gpointer user_data);
@@ -1144,7 +1145,9 @@ int _mh_core_execute_dhcp_server(void)
 			ERR("Could not create the file.\n");
 			return MOBILE_AP_ERROR_RESOURCE;
 		}
-		snprintf(buf, DNSMASQ_CONF_LEN, DNSMASQ_CONF);
+
+		DBG("Execute DHCP server with (%s)", dns_addr);
+		snprintf(buf, DNSMASQ_CONF_LEN, DNSMASQ_CONF, dns_addr);
 		fputs(buf, fp);
 		fclose(fp);
 
@@ -1791,3 +1794,12 @@ unsigned int _get_hostapd_tx_power(void)
 	return (atoi(buf));
 }
 
+void _set_dns_address(char *_dns_addr)
+{
+	DBG("+");
+	memset(dns_addr, 0x00, INET_ADDRSTRLEN);
+	memcpy(dns_addr, _dns_addr, INET_ADDRSTRLEN);
+	SDBG("dns_addr = %s", dns_addr);
+
+	return;
+}
