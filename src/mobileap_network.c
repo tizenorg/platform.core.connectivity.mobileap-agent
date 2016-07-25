@@ -588,6 +588,25 @@ DONE:
 	return;
 }
 
+static void __update_dns_address(connection_profile_h handle)
+{
+	int ret;
+	char *dns_addr = NULL;
+
+	ret = connection_profile_get_dns_address(handle, 1, CONNECTION_ADDRESS_FAMILY_IPV4, &dns_addr);
+	if (ret != CONNECTION_ERROR_NONE) {
+		ERR("Fail to get dns address");
+		return;
+	}
+	_set_dns_address(dns_addr);
+
+	if (dns_addr)
+		g_free(dns_addr);
+
+	return;
+}
+
+
 static void __profile_closed_cb(connection_error_e result, void *user_data)
 {
 	connection_profile_refresh(c_prof.handle);
@@ -1002,6 +1021,7 @@ int _open_network(void)
 	int ret;
 	int con_ret;
 	int cellular_state;
+	char *dns;
 	connection_type_e net_type;
 
 	ret = connection_get_type(connection, &net_type);
@@ -1080,7 +1100,8 @@ int _open_network(void)
 		ERR("Unknown connection type : %d\n", net_type);
 		return MOBILE_AP_ERROR_INTERNAL;
 	}
-
+	if (tethered_prof)
+		__update_dns_address(tethered_prof);
 	_set_masquerade();
 	_add_default_router();
 	_add_port_forward_rule();
