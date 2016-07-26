@@ -168,8 +168,8 @@ static void __handle_usb_disconnect_cb(keynode_t *key, void *data)
 	 */
 	if (usb_client_state == USBCLIENT_STATE_DISCONNECTED)
 		DBG("USB is disconnected\n");
-	else if (vconf_name && !strcmp(vconf_name, VCONFKEY_SETAPPL_USB_MODE_INT) &&
-			vconf_key != SETTING_USB_TETHERING_MODE)
+	else if (vconf_name && !strcmp(vconf_name, VCONFKEY_USB_CUR_MODE) &&
+			(vconf_key != SET_USB_RNDIS))
 		SDBG("USB Mode is changed [%d]\n", vconf_key);
 	else
 		return;
@@ -210,23 +210,23 @@ static void __handle_usb_mode_change(keynode_t *key, void *data)
 			vconf_keynode_get_name(key), vconf_key);
 
 	if (_mobileap_is_enabled(MOBILE_AP_STATE_USB)) {
-		if (vconf_key != SETTING_USB_TETHERING_MODE) {
+		if (vconf_key != SET_USB_RNDIS) {
 			DBG("Is progressing for usb mode change\n");
 			return;
 		}
 
 		DBG("USB tethering is enabled\n");
-		vconf_ignore_key_changed(VCONFKEY_SETAPPL_USB_MODE_INT,
+		vconf_ignore_key_changed(VCONFKEY_USB_CUR_MODE,
 				__handle_usb_mode_change);
 
 		/* USB Mode change is handled while USB tethering is enabled */
-		vconf_notify_key_changed(VCONFKEY_SETAPPL_USB_MODE_INT,
+		vconf_notify_key_changed(VCONFKEY_USB_CUR_MODE,
 				__handle_usb_disconnect_cb, (void *)obj);
-		ret = vconf_get_int(VCONFKEY_SETAPPL_USB_MODE_INT, &vconf_key);
+		ret = vconf_get_int(VCONFKEY_USB_CUR_MODE, &vconf_key);
 		if (ret != 0)
 			ERR("vconf_get_int is failed. but ignored [%d]\n", ret);
 
-		if (vconf_key != SETTING_USB_TETHERING_MODE) {
+		if (vconf_key != SET_USB_RNDIS) {
 			ERR("USB Mode is changed suddenly\n");
 			_disable_usb_tethering(obj);
 			if (g_context) {
@@ -244,13 +244,13 @@ static void __handle_usb_mode_change(keynode_t *key, void *data)
 			g_context = NULL;
 		}
 	} else {
-		if (vconf_key == SETTING_USB_TETHERING_MODE) {
+		if (vconf_key == SET_USB_RNDIS) {
 			DBG("Is progressing for usb mode change\n");
 			return;
 		}
 
 		DBG("USB tethering is disabled\n");
-		vconf_ignore_key_changed(VCONFKEY_SETAPPL_USB_MODE_INT,
+		vconf_ignore_key_changed(VCONFKEY_USB_CUR_MODE,
 				__handle_usb_mode_change);
 		tethering_emit_usb_off(obj, NULL);
 		if (g_context) {
@@ -269,7 +269,7 @@ mobile_ap_error_code_e _enable_usb_tethering(Tethering *obj)
 {
 	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
 	int vconf_ret;
-	int usb_mode = SETTING_USB_NONE_MODE;
+	int usb_mode = SET_USB_NONE;
 
 	if (_mobileap_is_enabled(MOBILE_AP_STATE_USB)) {
 		ERR("USB tethering is already enabled\n");
@@ -299,21 +299,21 @@ mobile_ap_error_code_e _enable_usb_tethering(Tethering *obj)
 	if (ret != MOBILE_AP_ERROR_NONE)
 		goto FAIL;
 
-	vconf_notify_key_changed(VCONFKEY_SETAPPL_USB_MODE_INT,
+	vconf_notify_key_changed(VCONFKEY_USB_CUR_MODE,
 			__handle_usb_mode_change, (void *)obj);
 
-	vconf_ret = vconf_get_int(VCONFKEY_SETAPPL_USB_MODE_INT, &usb_mode);
+	vconf_ret = vconf_get_int(VCONFKEY_USB_CUR_MODE, &usb_mode);
 	if (vconf_ret != 0) {
 		ERR("Error getting vconf\n");
-		vconf_ignore_key_changed(VCONFKEY_SETAPPL_USB_MODE_INT,
+		vconf_ignore_key_changed(VCONFKEY_USB_CUR_MODE,
 				__handle_usb_mode_change);
 		_deinit_tethering();
 		ret = MOBILE_AP_ERROR_RESOURCE;
 		goto FAIL;
 	}
 
-	if (usb_mode == SETTING_USB_TETHERING_MODE) {
-		vconf_ignore_key_changed(VCONFKEY_SETAPPL_USB_MODE_INT,
+	if (usb_mode == SET_USB_RNDIS) {
+		vconf_ignore_key_changed(VCONFKEY_USB_CUR_MODE,
 				__handle_usb_mode_change);
 		_add_interface_routing(USB_IF, IP_ADDRESS_USB);
 		_add_routing_rule(USB_IF);
@@ -362,7 +362,7 @@ mobile_ap_error_code_e _disable_usb_tethering(Tethering *obj)
 		conn = NULL;
 	}
 
-	vconf_ignore_key_changed(VCONFKEY_SETAPPL_USB_MODE_INT,
+	vconf_ignore_key_changed(VCONFKEY_USB_CUR_MODE,
 			__handle_usb_disconnect_cb);
 
 	_mobileap_clear_state(MOBILE_AP_STATE_USB);
@@ -422,7 +422,7 @@ gboolean tethering_disable_usb_tethering(Tethering *obj,
 		GDBusMethodInvocation *context)
 {
 	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
-	int usb_mode = SETTING_USB_NONE_MODE;
+	int usb_mode = SET_USB_NONE;
 	int vconf_ret = 0;
 
 	DBG("+\n");
@@ -448,15 +448,15 @@ gboolean tethering_disable_usb_tethering(Tethering *obj,
 		return FALSE;
 	}
 
-	vconf_notify_key_changed(VCONFKEY_SETAPPL_USB_MODE_INT,
+	vconf_notify_key_changed(VCONFKEY_USB_CUR_MODE,
 			__handle_usb_mode_change, (void *)obj);
-	vconf_ret = vconf_get_int(VCONFKEY_SETAPPL_USB_MODE_INT, &usb_mode);
+	vconf_ret = vconf_get_int(VCONFKEY_USB_CUR_MODE, &usb_mode);
 	if (vconf_ret != 0) {
 		ERR("Error getting vconf : %d. This error is ignored\n", vconf_ret);
 		goto DONE;
 	}
 
-	if (usb_mode != SETTING_USB_TETHERING_MODE) {
+	if (usb_mode != SET_USB_RNDIS) {
 		DBG("Don't need to wait for usb-setting\n");
 		goto DONE;
 	}
@@ -467,7 +467,7 @@ gboolean tethering_disable_usb_tethering(Tethering *obj,
 	return TRUE;
 
 DONE:
-	vconf_ignore_key_changed(VCONFKEY_SETAPPL_USB_MODE_INT,
+	vconf_ignore_key_changed(VCONFKEY_USB_CUR_MODE,
 			__handle_usb_mode_change);
 	tethering_emit_usb_off(obj, NULL);
 	tethering_complete_disable_usb_tethering(obj, g_context,
