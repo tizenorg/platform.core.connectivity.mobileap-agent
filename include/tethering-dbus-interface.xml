@@ -196,6 +196,15 @@
 			<arg type="u" name="result" direction="out"/>
 		</method>
 
+		<method name="set_wps_pin">
+			<arg type="s" name="pin" direction="in"/>
+			<arg type="u" name="result" direction="out"/>
+		</method>
+
+		<method name="push_wps_button">
+			<arg type="u" name="result" direction="out"/>
+		</method>
+
 		<method name="change_policy">
 			<arg type="s" name="name" direction="in"/>
 			<arg type="b" name="state" direction="in"/>

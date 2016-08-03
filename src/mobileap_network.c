@@ -269,7 +269,8 @@ static gboolean __read_port_forward_info(const char *conf_file)
 		pf->org_dest_ip = g_strdup(dest_ip[0]);
 		pf->org_dest_port = (unsigned short)atoi(dest_port[0]);
 		pf->new_dest_ip = g_strdup(dest_ip[1]);
-		pf->new_dest_port = (unsigned short)atoi(dest_port[1]);
+		if (dest_port[1])
+			pf->new_dest_port = (unsigned short)atoi(dest_port[1]);
 		port_forward_info = g_slist_append(port_forward_info, pf);
 
 		SDBG("Port forward rule #%d : %s %s %s:%d %s:%d\n", no_of_rule,
@@ -588,7 +589,7 @@ DONE:
 	return;
 }
 
-static void __update_dns_address(connection_profile_h handle)
+static int __update_dns_address(connection_profile_h handle)
 {
 	int ret;
 	char *dns_addr = NULL;
@@ -596,16 +597,15 @@ static void __update_dns_address(connection_profile_h handle)
 	ret = connection_profile_get_dns_address(handle, 1, CONNECTION_ADDRESS_FAMILY_IPV4, &dns_addr);
 	if (ret != CONNECTION_ERROR_NONE) {
 		ERR("Fail to get dns address");
-		return;
+		return __get_conn_error(ret);
 	}
 	_set_dns_address(dns_addr);
 
 	if (dns_addr)
 		g_free(dns_addr);
 
-	return;
+	return MOBILE_AP_ERROR_NONE;
 }
-
 
 static void __profile_closed_cb(connection_error_e result, void *user_data)
 {
@@ -1067,6 +1067,7 @@ int _open_network(void)
 			return MOBILE_AP_ERROR_NONE;
 		}
 		__print_cellular_profile();
+		__update_dns_address(c_prof.handle);
 
 		if (!__is_connected_profile(c_prof.handle)) {
 			if (c_prof.svc_type != __TETHERING_ONLY)
@@ -1099,8 +1100,7 @@ int _open_network(void)
 		ERR("Unknown connection type : %d\n", net_type);
 		return MOBILE_AP_ERROR_INTERNAL;
 	}
-	if (tethered_prof)
-		__update_dns_address(tethered_prof);
+	__update_dns_address(tethered_prof);
 	_set_masquerade();
 	_add_default_router();
 	_add_port_forward_rule();

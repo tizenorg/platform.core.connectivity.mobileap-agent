@@ -235,6 +235,99 @@ static int __execute_hostapd(const mobile_ap_type_e type, const char *ssid,
 	return MOBILE_AP_ERROR_NONE;
 }
 
+static int __execute_hostapd_wps(const mobile_ap_type_e type, const char *ssid,
+		const char *passphrase, const char *mode, int channel, int hide_mode, int mac_filter, int max_sta)
+{
+	DBG("+\n");
+	int ret;
+	char *conf = NULL;
+	char *old_conf = NULL;
+	char *hw_mode = NULL;
+	char buf[HOSTAPD_CONF_LEN] = "";
+	char key[MOBILE_AP_WIFI_KEY_MAX_LEN + 1];
+	FILE *fp = NULL;
+	pid_t pid;
+
+	if (mode == NULL)
+		hw_mode = g_strdup("g");
+	else
+		hw_mode = g_strdup(mode);
+
+	ret = __get_psk_hexascii(passphrase, (const unsigned char *)ssid, key, sizeof(key));
+	if (ret != MOBILE_AP_ERROR_NONE) {
+		ERR("hex conversion failed\n");
+
+		if (hw_mode)
+			g_free(hw_mode);
+
+		return MOBILE_AP_ERROR_RESOURCE;
+	}
+	/* Default conf. */
+	snprintf(buf, sizeof(buf), HOSTAPD_WPS_CONF,
+			WIFI_IF, HOSTAPD_CTRL_INTF_DIR,
+			ssid, channel,
+			hide_mode, hw_mode,
+			max_sta, mac_filter,
+			HOSTAPD_ALLOWED_LIST,
+			HOSTAPD_BLOCKED_LIST,
+			HOSTPAD_WPS_CONFIG_METHODS,
+			HOSTAPD_WPS_DEVICE_TYPE, key);
+	conf = g_strdup(buf);
+
+	if (hw_mode)
+		g_free(hw_mode);
+
+	/* Vendor elements conf. */
+	if (type == MOBILE_AP_TYPE_WIFI) {
+		snprintf(buf, sizeof(buf),
+			"vendor_elements=%s\n", HOSTAPD_VENDOR_ELEMENTS_TETH);
+	} else if (type == MOBILE_AP_TYPE_WIFI_AP) {
+		snprintf(buf, sizeof(buf),
+			"vendor_elements=%s\n", HOSTAPD_VENDOR_ELEMENTS_WIFI_AP);
+	} else {
+		ERR("Unknown type: %d\n", type);
+		g_free(conf);
+		return MOBILE_AP_ERROR_INVALID_PARAM;
+	}
+	old_conf = conf;
+	conf = g_strconcat(old_conf, buf, NULL);
+	g_free(old_conf);
+
+	fp = fopen(HOSTAPD_CONF_FILE, "w");
+	if (NULL == fp) {
+		ERR("Could not create the file.\n");
+		g_free(conf);
+		return MOBILE_AP_ERROR_RESOURCE;
+	}
+
+	if (conf) {
+		fputs(conf, fp);
+		g_free(conf);
+	}
+	fclose(fp);
+
+	pid = fork();
+	if (pid < 0) {
+		ERR("fork failed\n");
+		return MOBILE_AP_ERROR_RESOURCE;
+	}
+
+	if (pid == 0) {
+		if (execl(HOSTAPD_BIN, HOSTAPD_BIN, "-e", HOSTAPD_ENTROPY_FILE,
+					HOSTAPD_CONF_FILE,
+					"-f", HOSTAPD_DEBUG_FILE, "-ddd",
+					(char *)NULL))
+			ERR("execl failed\n");
+
+		ERR("Should not get here!");
+		return MOBILE_AP_ERROR_RESOURCE;
+	}
+
+	hostapd_pid = pid;
+
+	return MOBILE_AP_ERROR_NONE;
+}
+
 static int __terminate_hostapd()
 {
 	DBG("+\n");
@@ -865,7 +958,11 @@ int _mh_core_enable_softap(const mobile_ap_type_e type, const char *ssid,
 			break;
 		}
 
-		ret_status = __execute_hostapd(type, ssid, security, key, mode, channel, hide_mode, mac_filter, max_sta);
+		if (security != NULL && !strcmp(security, "wps"))
+			ret_status = __execute_hostapd_wps(type, ssid, key, mode, channel, hide_mode, mac_filter, max_sta);
+		else
+			ret_status = __execute_hostapd(type, ssid, security, key, mode, channel, hide_mode, mac_filter, max_sta);
+
 		if (ret_status != MOBILE_AP_ERROR_NONE) {
 			ERR("__execute_hostapd is failed\n");
 			break;
@@ -954,6 +1051,46 @@ int _mh_core_disable_softap(void)
 		ret_status = MOBILE_AP_ERROR_INTERNAL;
 
 	return ret_status;
+}
+
+int _mh_core_set_wps_pin(const char *wps_pin)
+{
+	int ret = 0;
+	char req[HOSTAPD_REQ_MAX_LEN] = {0, };
+	int buf_len = 0;
+	char buf[MOBILE_AP_STR_INFO_LEN] = {0, };
+	buf_len = sizeof(buf);
+
+	snprintf(req, sizeof(req), "%s%s", "WPS_PIN any ", wps_pin);
+
+	ret = __send_hostapd_req(hostapd_ctrl_fd, req, strlen(req), buf, &buf_len);
+
+	if (ret != MOBILE_AP_ERROR_NONE) {
+		ERR("__send_to_hostapd is failed : %d\n", ret);
+		return ret;
+	}
+
+	return MOBILE_AP_ERROR_NONE;
+}
+
+int _mh_core_push_wps_button(void)
+{
+	int ret = 0;
+	char req[HOSTAPD_REQ_MAX_LEN] = {0, };
+	int buf_len = 0;
+	char buf[MOBILE_AP_STR_INFO_LEN] = {0, };
+	buf_len = sizeof(buf);
+
+	snprintf(req, sizeof(req), "%s", "WPS_PBC");
+
+	ret = __send_hostapd_req(hostapd_ctrl_fd, req, strlen(req), buf, &buf_len);
+
+	if (ret != MOBILE_AP_ERROR_NONE) {
+		ERR("__send_to_hostapd is failed : %d\n", ret);
+		return ret;
+	}
+
+	return MOBILE_AP_ERROR_NONE;
 }
 
 static int __get_device_info_by_wext(softap_device_info_t *di)

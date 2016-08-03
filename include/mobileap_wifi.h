@@ -25,12 +25,14 @@
 #define VCONFKEY_SOFTAP_KEY					"memory/private/softap/key"
 #define SOFTAP_SECURITY_TYPE_OPEN_STR		"open"
 #define SOFTAP_SECURITY_TYPE_WPA2_PSK_STR	"wpa2-psk"
+#define SOFTAP_SECURITY_TYPE_WPS_STR	"wps"
 #define SOFTAP_PASSPHRASE_PATH			"wifi_tethering.txt"
 #define SOFTAP_PASSPHRASE_GROUP_ID		"secure-storage::tethering"
 
 typedef enum {
 	SOFTAP_SECURITY_TYPE_OPEN,
 	SOFTAP_SECURITY_TYPE_WPA2_PSK,
+	SOFTAP_SECURITY_TYPE_WPS,
 } softap_security_type_e;
 
 typedef struct {
@@ -131,5 +133,11 @@ gboolean softap_disable(Softap *obj,
 
 gboolean softap_reload_settings(Softap *obj, GDBusMethodInvocation *context,
 		gchar *ssid, char *key, gint visibility, gint security_type);
+
+gboolean softap_set_wps_pin(Softap *obj,
+		GDBusMethodInvocation *context, gchar *wps_pin);
+
+gboolean softap_push_wps_button(Softap *obj,
+		GDBusMethodInvocation *context);
 
 #endif /* __MOBILEAP_WIFI_H__ */

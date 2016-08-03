@@ -33,6 +33,15 @@
 		<arg type="a(a{sv})" name="station" direction="out"/>
 		</method>
 
+		<method name="set_wps_pin">
+			<arg type="s" name="pin" direction="in"/>
+			<arg type="u" name="result" direction="out"/>
+		</method>
+
+		<method name="push_wps_button">
+			<arg type="u" name="result" direction="out"/>
+		</method>
+
 		<!-- Signal (D-Bus) definitions -->
 		<signal name="sta_connected">
 			<arg type="s" name="arg1" direction="out"/>

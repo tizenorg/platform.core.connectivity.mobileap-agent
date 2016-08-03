@@ -105,8 +105,16 @@
 #define HOSTAPD_CTRL_INTF_DIR	tzplatform_mkpath(TZ_SYS_RUN, "/hostapd")
 #define HOSTAPD_ALLOWED_LIST	tzplatform_mkpath(TZ_SYS_VAR, "/lib/hostapd/hostapd.accept")
 #define HOSTAPD_BLOCKED_LIST	tzplatform_mkpath(TZ_SYS_VAR, "/lib/hostapd/hostapd.deny")
+
+#define HOSTAPD_CTRL_INTF_DIR_FOR_WPS	"/var/run/hostapd"
+
 #define HOSTAPD_CONF_LEN	1024
 #define HOSTAPD_DEFAULT_HW_MODE	"g"
+
+/* WPS (Wi-FI Protected Setup)*/
+#define HOSTAPD_WPS_DEVICE_NAME     "Tizen AP"
+#define HOSTAPD_WPS_DEVICE_TYPE     "6-0050F204-1"
+#define HOSTPAD_WPS_CONFIG_METHODS	"label virtual_display virtual_push_button keypad"
 
 #ifndef TIZEN_WLAN_BOARD_SPRD
 #define HOSTAPD_CONF		"interface=%s\n" \
@@ -135,6 +143,28 @@
 				"deny_mac_file=%s\n" \
 				"ieee80211n=1\n" \
 				"wowlan_triggers=any\n"
+
+#define HOSTAPD_WPS_CONF	"interface=%s\n" \
+				"driver=nl80211\n" \
+				"ctrl_interface=%s\n" \
+				"ssid=%s\n" \
+				"channel=%d\n" \
+				"ignore_broadcast_ssid=%d\n" \
+				"hw_mode=%s\n" \
+				"max_num_sta=%d\n" \
+				"macaddr_acl=%d\n" \
+				"accept_mac_file=%s\n" \
+				"deny_mac_file=%s\n" \
+				"ieee80211n=1\n" \
+				"wowlan_triggers=any\n" \
+				"eap_server=1\n" \
+				"wps_state=2\n" \
+				"ap_setup_locked=1\n" \
+				"config_methods=%s\n" \
+				"device_type=%s\n" \
+				"wpa=2\n" \
+				"rsn_pairwise=CCMP\n" \
+				"wpa_psk=%s\n"
 #endif
 
 #define HOSTAPD_DEBUG_FILE	"/var/log/hostapd.log"
@@ -244,6 +274,8 @@ int _mh_core_enable_port_filtering(int enable);
 int _mh_core_add_port_filtering_rule(int port, const char *protocol, int allow);
 int _mh_core_add_custom_port_filtering_rule(int port1, int port2, const char *protocol, int allow);
 int _mh_core_set_vpn_passthrough_rule(int vpn_type, int enable);
+int _mh_core_push_wps_button(void);
+int _mh_core_set_wps_pin(const char *wps_pin);
 
 void _register_wifi_station_handler(void);
 void _unregister_wifi_station_handler(void);

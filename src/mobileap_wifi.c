@@ -279,6 +279,10 @@ static mobile_ap_error_code_e __update_softap_settings(softap_settings_t *st,
 		g_strlcpy(st->security_type, SOFTAP_SECURITY_TYPE_OPEN_STR,
 			sizeof(st->security_type));
 		g_strlcpy(st->key, "00000000", sizeof(st->key));
+	} else if (security_type == SOFTAP_SECURITY_TYPE_WPS) {
+		g_strlcpy(st->security_type, SOFTAP_SECURITY_TYPE_WPS_STR,
+				sizeof(st->security_type));
+		g_strlcpy(st->key, passphrase, sizeof(st->key));
 	} else {
 		ERR("Unknown security type\n");
 		return MOBILE_AP_ERROR_INTERNAL;
@@ -1460,4 +1464,26 @@ gboolean softap_reload_settings(Softap *obj,
 	softap_complete_reload_settings(obj, context, ret);
 
 	return ret_val;
+}
+
+gboolean softap_set_wps_pin(Softap *obj,
+		GDBusMethodInvocation *context, gchar *wps_pin)
+{
+	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
+
+	ret = _mh_core_set_wps_pin(wps_pin);
+	softap_complete_set_wps_pin(obj, context, ret);
+
+	return TRUE;
+}
+
+gboolean softap_push_wps_button(Softap *obj, GDBusMethodInvocation *context)
+{
+	mobile_ap_error_code_e ret = MOBILE_AP_ERROR_NONE;
+
+	ret = _mh_core_push_wps_button();
+	softap_complete_push_wps_button(obj, context, ret);
+
+	return TRUE;
+
 }
